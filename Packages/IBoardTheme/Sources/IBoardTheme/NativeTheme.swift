@@ -1,5 +1,5 @@
 /// sRGB colour as plain values (no UIKit), so tokens are testable on macOS.
-public struct ThemeColor: Sendable, Equatable {
+public struct ThemeColor: Sendable, Hashable {
     public var red: Double
     public var green: Double
     public var blue: Double
