@@ -10,6 +10,8 @@ final class KeyboardViewController: UIInputViewController {
     private(set) var settings = IBoardSettings.defaults
 
     private let grid = KeyGridView()
+    private let strip = SuggestionStripView()
+    private var consumeShiftOnce = false
     private var heightConstraint: NSLayoutConstraint?
     private var layoutKind: LayoutKind = .letters
     private var lastLayoutKey: LayoutKey?
@@ -54,6 +56,7 @@ final class KeyboardViewController: UIInputViewController {
         grid.accessibilityIdentifier = "key-grid"
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
+        view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
         }
@@ -123,6 +126,7 @@ final class KeyboardViewController: UIInputViewController {
         case .light: grid.appearance = .light
         default: grid.appearance = traitCollection.userInterfaceStyle == .dark ? .dark : .light
         }
+        strip.appearance = grid.appearance
         relayoutIfNeeded()
     }
 
@@ -148,6 +152,7 @@ final class KeyboardViewController: UIInputViewController {
         if abs((heightConstraint?.constant ?? 0) - want) > 0.5 { heightConstraint?.constant = want }
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind)
         grid.apply(layout: layout)
+        strip.frame = layout.stripFrame
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
             updateAutoShift()
@@ -169,10 +174,14 @@ final class KeyboardViewController: UIInputViewController {
             machine!.touchMoved(id: id, to: point, emit: sink)
         case .ended:
             perfUp = Perf.begin(.touchUpToInsert)
-            machine!.touchUp(id: id, time: time, emit: sink)
+            machine!.touchUp(id: id, at: point, time: time, emit: sink)
             perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
         case .cancelled:
             machine!.touchCancelled(id: id, emit: sink)
+        }
+        if consumeShiftOnce {
+            consumeShiftOnce = false
+            if machine!.shift == .once { machine!.setShift(.off, emit: sink) }
         }
         applyDeferredLayerChange()
         updateRepeatTimer()
@@ -201,6 +210,23 @@ final class KeyboardViewController: UIInputViewController {
             advanceToNextInputMode()
         case .shiftChanged(let state):
             grid.setShift(state)
+        case .alternatesBegan(let keyIndex):
+            // Not `machine`: this runs inside a machine call. The grid holds the current layout.
+            guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
+            let key = layout.keys[keyIndex]
+            let options = KeyAlternates.options(for: key.identity, uppercase: grid.shift != .off) ?? []
+            strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
+        case .alternatesMoved(let p):
+            strip.move(to: p)
+        case .alternatesEnded(let p):
+            if let text = strip.end(at: p) {
+                input.insert(text)
+                feedback()
+                consumeShiftOnce = true
+                scheduleAutoShift()
+            }
+        case .alternatesCancelled:
+            strip.cancelAlternates()
         case .layerChanged(let kind):
             layoutKind = kind
             layerChangePending = true

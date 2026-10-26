@@ -31,6 +31,14 @@ public enum KeyEvent: Sendable, Equatable {
     case shiftChanged(ShiftState)
     /// The active layer changed: the host must build a layout for it and call `setLayout`.
     case layerChanged(LayoutKind)
+    /// Long press on a key with alternates: the host shows the alternates row in the strip. The key is released.
+    case alternatesBegan(keyIndex: Int)
+    /// The finger that started the alternates moved (view coordinates).
+    case alternatesMoved(CGPoint)
+    /// The finger lifted at this point: the host commits the highlighted alternate (or nothing).
+    case alternatesEnded(CGPoint)
+    /// The touch was cancelled (or the keyboard hidden): drop the alternates row, insert nothing.
+    case alternatesCancelled
 }
 
 /// Delete-hold timing (F1: "hold repeats with iOS-like acceleration, chars -> words after ~2 s"). Tunable; the exact
@@ -64,12 +72,17 @@ public struct KeyboardInputMachine: Sendable {
         var isActive = false
         /// The key's action already ran (on touch-down); touch-up only releases.
         var isCommitted = false
+        /// When the long press fires (infinity: this key has no alternates / already fired).
+        var longPressAt: TimeInterval = .infinity
+        var isAlternates = false
     }
 
     public private(set) var layout: KeyboardLayout
     public private(set) var kind: LayoutKind
     public private(set) var shift: ShiftState
     public var deletePolicy = DeleteRepeatPolicy()
+    /// Hold time before alternates appear (F1: 350 ms).
+    public var longPressDelay: TimeInterval = 0.35
 
     private var slots = [Slot](repeating: Slot(), count: KeyboardInputMachine.maxTouches)
     private var orderCounter: UInt64 = 0
@@ -86,7 +99,13 @@ public struct KeyboardInputMachine: Sendable {
     }
 
     /// Time the host should call `tick(now:)` next, or nil when nothing repeats.
-    public var nextDeadline: TimeInterval? { deleteTouchID >= 0 ? deleteNext : nil }
+    public var nextDeadline: TimeInterval? {
+        var d: TimeInterval? = deleteTouchID >= 0 ? deleteNext : nil
+        for s in slots where s.isActive && !s.isCommitted && s.longPressAt < .infinity {
+            d = min(d ?? .infinity, s.longPressAt)
+        }
+        return d
+    }
     public var activeTouchCount: Int { slots.reduce(0) { $0 + ($1.isActive ? 1 : 0) } }
 
     // MARK: Host-driven state
@@ -125,6 +144,9 @@ public struct KeyboardInputMachine: Sendable {
         orderCounter &+= 1
         slots[free] = Slot(touchID: id, keyIndex: hit.keyIndex, order: orderCounter, isActive: true, isCommitted: false)
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
+        if KeyAlternates.options(for: layout.keys[hit.keyIndex].identity) != nil {
+            slots[free].longPressAt = time + longPressDelay
+        }
 
         switch layout.keys[hit.keyIndex].identity {
         case .shift, .layerSwitch, .delete:
@@ -137,15 +159,25 @@ public struct KeyboardInputMachine: Sendable {
     }
 
     public mutating func touchMoved(id: Int, to point: CGPoint, emit: (KeyEvent) -> Void) {
-        guard let i = slotIndex(for: id), !slots[i].isCommitted else { return }
+        guard let i = slotIndex(for: id) else { return }
+        if slots[i].isAlternates { emit(.alternatesMoved(point)); return }
+        guard !slots[i].isCommitted else { return }
+        // Moving to another key restarts the long press only for that key's own alternates.
         guard let hit = layout.nearestHit(to: point), hit.keyIndex != slots[i].keyIndex else { return }
         emit(.highlight(keyIndex: slots[i].keyIndex, isOn: false))
         slots[i].keyIndex = hit.keyIndex
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
+        slots[i].longPressAt = .infinity // sliding to another key ends the long-press candidate
     }
 
-    public mutating func touchUp(id: Int, time: TimeInterval, emit: (KeyEvent) -> Void) {
+    public mutating func touchUp(id: Int, at point: CGPoint? = nil, time: TimeInterval, emit: (KeyEvent) -> Void) {
         guard let i = slotIndex(for: id) else { return }
+        if slots[i].isAlternates {
+            slots[i].isAlternates = false
+            emit(.alternatesEnded(point ?? .zero))
+            release(slot: i, emit: emit)
+            return
+        }
         if !slots[i].isCommitted, slots[i].keyIndex >= 0 {
             slots[i].isCommitted = true
             let identity = layout.keys[slots[i].keyIndex].identity
@@ -169,6 +201,16 @@ public struct KeyboardInputMachine: Sendable {
 
     /// Run delete repeat. Cheap when nothing repeats.
     public mutating func tick(now: TimeInterval, emit: (KeyEvent) -> Void) {
+        for i in 0..<slots.count where slots[i].isActive && !slots[i].isCommitted && now >= slots[i].longPressAt {
+            let k = slots[i].keyIndex
+            slots[i].longPressAt = .infinity
+            guard k >= 0 else { continue }
+            slots[i].isCommitted = true
+            slots[i].isAlternates = true
+            emit(.highlight(keyIndex: k, isOn: false))
+            slots[i].keyIndex = -1
+            emit(.alternatesBegan(keyIndex: k))
+        }
         guard deleteTouchID >= 0 else { return }
         var n = 0
         while now >= deleteNext && n < deletePolicy.maxCatchUp {
@@ -194,8 +236,11 @@ public struct KeyboardInputMachine: Sendable {
 
     private mutating func release(slot i: Int, emit: (KeyEvent) -> Void) {
         if slots[i].keyIndex >= 0 { emit(.highlight(keyIndex: slots[i].keyIndex, isOn: false)) }
+        if slots[i].isAlternates { emit(.alternatesCancelled) }
         if deleteTouchID == slots[i].touchID { deleteTouchID = -1 }
         slots[i].isActive = false
+        slots[i].isAlternates = false
+        slots[i].longPressAt = .infinity
         slots[i].keyIndex = -1
     }
 
