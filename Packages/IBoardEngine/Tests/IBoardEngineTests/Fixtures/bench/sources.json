@@ -1,0 +1,1 @@
+{"sources": [{"id": "synthetic-uni", "path": "uni.tsv", "kind": "unigram", "spdx": "CC0-1.0", "attribution": "iBoard test fixture (synthetic counts, authored for this repo)"}, {"id": "synthetic-ng", "path": "ng.tsv", "kind": "ngram", "spdx": "CC0-1.0", "attribution": "iBoard test fixture (synthetic phrases, authored for this repo)"}]}

@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import IBoardCore
 
@@ -30,13 +31,19 @@ enum Benchmark {
     }
 }
 
-@Suite struct EngineBenchmarks {
-    @Test func placeholderSuggestionLookupWithinBudget() {
-        let words = (0..<5_000).map { "word\($0)" }
-        nonisolated(unsafe) var sink = 0
-        Benchmark.expectP95(.keystrokeToSuggestions) {
-            sink &+= words.firstIndex(of: "word4999") ?? 0   // stand-in until the engine exists
-        }
-        #expect(sink > 0)
+extension Benchmark {
+    static func p50Milliseconds(_ sorted: [UInt64]) -> Double { Double(sorted[sorted.count / 2]) / 1_000_000 }
+
+    /// Runs `body`, prints "BENCH name: p50 .. ms p95 .. ms (n ops/iter)" and returns the p95 in ms.
+    /// `opsPerIteration` only scales the printed per-op figure.
+    @discardableResult
+    static func measure(_ name: String, warmup: Int = 20, iterations: Int = 300, opsPerIteration: Int = 1,
+                        _ body: () -> Void) -> Double {
+        let s = run(warmup: warmup, iterations: iterations, body)
+        let p95 = p95Milliseconds(s)
+        let perOp = p95 * 1_000_000 / Double(opsPerIteration)
+        print("BENCH \(name): p50 \(String(format: "%.4f", p50Milliseconds(s))) ms, p95 \(String(format: "%.4f", p95)) ms per iteration"
+              + (opsPerIteration > 1 ? " (\(opsPerIteration) ops, p95 \(String(format: "%.0f", perOp)) ns/op)" : ""))
+        return p95
     }
 }
