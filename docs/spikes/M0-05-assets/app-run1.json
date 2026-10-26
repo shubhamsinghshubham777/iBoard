@@ -1,0 +1,9 @@
+{
+  "darwin.receivedFromOther" : "5",
+  "groupContainer.url" : "available",
+  "groupDefaults.readOther" : "w-ext",
+  "groupDefaults.writeOwn" : "ok readBack=w-app",
+  "groupFile.readOther" : "w-ext",
+  "groupFile.write" : "ok",
+  "role" : "app"
+}

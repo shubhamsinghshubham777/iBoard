@@ -1,0 +1,16 @@
+{
+  "darwin.receivedFromOther" : "6",
+  "groupContainer.url" : "available",
+  "groupDefaults.readOther" : "w-app",
+  "groupDefaults.writeOwn" : "ok readBack=w-ext",
+  "groupFile.readOther" : "w-app",
+  "groupFile.write" : "ok",
+  "haptics.generator" : "called, no error (feel NOT TESTED)",
+  "hasFullAccess" : "true",
+  "network" : "HTTP 200",
+  "ownFile.write" : "ok",
+  "pasteboard.hasStrings" : "true",
+  "pasteboard.write" : "set; readBack=probe-ext",
+  "playInputClick" : "called, no error (audio NOT TESTED)",
+  "role" : "ext"
+}
