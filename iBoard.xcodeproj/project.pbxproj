@@ -10,21 +10,27 @@
 		015158E3B1264CC95D506C35 /* lm.iblm in Resources */ = {isa = PBXBuildFile; fileRef = 7D80AAA9E4344144F1B3DD5C /* lm.iblm */; };
 		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
 		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
+		291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
 		487214379D09AB14642893EF /* iBoardKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F4CAB1AD063D828AA750FEF /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = C1E596259DA263BECA26D1B3 /* IBoardTheme */; };
 		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
-		5AB898199F29A6EA29F1905B /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 261EEFEA2D4EF829F24DE453 /* IBoardTheme */; };
+		5AB898199F29A6EA29F1905B /* IBoardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 8AAAAC9AA464BAE807625340 /* IBoardEngine */; };
 		5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9ECAB65BC0422F84297743E /* iBoardTests.swift */; };
 		68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */; };
 		710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */; };
+		76C0AFC7D63968EEF93A6891 /* DictionaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4021068ED546815593C37204 /* DictionaryStore.swift */; };
 		7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A27A8EC462F171D099FC8 /* ContentView.swift */; };
 		803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 216285A7FBA94D1A19DDF35B /* IBoardCore */; };
 		8EB80591B1223E71D47EFA0E /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
+		92662892A252D852CA679A0D /* DictionaryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40023EC7AA27019C0077FA2 /* DictionaryViews.swift */; };
+		9A7C8807565EFA34CA7F9D34 /* DictionaryTransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A0E463C150FB74CE1E4C489 /* DictionaryTransferView.swift */; };
 		AD864BF989D52C359147095F /* CaptureVerificationCodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */; };
+		B0BBF305F0FFB97152D74736 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C311DADFD5AB90CD0C8A04 /* InsightsView.swift */; };
 		B404810CFD92858BE5926AEC /* lexicon.iblex in Resources */ = {isa = PBXBuildFile; fileRef = 898AF8C7931E754E2A3583F0 /* lexicon.iblex */; };
-		B4C5143AD95D645A595D9954 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
+		B4C5143AD95D645A595D9954 /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 261EEFEA2D4EF829F24DE453 /* IBoardTheme */; };
 		B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDB32790B189574630A5B54 /* EngineHost.swift */; };
 		C8B8398093194ACC3867C058 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */; };
+		D21F7DCDF18236487C10461E /* AboutViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460B693149FED8759AAD2248 /* AboutViews.swift */; };
 		E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */; };
 		E7C782CA678D15985042543B /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3A69118370202808F7CF9940 /* IBoardCore */; };
 		F233255FA56EB6B132E94384 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */; };
@@ -75,20 +81,25 @@
 		1203E236665B6D0499F27E15 /* IBoardUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardUI; path = Packages/IBoardUI; sourceTree = SOURCE_ROOT; };
 		12DDC771F6CEAAF72D0841AF /* IBoardCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardCore; path = Packages/IBoardCore; sourceTree = SOURCE_ROOT; };
 		14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardUITests.swift; sourceTree = "<group>"; };
+		23C311DADFD5AB90CD0C8A04 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlay.swift; sourceTree = "<group>"; };
+		4021068ED546815593C37204 /* DictionaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryStore.swift; sourceTree = "<group>"; };
+		460B693149FED8759AAD2248 /* AboutViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViews.swift; sourceTree = "<group>"; };
 		579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoardKeyboard.entitlements; sourceTree = "<group>"; };
 		69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7D80AAA9E4344144F1B3DD5C /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
 		898AF8C7931E754E2A3583F0 /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
+		8A0E463C150FB74CE1E4C489 /* DictionaryTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryTransferView.swift; sourceTree = "<group>"; };
 		A79FA046627E67810DEBBE9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
 		CD7C21085C40332AA7A01200 /* iBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardApp.swift; sourceTree = "<group>"; };
+		D40023EC7AA27019C0077FA2 /* DictionaryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryViews.swift; sourceTree = "<group>"; };
 		D4A29BC0E785F7DA06C54B57 /* iBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD5AB664BB14DEFF640D46AA /* IBoardTheme */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardTheme; path = Packages/IBoardTheme; sourceTree = SOURCE_ROOT; };
 		DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureVerificationCodeIntent.swift; sourceTree = "<group>"; };
@@ -119,8 +130,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */,
-				5AB898199F29A6EA29F1905B /* IBoardTheme in Frameworks */,
-				B4C5143AD95D645A595D9954 /* IBoardOTP in Frameworks */,
+				5AB898199F29A6EA29F1905B /* IBoardEngine in Frameworks */,
+				B4C5143AD95D645A595D9954 /* IBoardTheme in Frameworks */,
+				291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,10 +150,15 @@
 		29C50743FAAA6AD1175F2206 /* iBoard */ = {
 			isa = PBXGroup;
 			children = (
+				460B693149FED8759AAD2248 /* AboutViews.swift */,
 				6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */,
 				A81A27A8EC462F171D099FC8 /* ContentView.swift */,
+				4021068ED546815593C37204 /* DictionaryStore.swift */,
+				8A0E463C150FB74CE1E4C489 /* DictionaryTransferView.swift */,
+				D40023EC7AA27019C0077FA2 /* DictionaryViews.swift */,
 				11294C7D29525F83ADFFDDDB /* iBoard.entitlements */,
 				CD7C21085C40332AA7A01200 /* iBoardApp.swift */,
+				23C311DADFD5AB90CD0C8A04 /* InsightsView.swift */,
 				69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */,
 				546572152E5925D9E25ACC19 /* Intents */,
 			);
@@ -288,6 +305,7 @@
 			name = iBoard;
 			packageProductDependencies = (
 				216285A7FBA94D1A19DDF35B /* IBoardCore */,
+				8AAAAC9AA464BAE807625340 /* IBoardEngine */,
 				261EEFEA2D4EF829F24DE453 /* IBoardTheme */,
 				BEA058F77D8001DCC3C01C35 /* IBoardOTP */,
 			);
@@ -401,8 +419,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D21F7DCDF18236487C10461E /* AboutViews.swift in Sources */,
 				AD864BF989D52C359147095F /* CaptureVerificationCodeIntent.swift in Sources */,
 				7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */,
+				76C0AFC7D63968EEF93A6891 /* DictionaryStore.swift in Sources */,
+				9A7C8807565EFA34CA7F9D34 /* DictionaryTransferView.swift in Sources */,
+				92662892A252D852CA679A0D /* DictionaryViews.swift in Sources */,
+				B0BBF305F0FFB97152D74736 /* InsightsView.swift in Sources */,
 				255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -824,6 +847,10 @@
 			productName = IBoardOTP;
 		};
 		652B1E47E9E596FE161F1A79 /* IBoardEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardEngine;
+		};
+		8AAAAC9AA464BAE807625340 /* IBoardEngine */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = IBoardEngine;
 		};

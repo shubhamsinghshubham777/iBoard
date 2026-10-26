@@ -562,6 +562,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   Depends: M2-03, M1-06.
   **Partial (2026-10-27):** engine side done: Swift 6 `EngineActor`, sequence-number cancellation (stale dropped, 40-request burst test), `Suggestions` (3 slots + reserved phrase slot + autocorrect proposal). Strip wiring in the keyboard is NOT done.
   **Update (2026-10-27):** wired into the keyboard: `TypingCoordinator` + `EngineHost` (bundled 219-word synthetic lexicon, off-main load), strip shows suggestions, autocorrect + backspace restore, SmartPunctuation and PersonalLearner events; simulator-verified (keystroke→suggestions p95 ≈2 ms on the Mac sim, 24–25 MB), nothing learned in an email field. Not done: personal model into suggestions, strip taps live, Full Access mode, device. `docs/KEYBOARD_WIRING.md`.
+  **Update (2026-10-27):** EngineActor now has public `Suggestions`/`SuggestionSlot` initialisers, `setPersonal`/`refreshPersonal(from:)`, phrase chip, `applyTouchModel`, and transposition/deletion/insertion edits in the TapDecoder (189 engine tests); IBoardUI still uses its mirror types and `EngineHost` has not adopted `refreshPersonal`/`applyTouchModel` yet.
 - [x] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
   `autocorrectionType`. Depends: M2-04.
   **Result (2026-10-27):** engine-side conservative autocorrect policy (posterior ≥0.97, 0.995 for valid words; autocorrectionType/spellCheckingType respected; backspace restore; never-correct after 2 restores, in memory only) — 119 engine tests green; not wired into the keyboard.
@@ -587,17 +588,21 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** engine side: `AdaptiveTouchModel` (EMA mean/cov per orientation×display class, ±30% clamp); synthetic sloppy-typist key error 9.0%→4.7%, neutral 0.33%→0.41%; hook is `adaptive.apply(to:&params,…)` + rebuild TapDecoder; not wired, no real traces.
 - [~] **M3-07 Import/export `.iboarddict`** (app side). Depends: M3-01, M1-08.
   **Partial (2026-10-27):** core only: versioned `.iboarddict` JSON-lines encode/decode/validate/merge with corrupt-input tests; the app import/export screens are not built.
+  **Update (2026-10-27):** app side added: queue/command encoding in IBoardCore (32 tests), `DictionaryTransferView` (fileImporter/fileExporter), `DictionaryStore` validation; design `docs/APP_COMMANDS.md`; on-screen behaviour NOT tested; the keyboard does not yet apply queued commands. (`project.yml` now links IBoardEngine into the app.)
 
 ### M4 — Swipe typing (F3)
-- [ ] **M4-01 Gesture capture & trail** — Resampling, trail layer, tap-vs-swipe disambiguation. Depends: M1-04.
+- [~] **M4-01 Gesture capture & trail** — Resampling, trail layer, tap-vs-swipe disambiguation. Depends: M1-04.
+  **Partial (2026-10-27):** capture, resampling (512-sample cap), tap-vs-swipe, fading trail layer; unit-tested and a trail seen on the iPhone 12 simulator; fade/Reduce Motion/multi-touch/device cost NOT tested.
 - [x] **M4-02 Swipe decoder** — Template matching + LM + personal model; benchmarks. Depends: M2-02, M3-01.
   **Result (2026-10-27):** `SwipeDecoder` (SHARK2-style shape+location, trie-pruned, LM + personal re-score, layout-agnostic incl. Duo) — macOS release p95 0.04–0.41 ms (12k/60k-word lexicons; debug 3–8 ms); not measured on a device or with a 100k+ real lexicon. `docs/SWIPE.md`.
-- [ ] **M4-03 Swipe UX** — Auto-space, whole-word backspace, re-pick alternatives. Depends: M4-02.
+- [~] **M4-03 Swipe UX** — Auto-space, whole-word backspace, re-pick alternatives. Depends: M4-02.
+  **Partial (2026-10-27):** `SwipeEngine` in IBoardUI + coordinator: auto-space, whole-word backspace, `.swipe` learning event, re-pick (17 tests); simulator: `All `, `Ask `, `out` + one-unit backspace. Re-pick tap and personal boost live NOT tested; first swipe before engine load inserts nothing.
 - [~] **M4-04 Swipe eval set & tuning** — Recorded + synthetic traces; F3 numbers. Depends: M4-03.
   **Partial (2026-10-27):** synthetic eval only: top-1 97.0–98.4% / top-3 98.9–99.4% across profiles (generator shares the decoder's geometry, so this is a regression guard, not evidence F3's 90%/97% targets are met on real swipes). Needs recorded real traces.
 
 ### M5 — Gestures & editing (F5)
-- [ ] **M5-01 Gesture arbiter** — Implement the F5 conflict matrix with recorded-trace tests. Depends: M4-01.
+- [~] **M5-01 Gesture arbiter** — Implement the F5 conflict matrix with recorded-trace tests. Depends: M4-01.
+  **Partial (2026-10-27):** pure `GestureArbiter` + `GestureThresholds` implementing the F5 matrix; 24 matrix tests and 500 synthetic swipe words with no false flick/selection; NOT wired into the keyboard (a vertical flick crossing a key still becomes a swipe) and no recorded traces yet. `docs/SWIPE_UX.md`.
 - [ ] **M5-02 Spacebar cursor** — Speed-scaled movement, vertical line jumps, grapheme-correct offsets. Depends: M5-01, M0-08.
 - [ ] **M5-03 Backspace swipe-delete** — Preview in strip, cancel. Depends: M5-01.
 - [ ] **M5-04 Key flicks** — Up/down, secondary glyph rendering setting. Depends: M5-01.
@@ -636,9 +641,12 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M10 — Companion app (F16, F17)
 - [ ] **M10-01 Onboarding** — Depends: M6-04.
 - [ ] **M10-02 Settings for all features** — Depends: features shipped so far.
-- [ ] **M10-03 Dictionary manager** — Depends: M3-07.
-- [ ] **M10-04 Typing insights (F16)** — Depends: M3-02.
-- [ ] **M10-05 Privacy page, licenses & attributions** — Depends: M0-11.
+- [~] **M10-03 Dictionary manager** — Depends: M3-07.
+  **Partial (2026-10-27):** dictionary manager screens (search/sort/add/forget/pin over the shared snapshot, queued edits labelled 'queued', empty state when Full Access is off); builds; on-screen NOT tested.
+- [~] **M10-04 Typing insights (F16)** — Depends: M3-02.
+  **Partial (2026-10-27):** `InsightCounters`/`InsightsStore` (aggregate only, tolerant decoding, reset) + `InsightsView`; no text stored (tested); keyboard does not record counters yet; on-screen NOT tested.
+- [~] **M10-05 Privacy page, licenses & attributions** — Depends: M0-11.
+  **Partial (2026-10-27):** privacy, licenses and data-attribution screens (static, no network) in `iBoard/AboutViews.swift`; on-screen NOT tested.
 
 ### M11 — iPhone Duo (F18)
 - [ ] **M11-01 Outer display tuning** — Depends: M0-10, M1-09.
@@ -755,6 +763,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · round 4 (engine gaps, swipe UX + arbiter, companion app screens) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 32, Layout 23, Engine 189, OTP 11, Theme 12, UI 119, Sync 8; `scripts/build.sh` green; swipe agent used an iPhone 12 simulator (swipe trail, `All `/`Ask ` inserts, whole-word backspace seen). Rule note: the app agent added `- package: IBoardEngine` to project.yml (needed to link the dictionary decoder). Next integration tasks for an agent: adopt the new public engine API in IBoardUI/EngineHost (drop mirror types, `refreshPersonal`, `applyTouchModel`), wire GestureArbiter (M5-04) and queued app commands in the keyboard, record insight counters. Still needs the owner/device: perf gate M1-09, M0-06 restart/Email checks, M0-10 Duo.
 
 - **2026-10-27 · round 3 (wiring, swipe, personal model v2, themes, sync) ·** Four worktree agents merged cleanly. Verification after merge: `swift test` green — Core 15, Layout 23, Engine 172, OTP 11, Theme 12, UI 66, Sync 8; `scripts/build.sh` green; wiring agent ran the keyboard on an iPhone 12 simulator. Known gaps to give an agent next: `Suggestions`/`SuggestionSlot` need public initialisers (IBoardUI carries mirror types), `PersonalStore.scorer()` and phrase chip not connected to `EngineActor`, tap decoder has no transposition (`teh`→`the`), adaptive touch model not applied. Needs the owner/device: perf gate M1-09 on iPhone 12, feel of haptics/sound, Duo (M0-10).
 
