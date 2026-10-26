@@ -521,9 +521,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Result (2026-10-26):** README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, NOTICE; docs only.
 
 ### M1 — Keyboard shell & layout engine (F1, F11 base)
-- [ ] **M1-01 Native metrics capture** — Screenshot the system keyboard (all layers, light/dark, trait variants) on
+- [~] **M1-01 Native metrics capture** — Screenshot the system keyboard (all layers, light/dark, trait variants) on
   iPhone 12, 12 mini, Pro Max and Duo sizes; derive key frames/gaps/radii/colours into `IBoardLayout` tokens with the
   screenshots stored under `docs/reference/`. Depends: M0-02.
+  **Partial (2026-10-26):** iPhone 12 portrait only: 33 screenshots (letters/123/#+=, light+dark, 11 trait variants) and `docs/reference/native-metrics.{md,json}` (keyboard 390×328 at y=516; letter tiles 32.33×43 pt, pitch 38.33; radius ≈8.5; light #FFFFFF on #E2E3E8, dark #575757 on #373737). Missing: caps-lock, landscape, 12 mini / Pro Max / Duo, fonts only estimated; capture on a real device/Simulator.app for the rest.
 - [ ] **M1-02 Layout engine** — Pure function producing key frames + hit regions for letters/123/#+= and trait
   variants; snapshot tests for every device size in §6 (no hardcoded device sizes). Depends: M1-01.
 - [ ] **M1-03 Key grid renderer** — CALayer-based grid, highlight on touch-down, Native theme tokens, light/dark.
@@ -536,13 +537,15 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   now), alternates row mode with slide-to-select. Depends: M1-04.
 - [ ] **M1-07 Height resize foundation** — Height constraint, per orientation/display class storage, drag handle,
   number-row toggle. Depends: M1-03.
-- [ ] **M1-08 Minimal companion app** — Enable-keyboard instructions, test text field, settings stub that the keyboard
+- [~] **M1-08 Minimal companion app** — Enable-keyboard instructions, test text field, settings stub that the keyboard
   reads (per M0-05 results). Depends: M0-05.
+  **Partial (2026-10-26):** App (enable-keyboard steps, test field, settings screens), versioned `IBoardSettings` + App Group `SettingsStore` in IBoardCore (12 tests green), keyboard reads the haptics flag; builds. Not run on a device/simulator yet — verify the keyboard actually sees an app-written setting.
 - [ ] **M1-09 Perf gate** — Meet §6 touch and memory budgets on iPhone 12 with the static keyboard. Depends: M1-05, M0-13.
 
 ### M2 — Language engine v1, English (F2)
-- [ ] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
+- [x] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
   deterministic output; size report. Depends: M0-11.
+  **Result (2026-10-26):** `Tools/LexiconBuilder` (Swift 6 package, 7 tests green): deterministic `.iblex` trie + `.iblm` 3-gram + `licenses.json` + size report; format in `docs/LEXICON_FORMAT.md`. Not tested: CLI end to end, real-scale data/size, build time. Plain trie (no suffix sharing yet).
 - [ ] **M2-02 Runtime readers** — mmap loaders, prefix lookup, LM scoring; macOS benchmarks. Depends: M2-01.
 - [ ] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
 - [ ] **M2-04 EngineActor & strip wiring** — Background engine, cancellation by sequence number, strip updates.
@@ -726,6 +729,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M1-01 (partial), M2-01 done, M1-08 (built) ·** Three parallel worktree agents merged cleanly. Verification: LexiconBuilder 7 tests, IBoardCore 12 tests, `scripts/build.sh` green; M1-01 measured from simulator screenshots (see task note for gaps). Next: M1-02 layout engine (can use iPhone 12 tokens; other sizes need captures), runtime-verify M1-08, M0-06 OTP probe awaiting owner, M0-10 Duo awaiting owner.
 
 - **2026-10-26 · M0-13 done ·** Agent-built perf harness merged. Verification: `swift test` IBoardCore (7) and IBoardEngine (2) pass; `scripts/build.sh` succeeds with the overlay; agent also confirmed a Release build compiles. Not verified: overlay and signposts at runtime, absence of overlay in the Release binary. Follow-ups: instrument the other five metrics as M1 lands; M1-09 gate uses this.
 
