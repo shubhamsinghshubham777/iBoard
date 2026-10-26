@@ -536,12 +536,15 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M1-04 Touch state machine v1** — Tap, multi-touch rollover (fast typing with overlapping touches), shift/caps,
   delete repeat/acceleration, layer switching. Depends: M1-03.
   **Result (2026-10-27):** UIKit-free `KeyboardInputMachine` (tap, rollover, shift/caps, delete repeat/acceleration, layer switching), 26 tests; delete-repeat timings estimated; real multi-finger overlap not tested (axe is single-pointer).
-- [ ] **M1-05 Input controller** — Insert/delete via proxy, trait handling (return key, auto-cap basic, email/URL/
+- [~] **M1-05 Input controller** — Insert/delete via proxy, trait handling (return key, auto-cap basic, email/URL/
   numeric layouts, globe rule P-09), `playInputClick`, haptics when allowed. Depends: M1-04.
-- [ ] **M1-06 Suggestion strip shell + long-press alternates in strip (D-08)** — Strip view with 3 slots (static for
+  **Partial (2026-10-27):** simulator-verified: return label/dimming, auto-cap shift incl. after ``. `` (fixed a layer-switch bug); unit-tested: auto-cap rules, return mapping, grapheme/word deletes. Not tested: globe rule (P-09), email/URL/numeric layouts live, `playInputClick` sound, haptics, grapheme delete with real emoji in a host.
+- [~] **M1-06 Suggestion strip shell + long-press alternates in strip (D-08)** — Strip view with 3 slots (static for
   now), alternates row mode with slide-to-select. Depends: M1-04.
-- [ ] **M1-07 Height resize foundation** — Height constraint, per orientation/display class storage, drag handle,
+  **Partial (2026-10-27):** 3-slot strip + alternates row built; simulator-verified long-press → alternates, release inserts, one slide-to-select (ê); cancel-by-sliding-back and URL suffix row unit-tested only; slots empty until F2 wiring.
+- [~] **M1-07 Height resize foundation** — Height constraint, per orientation/display class storage, drag handle,
   number-row toggle. Depends: M1-03.
+  **Partial (2026-10-27):** settings schema v2 (`numberRow`, `heightScales`, 80–140% clamp, migration test), live drag handle and number-row toggle, app sliders; handle edits are stored extension-locally (cannot write App Group without Full Access, P-23) and override app values, so the app sliders and the handle can disagree. Per-display-class storage only wired for phone. Fixed orientation bug (was width>height ⇒ always landscape): portrait is taller now — recheck the 260 pt figures.
 - [~] **M1-08 Minimal companion app** — Enable-keyboard instructions, test text field, settings stub that the keyboard
   reads (per M0-05 results). Depends: M0-05.
   **Partial (2026-10-26):** App (enable-keyboard steps, test field, settings screens), versioned `IBoardSettings` + App Group `SettingsStore` in IBoardCore (12 tests green), keyboard reads the haptics flag; builds. Not run on a device/simulator yet — verify the keyboard actually sees an app-written setting.
@@ -555,20 +558,26 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Result (2026-10-27):** mmap `Lexicon`/`NGramModel` readers cross-checked against LexiconBuilder (219 words, 16k n-gram probabilities identical); macOS release p95: exact lookup 140 ns, trigram 218 ns, top-8 completions 1.7 µs; fixtures synthetic. Not measured on iPhone 12.
 - [x] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
   **Result (2026-10-27):** `TapDecoder` (Gaussian spatial × LM, beam 24): on synthetic seeded noise top-1 97.5–100% vs literal 44.7–88.7%, 0 false corrections; real typing data and iPhone 12 latency untested. `docs/ENGINE.md`.
-- [ ] **M2-04 EngineActor & strip wiring** — Background engine, cancellation by sequence number, strip updates.
+- [~] **M2-04 EngineActor & strip wiring** — Background engine, cancellation by sequence number, strip updates.
   Depends: M2-03, M1-06.
-- [ ] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
+  **Partial (2026-10-27):** engine side done: Swift 6 `EngineActor`, sequence-number cancellation (stale dropped, 40-request burst test), `Suggestions` (3 slots + reserved phrase slot + autocorrect proposal). Strip wiring in the keyboard is NOT done.
+- [x] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
   `autocorrectionType`. Depends: M2-04.
-- [ ] **M2-06 Smart punctuation & capitalization** — Auto-cap, double-space period, smart quotes/dashes, contractions.
+  **Result (2026-10-27):** engine-side conservative autocorrect policy (posterior ≥0.97, 0.995 for valid words; autocorrectionType/spellCheckingType respected; backspace restore; never-correct after 2 restores, in memory only) — 119 engine tests green; not wired into the keyboard.
+- [x] **M2-06 Smart punctuation & capitalization** — Auto-cap, double-space period, smart quotes/dashes, contractions.
   Depends: M2-04.
-- [ ] **M2-07 Eval harness** — Typo/correction eval set + scorer in `swift test`; F2 acceptance numbers reported in the
+  **Result (2026-10-27):** pure smart-punctuation/auto-cap functions (sentences/words/all-chars, double-space period, smart quotes/dashes, contractions with real-word collisions suggestion-only); tested with emoji/combining marks and 500-char context; not wired in.
+- [~] **M2-07 Eval harness** — Typo/correction eval set + scorer in `swift test`; F2 acceptance numbers reported in the
   progress log. Depends: M2-05.
+  **Partial (2026-10-27):** synthetic eval harness + scorer exist (3,500 items/level; precision 99.9–100%, false-correction 0%, recall ~70%), but the lexicon is the 219-word fixture and the generator shares the decoder's noise model, so the F2 targets (≥97% / ≤0.5%) are NOT shown to be met; needs a real eval set.
 
 ### M3 — Learning & personal model (F4, F14, F15)
-- [ ] **M3-01 Personal store** — Extension-local + App Group modes (per M0-05), journal + snapshot, decay, P-16-safe
+- [x] **M3-01 Personal store** — Extension-local + App Group modes (per M0-05), journal + snapshot, decay, P-16-safe
   writes. Depends: M2-04.
-- [ ] **M3-02 Learning events & policy** — Kept-word detection, excluded fields, incognito toggle/indicator (F15).
+  **Result (2026-10-27):** personal store (decay half-life 60 d, journal+snapshot, corruption recovery, forget/never-correct lists, phrases, caps, local vs App Group modes) — 25 tests; memory only estimated (<8 MB default caps), no timing, interpolation constants untuned. `docs/PERSONAL_MODEL.md`.
+- [x] **M3-02 Learning events & policy** — Kept-word detection, excluded fields, incognito toggle/indicator (F15).
   Depends: M3-01.
+  **Result (2026-10-27):** learning policy: 20 excluded content types × 12 keyboard types × incognito, kept-word detection, forget list (30 days, 3 deliberate retypes), word filter; 25 tests; the keyboard controller still has to call the events (contract in `PersonalLearner.swift`). Not run in the extension.
 - [ ] **M3-03 Phrase model + smart wide chip (D-13)** — Depends: M3-02.
 - [ ] **M3-04 Forget & never-correct UX** — Long-press suggestion → forget; lists persist. Depends: M3-02.
 - [ ] **M3-05 UILexicon import** — Contacts + Text Replacements, cheap refresh. Depends: M3-01.
@@ -738,6 +747,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · M1-05/06/07, M2-04..07, M3-01/02 (parallel round 2) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 15, Layout 23, Engine 119, OTP 11, Theme 3, UI 40; `scripts/build.sh` green; agent A drove an iPhone 12 simulator. Statuses are `[~]` where behaviour is only simulator- or unit-tested. Risks: handle/app height settings can disagree (Full Access limit); engine eval numbers are synthetic; portrait height changed after an orientation fix. Next: wire EngineActor + personal learning events into the keyboard (needs an agent that owns KeyboardViewController), M4 swipe, M5 gestures, real-device pass.
 
 - **2026-10-27 · M1-03, M1-04, M2-02, M2-03, M6-02 done; M13-03, M0-06 partial ·** Overnight, three worktree agents (keyboard renderer+state machine, engine readers+tap decoder, OTP store+intent+privacy manifests) merged cleanly; owner device OTP spike captured as P-27. Verification after merge: `swift test` green in all six packages (Core 12, Layout 23, Engine 29, OTP 11, Theme 3, UI 26) and LexiconBuilder 7; `scripts/build.sh` green; app bundle contains Metadata.appintents and PrivacyInfo.xcprivacy. Follow-ups for the owner: (1) open Shortcuts once and report whether the missed post-restart run appears, (2) Email trigger test, (3) a real iPhone 12 pass on the new keyboard (feel, perf gates M1-09). Next agent tasks: M1-05 input controller, M1-06 strip, M1-07 resize, then M2-04.
 
