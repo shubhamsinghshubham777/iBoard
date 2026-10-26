@@ -45,6 +45,51 @@ Scope and limits: decodes letter taps of a single word (letter keys of the layou
 apostrophes and other punctuation inside words, capitalisation, space-ending and transposition errors are not handled
 here. The defaults (sigma, beam, penalties) are untuned guesses validated only on synthetic traces.
 
+## EngineActor and strip model (M2-04)
+
+`Sources/IBoardEngine/Actor/`. `EngineActor` is a Swift 6 actor owning `Lexicon`, `NGramModel` and `TapDecoder`; the keyboard
+calls `beginRequest()` (nonisolated, any thread, a `Mutex` counter) per keystroke to get a sequence number, then
+`await submit(EngineRequest)`. `submit` returns nil when the request was superseded, checked at the start and again after
+the decode (a decode in progress is not interrupted). `invalidatePending()` drops everything in flight (field change,
+cursor jump); `updateLayout(_:)` rebuilds the decoder after a resize / layer change.
+
+`Suggestions`: up to 3 `SuggestionSlot`s in display order `[literal, best, alternative]` (literal is flagged `showsQuotes`
+when it is out of vocabulary or about to be corrected; the UI centres `best`), `phrase` (reserved for the D-13 wide chip,
+always nil now), and `autocorrect: AutocorrectProposal?` (word, posterior, whether the literal is itself a word).
+With no touches the actor predicts the next word (unigram candidates re-ranked by the n-gram model with the last two
+words as context; real successor lists come with M3-02). Requests carry previous words only for the call; nothing typed is
+stored or logged.
+
+## Autocorrect policy (M2-05)
+
+`Sources/IBoardEngine/Autocorrect/`. `AutocorrectPolicy.decide(...)` is pure. Corrects only when: autocorrection and
+spell-checking traits are not `.no` (otherwise suggestions only), the word has >= 2 letters, is not on the never-correct
+list, and the posterior is >= 0.97 (conservative; 0.90 balanced, 0.80 assertive), or >= 0.995 when the typed literal is
+itself a valid word. `AutocorrectState` (value type, fake-clock friendly: `now` is an argument) tracks the last applied
+correction: backspace right after it (within 30 s, no other input) returns a `TextEdit` restoring the original and
+counts the restore; two restores (or choosing the quoted literal slot twice) put the word on the never-correct list.
+The list is memory only; persisting it means persisting typed words, which is left to the opt-in personal-model work.
+
+## Smart punctuation (M2-06)
+
+`Sources/IBoardEngine/Punctuation/SmartPunctuation.swift`, pure functions over `(leftContext, traits, event)`: auto-cap
+(`shouldAutocapitalize`: none / words / sentences / all characters; sentence ends `.!?…` plus closing quotes and
+brackets, newline, document start, abbreviation / initials exceptions), `edit(forInserting:)` for double-space period,
+smart quotes (open / close by position, apostrophes inside words are closing), and `--` to an em dash. Contractions:
+`contraction(forWord:)` returns a suggestion and `isAutoApplicable` only for unambiguous forms (dont, im, thats...) at high
+confidence; real-word collisions (ill, id, its, were, well, lets, wont, hes, shes) are suggestions only. All scanning is
+over Characters, so emoji and combining marks are never split; `TextEdit.deleteBackward` counts Characters. The 500-char
+left-context cap (P-24) is handled by treating a window without a terminator as "not a sentence start" (an empty context
+is the document start). Locale quote styles beyond English are a `QuoteStyle` hook, untested.
+
+## Eval harness (M2-07)
+
+`Tests/IBoardEngineTests/Eval/AutocorrectEval.swift`: `EvalSet` (frequency-weighted words from the 219-word synthetic
+fixture plus 500 random-syllable OOV names), Gaussian touch noise at 0.15 / 0.25 / 0.35 key sizes, `EvalScorer` (precision,
+false-correction rate, recall) and a test that prints the report against the F2 targets (97% / 0.5%). SYNTHETIC: tiny
+lexicon, decoder and generator share the same Gaussian model, so the numbers are optimistic regression guards, not
+evidence for F2 acceptance on real typing. The test asserts only loose floors (precision >= 90%, false rate <= 2%).
+
 ## Measured (macOS host, Apple Silicon, not a device)
 
 See the M2-02 / M2-03 progress-log entries for numbers. Benchmarks are in `ReaderBenchmarks` and
