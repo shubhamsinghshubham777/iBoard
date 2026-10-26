@@ -459,7 +459,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   Done when: `xcodebuild -version` shows 27.1+, both simulators boot, skills refreshed.
   **Result (2026-10-26):** Xcode 27.1 selected; simulators `iPhone 12` (iOS 27.0) and `iPhone Duo` (iOS 27.1) boot and build the app;
   `app-resizability` exported; all six `iphone-duo-*` skills kept (§11).
-- [ ] **M0-02 Project structure** — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
+- [~] **M0-02 Project structure** — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
   entitlement placeholder, `Config/Base.xcconfig` + gitignored `Config/Local.xcconfig` (team ID, bundle prefix;
   move `DEVELOPMENT_TEAM` out of the pbxproj), local Swift packages from §7 with empty modules and one test each,
   Swift 6 mode for packages (D-25), shared schemes in `xcshareddata` (the auto-generated scheme lives in
