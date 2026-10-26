@@ -9,7 +9,12 @@ struct ContentView: View {
             List {
                 Section("Set up") { SetupStepsView() }
                 Section("Try it") { TryKeyboardView() }
-                Section { NavigationLink("Settings") { SettingsView() } }
+                Section {
+                    NavigationLink("Settings") { SettingsView() }
+                    NavigationLink("Dictionary") { DictionaryManagerView() }
+                    NavigationLink("Typing insights") { InsightsView() }
+                    NavigationLink("Privacy, licenses and about") { AboutView() }
+                }
             }
             .navigationTitle("iBoard")
         }

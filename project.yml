@@ -28,6 +28,7 @@ targets:
     dependencies:
       - target: iBoardKeyboard
       - package: IBoardCore
+      - package: IBoardEngine
       - package: IBoardTheme
       - package: IBoardOTP
     settings:
