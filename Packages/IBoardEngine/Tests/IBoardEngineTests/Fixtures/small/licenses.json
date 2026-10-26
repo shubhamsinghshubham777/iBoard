@@ -1,0 +1,20 @@
+{
+  "formatVersion" : 1,
+  "shareAlike" : false,
+  "sources" : [
+    {
+      "attribution" : "iBoard test fixture (synthetic phrases, authored for this repo)",
+      "id" : "synthetic-ng",
+      "kind" : "ngram",
+      "sha256" : "adc745089eba88cb34536a6cdbe01de35cf3cb908442787748a118504b3cb342",
+      "spdx" : "CC0-1.0"
+    },
+    {
+      "attribution" : "iBoard test fixture (synthetic counts, authored for this repo)",
+      "id" : "synthetic-uni",
+      "kind" : "unigram",
+      "sha256" : "2956b6aabb22d277716dcc22d69b992c142e141d83a7867d6a9578dfb8abdc93",
+      "spdx" : "CC0-1.0"
+    }
+  ]
+}
