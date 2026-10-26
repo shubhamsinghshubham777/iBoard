@@ -49,3 +49,5 @@ Config/Local.xcconfig
 # Scratch output from skills/tools
 xcode-skills/
 artifacts/
+build/
+.claude/worktrees/

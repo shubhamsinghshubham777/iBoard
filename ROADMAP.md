@@ -3,7 +3,7 @@
 > The single source of truth for building iBoard. Every agent reads this before working and updates it before
 > finishing. If code and this document disagree, fix one of them in the same commit.
 
-**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-03`
+**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-03` (👤)
 
 ---
 
@@ -68,7 +68,7 @@
 
 | Milestone | Goal | Status |
 |---|---|---|
-| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (M0-01, M0-02 done) |
+| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (M0-01, -02, -11, -12, -14 done) |
 | **M1** Keyboard shell & layout engine | A fast, native-looking keyboard that types letters | Not started |
 | **M2** Language engine v1 (English) | Suggestions, conservative autocorrect, smart punctuation | Not started |
 | **M3** Learning & personal model | Learns words/phrases, adaptive touch model, incognito | Not started |
@@ -489,17 +489,20 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M0-10 Spike: iPhone Duo keyboard** — In the Duo simulator (27.1 final): extension frame and traits on outer/inner,
   rotation and fold transitions, whether `UIHingeInteraction`/`reservedRegions` now reach the extension (P-14);
   capture system keyboard screenshots in each pose as layout reference. Depends: M0-01, M0-02. Unblocks: M11.
-- [ ] **M0-11 Language data & licensing** — Shortlist corpora/word lists for EN and Hinglish, emoji annotations (CLDR),
+- [x] **M0-11 Language data & licensing** — Shortlist corpora/word lists for EN and Hinglish, emoji annotations (CLDR),
   keyboard eval data; record license, attribution and share-alike obligations in `docs/DATA_SOURCES.md`; prefer
   public-domain/CC BY/permissive; any CC BY-SA data needs 👤 sign-off (fine for open source, must be attributed and
   derived dictionaries released under the same terms). Unblocks: M2-01, M7.
-- [ ] **M0-12 Build & test scripts** — `scripts/build.sh` (app + extension, simulator), `scripts/test.sh` (`swift test`
+  **Result (2026-10-26):** `docs/DATA_SOURCES.md` written (licenses checked against source pages; unverified items marked). Needs 👤 sign-off on CC BY-SA/NC items before M2-01/M7 — see R-06.
+- [x] **M0-12 Build & test scripts** — `scripts/build.sh` (app + extension, simulator), `scripts/test.sh` (`swift test`
   for packages + `xcodebuild test`), documented in `CLAUDE.md`. Optional GitHub Actions workflow on push.
+  **Result (2026-10-26):** `scripts/build.sh`, `scripts/test.sh [--no-ui]`, CI workflow; both run green locally (UI tests not run).
 - [ ] **M0-13 Performance harness** — `os_signpost` intervals for every §6 metric, a debug overlay toggle in the
   keyboard showing live latency/memory, and macOS benchmarks for engine functions with thresholds.
-- [ ] **M0-14 Open-source scaffolding** — `README.md` (pitch, screenshots later, build steps, privacy), `CONTRIBUTING.md`
+- [x] **M0-14 Open-source scaffolding** — `README.md` (pitch, screenshots later, build steps, privacy), `CONTRIBUTING.md`
   (agent protocol summary, coding style, how to run bootstrap), `CODE_OF_CONDUCT.md`, `SECURITY.md`, `NOTICE`
   (vendored skills, data attributions), issue templates. Depends: none.
+  **Result (2026-10-26):** README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, NOTICE; docs only.
 
 ### M1 — Keyboard shell & layout engine (F1, F11 base)
 - [ ] **M1-01 Native metrics capture** — Screenshot the system keyboard (all layers, light/dark, trait variants) on
@@ -560,7 +563,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M5-05 Shift + space selection** — Virtual selection, preview, action row, host-selection support. Depends: M5-02.
 
 ### M6 — OTP & smart chips (F6, F7)
-- [ ] **M6-01 IBoardOTP parser + corpus** — Depends: none (can start any time after M0-02).
+- [x] **M6-01 IBoardOTP parser + corpus** — Depends: none (can start any time after M0-02).
+  **Result (2026-10-26):** `OTPParser` + 149-message synthetic corpus, 100% / 0 FP (self-written corpus, optimistic; sample real SMS later). Gaps: yyyymmdd-like 8-digit OTPs, Devanagari digits, non-alternating alphanumerics.
 - [ ] **M6-02 App Intent + TTL store** — Background intent writing code/sender/timestamp. Depends: M6-01, M0-06.
 - [ ] **M6-03 Keyboard code chip** — Freshness, oneTimeCode prominence, insert + clear. Depends: M6-02, M2-04.
 - [ ] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
@@ -626,7 +630,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   are printed by `scripts/test.sh` and recorded in the progress log when they change.
 - **UI tests** in the app target with the keyboard enabled in the simulator: typing, suggestions, gestures.
 - **Device checks 👤** on iPhone 12 for every perf gate (M1-09, M13-02) and OTP latency (M6).
-- **Interim build command (until M0-12):**
+- **Build/test:** `scripts/build.sh`, `scripts/test.sh [--no-ui]`. Raw build command:
   `xcodebuild -project iBoard.xcodeproj -scheme iBoard -destination 'generic/platform=iOS Simulator' build`
 - Never log typed text, even in tests' console output; use lengths, counts and hashes.
 
@@ -706,6 +710,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-11, M0-12, M0-14, M6-01 done (parallel agents) ·** Four agents worked in isolated git worktrees on disjoint files; branches merged cleanly. Verification: `swift test` in IBoardOTP (3 tests, corpus 149/149, 0 FP); build.sh + test.sh --no-ui run green by the agent; M0-11/M0-14 are docs (links/paths checked, licenses sourced from live pages, some marked unverified). Follow-ups: 👤 sign-off on CC BY-SA sources (R-06); enable GitHub private vulnerability reporting; repo has no remote.
 
 - **2026-10-26 · M0-02 done ·** Owner enabled iBoard on the iPhone 12 simulator and confirmed the "a" key types into Safari's search field (Notes isn't installed on the sim). Closes the gap in the entry below. Next: M0-03 needs the owner's device; agents can take M0-04, M0-05 or M0-12.
 
