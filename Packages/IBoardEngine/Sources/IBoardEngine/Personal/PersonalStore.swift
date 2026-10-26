@@ -137,7 +137,10 @@ public actor PersonalStore {
 
     /// Counts `word` (unigram) and, given preceding words, its bigram and trigram. One journal transaction.
     /// `surface` is kept only when it differs from the lowercased form (proper nouns, "iPhone").
-    public func learn(word: String, surface: String? = nil, context: [String] = [], increment: Float) {
+    /// `phraseContext` (up to 5 preceding words in the same sentence) also records the 3-6 word phrases ending at
+    /// `word` (increment 1 each), in the same journal transaction.
+    public func learn(word: String, surface: String? = nil, context: [String] = [], increment: Float,
+                      phraseContext: [String] = []) {
         let w = Self.normalize(word)
         guard !w.isEmpty, increment > 0 else { return }
         let now = clock.now()
@@ -148,6 +151,13 @@ public actor PersonalStore {
             ops.append(.add(kind: .bigram, key: PersonalModelState.key([a, w]), increment: increment, surface: nil, at: now))
             if ctx.count == 2 {
                 ops.append(.add(kind: .trigram, key: PersonalModelState.key([ctx[0], a, w]), increment: increment,
+                                surface: nil, at: now))
+            }
+        }
+        let chain = phraseContext.suffix(5).map(Self.normalize)
+        if chain.count >= 2 {
+            for n in 2...chain.count {
+                ops.append(.add(kind: .phrase, key: PersonalModelState.key(Array(chain.suffix(n)) + [w]), increment: 1,
                                 surface: nil, at: now))
             }
         }

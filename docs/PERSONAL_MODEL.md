@@ -51,3 +51,47 @@ personal data mass up to 0.4. The EngineActor combines it with the base LM using
 `PersonalInterpolation.mix(baseLogProb:personal:)` = `log((1-w) * P_base + w * P_personal)`. The constants (0.4 cap, mass
 300 for half trust) are untuned placeholders: NOT evaluated on any dataset. `completions(prefix:limit:)` is a linear scan
 over the unigram table (not benchmarked).
+
+## 2. Learning events and policy (M3-02)
+
+Code: `LearningPolicy.swift` (field traits, incognito model, word filter, config) and `PersonalLearner.swift` (actor that
+turns keyboard events into store writes).
+
+### Policy (F4, D-10, F15)
+- **Never learn** when: incognito is on (manual toggle) or auto-incognito applies; `isSecureTextEntry`; content type in
+  {URL, emailAddress, username, password, newPassword, oneTimeCode, telephoneNumber, postalCode, cellularEID/IMEI,
+  flightNumber, shipmentTrackingNumber, anything starting `creditCard`} (matched case-insensitively on the raw
+  `UITextContentType` string); keyboard type in {URL, emailAddress, numberPad, decimalPad, phonePad, namePhonePad,
+  asciiCapableNumberPad}. `FieldTraits.exclusion` gives the reason. Unknown content types are learnable.
+- **Fail closed**: nothing is learned until the first `fieldDidChange`.
+- **Word filter** (`LearnableWord.rejection`): 2-32 chars; no digit (any script), `@`, `/ : . \`, `www`-prefix, symbols or
+  emoji; no camel-case noise (2+ lower-to-upper transitions; `iPhone`/`McDonald` are fine), no 4+ repeated characters, no
+  hex-like 8+ letter strings, no 5+ letter vowel-less Latin strings. A rejected word is a **barrier**: it is not learned
+  and no n-gram or phrase spans it.
+- **Kept word**: committed, then the user types the next character (`typingContinued`), a next word commits, or
+  `sentenceBoundary`/`flush`/`fieldDidChange` happens, without being reopened by backspace (`lastWordReopened`) or having
+  its autocorrection reverted (`autocorrectReverted`). Revert drops the correction and learns the restored original as
+  a deliberate word with increment 1.0.
+- **Weights**: increments 0.3, 0.7, then 1.0 per observation (`LearningConfig.weightSchedule`), on top of decay.
+  n-grams use the same increment; every kept word also records the 3-6 word phrases ending at it (same sentence, one
+  journal transaction). A phrase counts as learned at `uses >= 2` (`repeatedPhrases`).
+- **Casing**: surface kept for proper nouns / mid-sentence capitals / internal capitals; sentence-start capitals are not
+  remembered.
+- **Forget list**: `forgetSuggestion` removes the word and all n-grams/phrases containing it and records time. While
+  forgotten, a word is not relearned (and is a barrier for context) unless 30 days passed, or it was typed deliberately
+  (`.typed` or restored original) 3 times: counted in the forget entry, the 3rd learns and unforgets.
+  Suggestion/autocorrect/swipe commits never count.
+- **Incognito** (`IncognitoState`): `userToggle` or `fieldExclusion`; `indicator` is `.manual` / `.automatic(reason)` /
+  `.off`. Switching incognito on discards pending words and cancels queued writes (epoch). Pending words are discarded
+  on entering an excluded field, never deferred.
+
+### Privacy
+Words live only in the personal store (plus at most `sentenceWindow` = 8 transient in-memory words of the current
+sentence). Nothing is logged; only counts are exposed. Typed words are never put in errors or stats.
+
+### Integration notes / caveats
+- The controller must supply the events above; mapping UIKit traits to `FieldTraits` and wiring `typingContinued` to the
+  first non-backspace insert is not done here (NOT TESTED on device or in the keyboard extension).
+- Reentrancy: `PersonalLearner` mutates tracking state synchronously and then awaits the store; events arriving during an
+  await are ordered by the actor but write jobs may interleave with later events. Fine for counts; not asserted by tests.
+- Never-correct: the store holds the list; automatic additions after reverts are NOT implemented (left to M2-05/M3-04).
