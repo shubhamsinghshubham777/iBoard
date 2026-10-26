@@ -45,7 +45,11 @@ public struct EngineRequest: Sendable {
 public actor EngineActor {
     private let lexicon: Lexicon
     private let model: NGramModel?
+    /// Effective parameters (base + learned touch model); `baseParameters` is what the caller supplied.
     private var parameters: TapDecoderParameters
+    private let baseParameters: TapDecoderParameters
+    private var touchModel: (any TouchSpatialModelProvider)?
+    private var touchContext: TouchModelContext?
     private var layout: KeyboardLayout
     private var decoder: TapDecoder
     private var personal: (any PersonalScoreProvider)?
@@ -61,6 +65,7 @@ public actor EngineActor {
         self.lexicon = lexicon
         self.model = model
         self.parameters = parameters
+        self.baseParameters = parameters
         self.decoder = TapDecoder(layout: layout, lexicon: lexicon, model: model, parameters: parameters)
     }
 
@@ -81,7 +86,34 @@ public actor EngineActor {
     /// come from this layout.
     public func updateLayout(_ layout: KeyboardLayout) {
         self.layout = layout
-        decoder = TapDecoder(layout: layout, lexicon: lexicon, model: model, parameters: parameters)
+        rebuildDecoder()
+    }
+
+    /// Applies the learned touch model (F14) to the decoder: the provider's per-key models for `context` (orientation x
+    /// display class of the current layout) override the matching entries of the base `keyModels`, and the decoder is
+    /// rebuilt. Pass nil to go back to the base parameters. Call again after the model learned more or the
+    /// orientation changed; a rebuild is cheap (letters only), but do it per committed word at most, not per keystroke.
+    /// Returns the number of keys that received a learned model.
+    @discardableResult
+    public func applyTouchModel(_ provider: (any TouchSpatialModelProvider)?, context: TouchModelContext?) -> Int {
+        touchModel = provider
+        touchContext = context
+        return rebuildDecoder()
+    }
+
+    /// Re-derives the effective parameters from the base ones plus the touch model and rebuilds the decoder.
+    @discardableResult
+    private func rebuildDecoder() -> Int {
+        var p = baseParameters
+        var applied = 0
+        if let provider = touchModel, let ctx = touchContext {
+            let learned = provider.keyModels(for: ctx)
+            for (k, m) in learned { p.keyModels[k] = m }
+            applied = learned.count
+        }
+        parameters = p
+        decoder = TapDecoder(layout: layout, lexicon: lexicon, model: model, parameters: p)
+        return applied
     }
 
     /// Installs (or, with nil, removes) the personal model snapshot. Snapshots are immutable: call again after the

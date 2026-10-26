@@ -74,6 +74,16 @@ instead of mirroring them. With no touches the actor predicts the next word (uni
 words as context; real successor lists come with M3-02). Requests carry previous words only for the call; nothing typed is
 stored or logged.
 
+### Adaptive touch model in the engine (engine-gap-4)
+
+`EngineActor.applyTouchModel(_ provider: (any TouchSpatialModelProvider)?, context: TouchModelContext?) -> Int`
+(`AdaptiveTouchModel` conforms): the provider's per-key models for the context override the matching
+`parameters.keyModels` of the base parameters and the decoder is rebuilt; the return value is the number of keys that got
+a learned model (0 for a context with too few samples). `nil` restores the base parameters. The choice survives
+`updateLayout(_:)`. The keyboard should call it after a learning batch or an orientation / display-class change, not per
+keystroke. Synthetic check (constant 0.28-key bias, 300 trained words): summed log-score of the intended word 540 -> 1274
+with the learned model; top-1 was already 100 % on both thanks to the LM, so this is not evidence of real-typing gain.
+
 ### Personal model in the engine (engine-gap-2)
 
 Optional and injectable: `EngineActor(..., personal: (any PersonalScoreProvider)?, phrases: PhraseSuggester?)`,
