@@ -22,6 +22,8 @@ public final class KeyGridView: UIView {
 
     public private(set) var layout: KeyboardLayout?
     public private(set) var shift: ShiftState = .off
+    /// `enablesReturnKeyAutomatically` with an empty field: the return key is drawn dimmed.
+    public private(set) var returnKeyEnabled = true
 
     public var appearance: ThemeAppearance = .light {
         didSet { if appearance != oldValue { applyTheme() } }
@@ -80,6 +82,25 @@ public final class KeyGridView: UIView {
             l.contentsScale = scale
             l.backgroundColor = isAction[i] ? actionFill : fill
             l.contents = glyphs.image(for: glyphSpec(for: key.identity))
+            l.opacity = Self.dimmed(key.identity, returnKeyEnabled) ? 0.4 : 1
+        }
+        CATransaction.commit()
+    }
+
+    private static func dimmed(_ identity: KeyIdentity, _ returnEnabled: Bool) -> Bool {
+        if case .returnKey = identity { return !returnEnabled }
+        return false
+    }
+
+    /// Dim or restore the return key (field trait `enablesReturnKeyAutomatically`).
+    public func setReturnKeyEnabled(_ enabled: Bool) {
+        guard enabled != returnKeyEnabled else { return }
+        returnKeyEnabled = enabled
+        guard let layout else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (i, key) in layout.keys.enumerated() {
+            if case .returnKey = key.identity { keyLayers[i].opacity = enabled ? 1 : 0.4 }
         }
         CATransaction.commit()
     }
@@ -151,10 +172,7 @@ public final class KeyGridView: UIView {
 
     static func isActionKey(_ identity: KeyIdentity) -> Bool {
         guard case .returnKey(let kind) = identity else { return false }
-        switch kind {
-        case .default, .next, .emergencyCall: return false
-        default: return true
-        }
+        return ReturnKeyStyle.isProminent(kind)
     }
 
     func glyphSpec(for identity: KeyIdentity) -> GlyphSpec? {
@@ -174,17 +192,10 @@ public final class KeyGridView: UIView {
             }
         case .space: return nil
         case .returnKey(let kind):
-            let name: String
-            switch kind {
-            case .default: name = "return"
-            case .go, .join, .route, .yahoo, .google, .continue: name = "arrow.right"
-            case .search: name = "magnifyingglass"
-            case .send: name = "arrow.up"
-            case .done: name = "checkmark"
-            case .next: name = "chevron.right"
-            case .emergencyCall: name = "phone.fill"
+            if let label = ReturnKeyStyle.label(for: kind) {
+                return .text(label, .function, onAction: Self.isActionKey(identity))
             }
-            return .symbol(name, onAction: Self.isActionKey(identity))
+            return .symbol("phone.fill", onAction: false)
         case .globe: return .symbol("globe", onAction: false)
         }
     }

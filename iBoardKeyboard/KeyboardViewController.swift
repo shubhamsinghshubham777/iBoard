@@ -19,6 +19,9 @@ final class KeyboardViewController: UIInputViewController {
     private var layerChangePending = false
     private var repeatLink: CADisplayLink?
     private var hapticsEnabled: Bool { settings.haptics && hasFullAccess }
+    private lazy var input = InputController(proxy: ProxyAdapter(controller: self))
+    private var haptic: UIImpactFeedbackGenerator?
+    private var autoShiftPending = false
 
     /// What the current layout was computed from; used to skip redundant relayouts.
     private struct LayoutKey: Equatable {
@@ -26,6 +29,11 @@ final class KeyboardViewController: UIInputViewController {
         var safe: LayoutInsets
         var traits: LayoutTraits
         var kind: LayoutKind
+    }
+
+    /// P-23: `playInputClick` only sounds when the input view adopts `UIInputViewAudioFeedback`.
+    override func loadView() {
+        inputView = ClickInputView(frame: .zero, inputViewStyle: .keyboard)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -70,18 +78,30 @@ final class KeyboardViewController: UIInputViewController {
         updateAutoShift()
     }
 
-    /// Minimal auto-capitalisation on appear / external text changes (full input-layer rules come later).
+    /// Applies field traits (autocapitalisation, auto-enabled return key) and the shift state they imply.
+    /// Reads the left context transiently; nothing is stored.
     private func updateAutoShift() {
-        guard machine != nil, layoutKind == .letters, machine!.shift != .capsLock else { return }
-        let before = textDocumentProxy.documentContextBeforeInput ?? ""
-        var want = ShiftState.off
-        switch textDocumentProxy.autocapitalizationType ?? .none {
-        case .allCharacters: want = .capsLock
-        case .sentences: if before.isEmpty || before.hasSuffix("\n") { want = .once }
-        case .words: if before.isEmpty || before.hasSuffix(" ") || before.hasSuffix("\n") { want = .once }
-        default: break
+        let proxy = textDocumentProxy
+        input.traits = InputFieldTraits(
+            autoCap: AutoCapMode(proxy.autocapitalizationType ?? .none),
+            enablesReturnKeyAutomatically: proxy.enablesReturnKeyAutomatically ?? false
+        )
+        grid.setReturnKeyEnabled(input.isReturnKeyEnabled)
+        guard machine != nil, layoutKind == .letters else { return }
+        // Manual caps lock stays unless the field forces all caps / the field changed to a mode without it.
+        if machine!.shift == .capsLock && input.traits.autoCap != .allCharacters { return }
+        machine!.setShift(input.autoShift()) { [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) } }
+    }
+
+    /// The proxy's context can lag an edit by a run-loop turn, so edits schedule one coalesced re-evaluation.
+    private func scheduleAutoShift() {
+        guard !autoShiftPending else { return }
+        autoShiftPending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.autoShiftPending = false
+            self.updateAutoShift()
         }
-        machine!.setShift(want) { [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) } }
     }
 
     // MARK: Layout
@@ -165,17 +185,18 @@ final class KeyboardViewController: UIInputViewController {
             grid.setHighlighted(index, on)
             if on, let p = perfDown { Perf.end(p); perfDown = nil }
         case .insert(let text):
-            textDocumentProxy.insertText(text)
+            input.insert(text)
             feedback()
+            scheduleAutoShift()
         case .deleteBackward:
-            textDocumentProxy.deleteBackward()
+            input.deleteBackward()
             feedback()
+            scheduleAutoShift()
         case .deleteWord:
-            let n = max(wordDeleteCount(before: textDocumentProxy.documentContextBeforeInput ?? ""), 1)
-            for _ in 0..<n { textDocumentProxy.deleteBackward() }
+            input.deleteWord()
+            scheduleAutoShift()
         case .returnKey:
-            textDocumentProxy.insertText("\n")
-            feedback()
+            if input.returnKey() { feedback(); scheduleAutoShift() }
         case .advanceKeyboard:
             advanceToNextInputMode()
         case .shiftChanged(let state):
@@ -192,9 +213,13 @@ final class KeyboardViewController: UIInputViewController {
         return false
     }
 
+    /// Key click (needs `ClickInputView`, works without Full Access: P-23) and haptic (Full Access only).
     private func feedback() {
-        // M1-05 owns click + haptics; until then only the existing opt-in haptic.
-        if hapticsEnabled { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+        if settings.keyClickSound { UIDevice.current.playInputClick() }
+        if hapticsEnabled {
+            if haptic == nil { haptic = UIImpactFeedbackGenerator(style: .light) }
+            haptic?.impactOccurred()
+        }
     }
 
     private func applyDeferredLayerChange() {
@@ -203,6 +228,7 @@ final class KeyboardViewController: UIInputViewController {
         lastLayoutKey = nil
         relayoutIfNeeded()
         grid.clearHighlights()
+        if layoutKind == .letters { updateAutoShift() } // edits made on other layers still affect capitalisation
     }
 
     // MARK: Delete repeat
@@ -269,6 +295,34 @@ extension ReturnKeyKind {
         case .emergencyCall: self = .emergencyCall
         case .continue: self = .continue
         default: self = .default
+        }
+    }
+}
+
+// MARK: - Input plumbing
+
+/// `UIInputView` that opts in to input clicks so `UIDevice.playInputClick()` makes a sound.
+final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
+    var enableInputClicksWhenVisible: Bool { true }
+}
+
+/// Adapts the text document proxy to the UIKit-free `TextProxy` used by `InputController`.
+final class ProxyAdapter: TextProxy {
+    private unowned let controller: UIInputViewController
+    init(controller: UIInputViewController) { self.controller = controller }
+    var contextBefore: String? { controller.textDocumentProxy.documentContextBeforeInput }
+    var hasText: Bool { controller.textDocumentProxy.hasText }
+    func insert(_ text: String) { controller.textDocumentProxy.insertText(text) }
+    func deleteBackwardOnce() { controller.textDocumentProxy.deleteBackward() }
+}
+
+extension AutoCapMode {
+    init(_ type: UITextAutocapitalizationType) {
+        switch type {
+        case .words: self = .words
+        case .sentences: self = .sentences
+        case .allCharacters: self = .allCharacters
+        default: self = .none
         }
     }
 }
