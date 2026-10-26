@@ -3,7 +3,7 @@
 > The single source of truth for building iBoard. Every agent reads this before working and updates it before
 > finishing. If code and this document disagree, fix one of them in the same commit.
 
-**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-04`
+**Last updated:** 2026-10-27 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-04`
 
 ---
 
@@ -182,6 +182,7 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-24 | **Text proxy (device):** `adjustTextPosition` offsets are UTF-16 units (can split emoji/ZWJ sequences); `documentContextBeforeInput` is capped at 500 chars and spans paragraphs; `selectedText` works in Notes; WhatsApp search field's cursor did not visibly move on `adjustTextPosition`; no marked-text accessor. | Cursor movement must step by grapheme boundaries computed by us (R-10), assume ≤500 chars of left context, keep per-host fallbacks. | same doc |
 | P-25 | **Pasteboard / lexicon (device):** first cross-app `UIPasteboard.string` read with Full Access shows the system paste prompt, blocks ~3 s, and the keyboard was dismissed; later reads ~23 ms. `hasStrings` false and `detectPatterns` fails without Full Access. `requestSupplementaryLexicon`/`detectPatterns` callbacks arrive off-main (Swift 6: use `@Sendable`). | Clipboard features (F9, M6-05) must read lazily on user action, never block the main thread, and degrade gracefully. | same doc |
 | P-26 | Foundation Models `SystemLanguageModel.default.availability` on iPhone 12 / iOS 27.0 = `unavailable(.deviceNotEligible)`. | No on-device AI features on the reference device; any AI must be an optional, availability-gated extra on newer hardware. | `docs/spikes/M0-07.md`, 2026-10-26 |
+| P-27 | **OTP via iOS 27 Message automation (iPhone 12):** iOS 27 saves automations as shortcuts (appear in All Shortcuts); a Message-trigger automation with Automation on and Confirm Before Run off runs a background App Intent with the message text and sender, no prompt, app not opened, also while locked; a 'Running <name>' banner appears. App Intents must be compiled into the target (run `xcodegen generate` after adding files) for the action to show up in Shortcuts. After a restart the first text did not trigger it (2/2 tries, cause unknown). | Onboarding must describe this setup; investigate the restart behaviour before promising reliability (R-04). | owner's device, 2026-10-27 |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | `xcode-select -p` points at 27.1 (verified 2026-10-26). Always check `xcodebuild -version` at session start. | Owner's machine, 2026-10-26 |
 
 ---
@@ -487,9 +488,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   read/write, Darwin notifications, haptics, `playInputClick`, pasteboard read/write, network. Record as a table in §5.
   Unblocks: M1, M3, M6, M9.
   **Result (2026-10-26):** device matrix recorded (P-23): without Full Access the keyboard can READ app-written App Group defaults and play clicks and read UILexicon, but cannot write shared defaults/files, use network, pasteboard or haptics. Not tested: Darwin cross-process delivery, network with Full Access. `docs/spikes/device-session-2026-10-26.md`, `M0-05.md`.
-- [ ] **M0-06 Spike: OTP pipeline** — Minimal App Intent + iOS 27 Message automation built by hand, then as a signed
+- [~] **M0-06 Spike: OTP pipeline** — Minimal App Intent + iOS 27 Message automation built by hand, then as a signed
   `.shortcut` file; confirm background run without opening the app, with locked phone, latency, and that the
   automation survives reboot; repeat with Email trigger. Record exact setup steps for onboarding. Unblocks: M6.
+  **Partial (2026-10-27):** verified on the owner's iPhone 12 (P-27): an iOS 27 Message automation (Library > Automation > + > Automation chip > Communication > Message; Sender/Message-contains conditions; Automation on, Confirm Before Run off) runs the background App Intent with no prompt, app not opened, also with the phone locked (a 'Running <name>' banner shows). Open: after a restart the first text did not run (twice, ~reproducible; possibly lazy start), duplicate run seen once, Email trigger untested, signed .shortcut file not built, latency only 'immediate'.
 - [x] **M0-07 Spike: on-device AI** — Can the extension (or the app via an intent) call Foundation Models within the
   memory budget? Measure latency for proofreading 200 chars. Pass/fail recorded; drives D-16.
   **Result (2026-10-26): FAIL on the reference device** — iPhone 12 reports `deviceNotEligible` for Foundation Models (P-26); no latency measured. AI stays post-v1/optional (D-16 unchanged). `docs/spikes/M0-07.md`.
@@ -528,10 +530,12 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M1-02 Layout engine** — Pure function producing key frames + hit regions for letters/123/#+= and trait
   variants; snapshot tests for every device size in §6 (no hardcoded device sizes). Depends: M1-01.
   **Result (2026-10-26):** pure `LayoutEngine` + `HitModel` in IBoardLayout (23 tests green; iPhone 12 frames within ±1 pt of M1-01 measurements; natural keyboard height 260 pt = strip 44 + rows). Estimated, not measured: landscape, caps lock, 375/428/440/Duo sizes, globe layout. `docs/LAYOUT_ENGINE.md`. M1-03 consumes `KeyboardLayout`/`hit`; centre-gap split seam left for M11.
-- [ ] **M1-03 Key grid renderer** — CALayer-based grid, highlight on touch-down, Native theme tokens, light/dark.
+- [x] **M1-03 Key grid renderer** — CALayer-based grid, highlight on touch-down, Native theme tokens, light/dark.
   Depends: M1-02, M0-04.
-- [ ] **M1-04 Touch state machine v1** — Tap, multi-touch rollover (fast typing with overlapping touches), shift/caps,
+  **Result (2026-10-27):** `IBoardUI` CALayer key grid driven by `KeyboardLayout`, Native tokens from IBoardTheme, light/dark, no custom backdrop (P-22), no balloons; simulator-verified: render, highlight, typing, 20 fast taps without drops (single pointer only), layer switching. Perf on Mac simulator CPU: highlight p95 0.1 ms, insert p95 0.5 ms, 25.5 MB — NOT an iPhone 12 number. Pressed-state colours, fonts, return glyphs estimated.
+- [x] **M1-04 Touch state machine v1** — Tap, multi-touch rollover (fast typing with overlapping touches), shift/caps,
   delete repeat/acceleration, layer switching. Depends: M1-03.
+  **Result (2026-10-27):** UIKit-free `KeyboardInputMachine` (tap, rollover, shift/caps, delete repeat/acceleration, layer switching), 26 tests; delete-repeat timings estimated; real multi-finger overlap not tested (axe is single-pointer).
 - [ ] **M1-05 Input controller** — Insert/delete via proxy, trait handling (return key, auto-cap basic, email/URL/
   numeric layouts, globe rule P-09), `playInputClick`, haptics when allowed. Depends: M1-04.
 - [ ] **M1-06 Suggestion strip shell + long-press alternates in strip (D-08)** — Strip view with 3 slots (static for
@@ -547,8 +551,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
   deterministic output; size report. Depends: M0-11.
   **Result (2026-10-26):** `Tools/LexiconBuilder` (Swift 6 package, 7 tests green): deterministic `.iblex` trie + `.iblm` 3-gram + `licenses.json` + size report; format in `docs/LEXICON_FORMAT.md`. Not tested: CLI end to end, real-scale data/size, build time. Plain trie (no suffix sharing yet).
-- [ ] **M2-02 Runtime readers** — mmap loaders, prefix lookup, LM scoring; macOS benchmarks. Depends: M2-01.
-- [ ] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
+- [x] **M2-02 Runtime readers** — mmap loaders, prefix lookup, LM scoring; macOS benchmarks. Depends: M2-01.
+  **Result (2026-10-27):** mmap `Lexicon`/`NGramModel` readers cross-checked against LexiconBuilder (219 words, 16k n-gram probabilities identical); macOS release p95: exact lookup 140 ns, trigram 218 ns, top-8 completions 1.7 µs; fixtures synthetic. Not measured on iPhone 12.
+- [x] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
+  **Result (2026-10-27):** `TapDecoder` (Gaussian spatial × LM, beam 24): on synthetic seeded noise top-1 97.5–100% vs literal 44.7–88.7%, 0 false corrections; real typing data and iPhone 12 latency untested. `docs/ENGINE.md`.
 - [ ] **M2-04 EngineActor & strip wiring** — Background engine, cancellation by sequence number, strip updates.
   Depends: M2-03, M1-06.
 - [ ] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
@@ -585,7 +591,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M6 — OTP & smart chips (F6, F7)
 - [x] **M6-01 IBoardOTP parser + corpus** — Depends: none (can start any time after M0-02).
   **Result (2026-10-26):** `OTPParser` + 149-message synthetic corpus, 100% / 0 FP (self-written corpus, optimistic; sample real SMS later). Gaps: yyyymmdd-like 8-digit OTPs, Devanagari digits, non-alternating alphanumerics.
-- [ ] **M6-02 App Intent + TTL store** — Background intent writing code/sender/timestamp. Depends: M6-01, M0-06.
+- [x] **M6-02 App Intent + TTL store** — Background intent writing code/sender/timestamp. Depends: M6-01, M0-06.
+  **Result (2026-10-27):** `OTPWriter`/`OTPReader` store (code, sender, time; last 3; TTL 10 min; App Group `iBoard.otp.` keys; keyboard read-only) with 11 tests, and `iBoard/Intents/CaptureVerificationCodeIntent.swift` (background); App Intents metadata is generated in the build. The same flow was device-verified in M0-06; this production intent itself was not re-run on the phone yet.
 - [ ] **M6-03 Keyboard code chip** — Freshness, oneTimeCode prominence, insert + clear. Depends: M6-02, M2-04.
 - [ ] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
   Depends: M6-02, M1-08.
@@ -635,7 +642,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M13 — Hardening & launch
 - [ ] **M13-01 Accessibility (F19)** — Depends: M5, M8.
 - [ ] **M13-02 Performance soak** — 30-min typing soak on iPhone 12, memgraph before/after, no growth. Depends: all features.
-- [ ] **M13-03 Privacy manifest & labels** — `PrivacyInfo.xcprivacy`, "Data Not Collected", required-reason APIs.
+- [~] **M13-03 Privacy manifest & labels** — `PrivacyInfo.xcprivacy`, "Data Not Collected", required-reason APIs.
+  **Partial (2026-10-27):** `PrivacyInfo.xcprivacy` for app + keyboard (no tracking/collection; UserDefaults reasons CA92.1, 1C8F.1) and `docs/PRIVACY.md`; reason codes from memory, not yet validated by App Store Connect; privacy labels still to do.
 - [ ] **M13-04 App Review audit** — 4.4.1 checklist with `app-store-review` skill. Depends: M13-03.
 - [ ] **M13-05 👤 TestFlight beta** — Depends: M13-04.
 - [ ] **M13-06 👤 App Store submission & public repo launch** — Depends: M13-05.
@@ -730,6 +738,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · M1-03, M1-04, M2-02, M2-03, M6-02 done; M13-03, M0-06 partial ·** Overnight, three worktree agents (keyboard renderer+state machine, engine readers+tap decoder, OTP store+intent+privacy manifests) merged cleanly; owner device OTP spike captured as P-27. Verification after merge: `swift test` green in all six packages (Core 12, Layout 23, Engine 29, OTP 11, Theme 3, UI 26) and LexiconBuilder 7; `scripts/build.sh` green; app bundle contains Metadata.appintents and PrivacyInfo.xcprivacy. Follow-ups for the owner: (1) open Shortcuts once and report whether the missed post-restart run appears, (2) Email trigger test, (3) a real iPhone 12 pass on the new keyboard (feel, perf gates M1-09). Next agent tasks: M1-05 input controller, M1-06 strip, M1-07 resize, then M2-04.
 
 - **2026-10-26 · M1-02 done ·** Layout engine merged from a worktree agent. Verification: `swift test` IBoardLayout 23 tests; `scripts/build.sh` green; geometry invariants (no overlaps, touch regions tile the area) and ±1 pt match to native-metrics.json at 390 pt wide. Follow-ups: capture caps lock/landscape/other sizes to replace estimates; M1-03 next (needs a simulator).
 

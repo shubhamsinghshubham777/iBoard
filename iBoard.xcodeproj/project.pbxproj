@@ -19,9 +19,12 @@
 		7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A27A8EC462F171D099FC8 /* ContentView.swift */; };
 		803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 216285A7FBA94D1A19DDF35B /* IBoardCore */; };
 		8EB80591B1223E71D47EFA0E /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
+		AD864BF989D52C359147095F /* CaptureVerificationCodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */; };
 		B4C5143AD95D645A595D9954 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
+		C8B8398093194ACC3867C058 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */; };
 		E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */; };
 		E7C782CA678D15985042543B /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3A69118370202808F7CF9940 /* IBoardCore */; };
+		F233255FA56EB6B132E94384 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */; };
 		F453CA0F57596485F438921E /* IBoardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 652B1E47E9E596FE161F1A79 /* IBoardEngine */; };
 		F9CFA65079D5759EAAB38BDC /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = 5BE31DF68AEC8878C6627475 /* IBoardOTP */; };
 /* End PBXBuildFile section */
@@ -73,6 +76,7 @@
 		324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlay.swift; sourceTree = "<group>"; };
 		579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoardKeyboard.entitlements; sourceTree = "<group>"; };
+		69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A79FA046627E67810DEBBE9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -81,7 +85,9 @@
 		CD7C21085C40332AA7A01200 /* iBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardApp.swift; sourceTree = "<group>"; };
 		D4A29BC0E785F7DA06C54B57 /* iBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD5AB664BB14DEFF640D46AA /* IBoardTheme */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardTheme; path = Packages/IBoardTheme; sourceTree = SOURCE_ROOT; };
+		DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureVerificationCodeIntent.swift; sourceTree = "<group>"; };
 		E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = iBoardKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F0C4552A210A9E81FABBE884 /* IBoardLayout */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardLayout; path = Packages/IBoardLayout; sourceTree = SOURCE_ROOT; };
 		F0E28990E75EBE5B420749B0 /* iBoardTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F3E1E2AE1791F3BB0D39310C /* IBoardOTP */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardOTP; path = Packages/IBoardOTP; sourceTree = SOURCE_ROOT; };
@@ -130,6 +136,8 @@
 				A81A27A8EC462F171D099FC8 /* ContentView.swift */,
 				11294C7D29525F83ADFFDDDB /* iBoard.entitlements */,
 				CD7C21085C40332AA7A01200 /* iBoardApp.swift */,
+				69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */,
+				546572152E5925D9E25ACC19 /* Intents */,
 			);
 			path = iBoard;
 			sourceTree = "<group>";
@@ -145,6 +153,14 @@
 				7785DC327E0118873155405F /* Packages */,
 				9F4E88B8D767574FF04FA66C /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		546572152E5925D9E25ACC19 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 		6BDAFBA434AEC18A6DCD4851 /* iBoardUITests */ = {
@@ -186,6 +202,7 @@
 				6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */,
 				A79FA046627E67810DEBBE9E /* Info.plist */,
 				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
+				ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */,
 			);
 			path = iBoardKeyboard;
 			sourceTree = "<group>";
@@ -266,6 +283,7 @@
 			buildConfigurationList = A7E29D510726C9F1D79098C5 /* Build configuration list for PBXNativeTarget "iBoardKeyboard" */;
 			buildPhases = (
 				E21EA03E3C052CAB4043ABD9 /* Sources */,
+				BC893E0DA339C601C518B9F8 /* Resources */,
 				1CA0CF9C8E6D6DCF9114B8D9 /* Frameworks */,
 			);
 			buildRules = (
@@ -345,6 +363,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */,
+				C8B8398093194ACC3867C058 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BC893E0DA339C601C518B9F8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F233255FA56EB6B132E94384 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,6 +382,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD864BF989D52C359147095F /* CaptureVerificationCodeIntent.swift in Sources */,
 				7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */,
 				255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */,
 			);
