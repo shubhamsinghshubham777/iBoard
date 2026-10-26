@@ -228,6 +228,12 @@ public actor PersonalStore {
     /// Whole-state copy for export / tests.
     public func exportState() -> PersonalModelState { state }
 
+    /// Current store time (injected clock).
+    public var currentTime: Double { clock.now() }
+
+    /// Applies externally planned mutations (import) as one journal transaction.
+    public func apply(ops: [PersonalOp]) { commit(ops) }
+
     // MARK: Maintenance
 
     /// Deletes everything (memory, snapshot, journal).

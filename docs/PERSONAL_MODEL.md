@@ -1,4 +1,4 @@
-# Personal model (M3-01, M3-02)
+# Personal model (M3-01, M3-02, M3-03, M3-06, M3-07)
 
 Code: `Packages/IBoardEngine/Sources/IBoardEngine/Personal/`. Tests: `Packages/IBoardEngine/Tests/IBoardEngineTests/Personal/`.
 
@@ -95,3 +95,22 @@ sentence). Nothing is logged; only counts are exposed. Typed words are never put
 - Reentrancy: `PersonalLearner` mutates tracking state synchronously and then awaits the store; events arriving during an
   await are ordered by the actor but write jobs may interleave with later events. Fine for counts; not asserted by tests.
 - Never-correct: the store holds the list; automatic additions after reverts are NOT implemented (left to M2-05/M3-04).
+
+## 3. Phrase model and smart wide chip (M3-03, D-13)
+
+Code: `Personal/PhraseModel.swift`. `PersonalStore.phraseSuggester(config:baseLM:)` returns an immutable `PhraseSuggester`
+(index of the phrase table built at creation; one pass over at most 1k phrases, NOT benchmarked).
+`suggest(context:currentPrefix:)` -> `PhraseSuggestion?` for `Suggestions.phrase` (`.slot` has role `.phrase`).
+
+- Match: the last k (1...5) sentence words equal the first k words of a table phrase; the rest (>= 2 words, shown up to
+  `maxWords` = 4) is the continuation. One-word continuations are normal next-word prediction, never a chip.
+- Confidence = lifetime uses(phrase) / lifetime uses(context k-gram) (uni/bi/tri/phrase tables; all count one per
+  observation, unlike the 0.3/0.7/1.0 weight schedule). Optional base LM agreement (`PhraseBaseLanguageModel`, adapter
+  `NGramPhraseBaseLM`) scales it by `(1 - 0.15) + 0.15 * agreement`; words unknown to the base LM count as 0.5.
+- Gates (`PhraseConfig`, all UNTUNED placeholders, not evaluated on real data): confidence >= 0.6, uses >= 2, effective
+  weight after decay >= 1.0, no forgotten word. Longest confident continuation wins, then confidence.
+- A partially typed word (`currentPrefix`) must prefix the first continuation word.
+- Chip semantics are data (`PhraseChipSemantics.standard`): tap = `.insertAllWords` (`tapText`), long-press =
+  `.insertNextWordOnly` (`longPressText`). The controller must add the leading space and decide whether the strip slot
+  widens; not wired into `EngineActor` here (that file is outside this task's scope).
+- `PersonalStore` gained `currentTime` and `apply(ops:)` (used by import).
