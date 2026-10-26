@@ -16,8 +16,14 @@ Hard rules (details in ROADMAP §1):
 - Never log or persist typed text; no network from the keyboard extension except opt-in features.
 - Never vendor non-open-source skills or data; record licenses.
 
-Build (until `scripts/build.sh` exists, task M0-12):
+Build and test:
 
 ```sh
-xcodebuild -project iBoard.xcodeproj -scheme iBoard -destination 'generic/platform=iOS Simulator' build
+scripts/build.sh            # app + keyboard extension, iOS Simulator
+scripts/test.sh             # swift test in every Packages/*, then xcodebuild test (iBoardTests + iBoardUITests)
+scripts/test.sh --no-ui     # same, skipping UI tests
 ```
+
+`build.sh` copies `Config/Local.xcconfig.example` to `Config/Local.xcconfig` if missing and runs `xcodegen generate`
+only when `project.yml` is newer than the pbxproj. Set `DERIVED_DATA=<dir>` to change the build dir (default
+`build/DerivedData`); `test.sh` also honours `SIM_NAME` to pick a simulator. CI: `.github/workflows/ci.yml`.
