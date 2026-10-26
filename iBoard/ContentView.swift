@@ -1,24 +1,56 @@
-//
-//  ContentView.swift
-//  iBoard
-//
-//  Created by Shubham Singh on 26/10/26.
-//
-
 import SwiftUI
+import UIKit
+import IBoardCore
 
+/// Companion app root. Layout adapts via size classes only (D-24); no UIScreen/idiom checks.
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            List {
+                Section("Set up") { SetupStepsView() }
+                Section("Try it") { TryKeyboardView() }
+                Section { NavigationLink("Settings") { SettingsView() } }
+            }
+            .navigationTitle("iBoard")
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct SetupStepsView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Open Settings", systemImage: "1.circle")
+            Label("General > Keyboard > Keyboards > Add New Keyboard", systemImage: "2.circle")
+            Label("Choose iBoard", systemImage: "3.circle")
+            Label("Full Access is optional (needed only for haptics and opt-in features)", systemImage: "4.circle")
+        }
+        .font(.subheadline)
+        Button("Open Settings") {
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        }
+    }
 }
+
+struct TryKeyboardView: View {
+    @State private var text = ""
+    var body: some View {
+        TextField("Tap here, then switch to iBoard (globe key)", text: $text, axis: .vertical)
+            .lineLimit(3...6)
+    }
+}
+
+struct SettingsView: View {
+    @State private var settings = SettingsStore().load()
+    var body: some View {
+        Form {
+            Toggle("Haptic feedback (needs Full Access)", isOn: $settings.haptics)
+            Toggle("Key click sound", isOn: $settings.keyClickSound)
+        }
+        .navigationTitle("Settings")
+        .onChange(of: settings) { _, new in SettingsStore().save(new) }
+    }
+}
+
+#Preview { ContentView() }
