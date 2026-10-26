@@ -34,6 +34,8 @@ final class KeyboardViewController: UIInputViewController {
     private var engineLoadStarted = false
     private var lastDocumentID: UUID?
     private var stripTouchID: Int?
+    /// Swipe typing capture (M4-01): one finger at a time; trail drawn by `grid.trail`.
+    private var swipeCapture = SwipeCapture()
     /// Keyboard-local placeholder for the incognito toggle (F15 UI comes later). Never leaves the extension.
     static let incognitoKey = "iBoard.incognito"
     #if DEBUG
@@ -82,6 +84,7 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
+        coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
         coordinator.onStripChange = { [weak self] content in self?.strip.slotTexts = content.texts }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
@@ -185,6 +188,7 @@ final class KeyboardViewController: UIInputViewController {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 self.coordinator.setEngine(loaded.engine)
+                self.coordinator.setSwipeDecoder(loaded.swipe)
                 self.coordinator.setLearner(loaded.learner)
                 #if DEBUG
                 self.engineStatus = loaded.engine == nil
@@ -257,6 +261,8 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         machine?.cancelAll { _ in }
+        swipeCapture.cancel()
+        grid.trail.clear()
         coordinator.keyboardWillDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
@@ -355,16 +361,40 @@ final class KeyboardViewController: UIInputViewController {
             perfDown = Perf.begin(.touchDownToHighlight)
             coordinator.trackTouch(id: id, at: point)
             machine!.touchDown(id: id, at: point, time: time, emit: sink)
+            if let layout = grid.layout { swipeCapture.begin(id: id, at: point, time: time, layout: layout) }
         case .moved:
+            if swipeCapture.tracks(id), let layout = grid.layout {
+                switch swipeCapture.move(id: id, to: point, time: time, layout: layout) {
+                case .began:
+                    // Crossed into another key: no longer a key press (F3/F5). Release the cap, insert nothing.
+                    machine!.touchCancelled(id: id, emit: sink)
+                    coordinator.releaseTouch(id: id)
+                    grid.trail.update(points: swipeCapture.trail)
+                case .moved:
+                    grid.trail.update(points: swipeCapture.trail)
+                case .none:
+                    break
+                }
+                if swipeCapture.isSwiping { break }
+            }
             coordinator.trackTouch(id: id, at: point)
             machine!.touchMoved(id: id, to: point, emit: sink)
         case .ended:
+            if swipeCapture.isSwiping, swipeCapture.tracks(id) {
+                finishSwipe(id: id, at: point, time: time)
+                break
+            }
+            if swipeCapture.tracks(id) { _ = swipeCapture.end(id: id, at: point, time: time) }
             coordinator.trackTouch(id: id, at: point)
             perfUp = Perf.begin(.touchUpToInsert)
             machine!.touchUp(id: id, at: point, time: time, emit: sink)
             perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
             coordinator.releaseTouch(id: id)
         case .cancelled:
+            if swipeCapture.tracks(id) {
+                swipeCapture.cancel()
+                grid.trail.finish()
+            }
             machine!.touchCancelled(id: id, emit: sink)
             coordinator.releaseTouch(id: id)
         }
@@ -374,6 +404,23 @@ final class KeyboardViewController: UIInputViewController {
         }
         applyDeferredLayerChange()
         updateRepeatTimer()
+    }
+
+    /// The swipe finger lifted: fade the trail and hand the path to the typing coordinator (decode, insert word with
+    /// auto-space, strip alternatives). A pending shift is consumed like for a typed letter.
+    private func finishSwipe(id: Int, at point: CGPoint, time: TimeInterval) {
+        let points = swipeCapture.end(id: id, at: point, time: time)
+        coordinator.releaseTouch(id: id)
+        grid.trail.finish()
+        guard let points else { return }
+        let shift = grid.shift
+        coordinator.swipeEnded(points: points, shift: shift)
+        if shift == .once {
+            let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
+            machine?.setShift(.off, emit: sink)
+        }
+        feedback()
+        scheduleAutoShift()
     }
 
     /// Runs inside machine calls: must not touch `machine` (exclusive access).
@@ -400,6 +447,7 @@ final class KeyboardViewController: UIInputViewController {
         case .shiftChanged(let state):
             grid.setShift(state)
         case .alternatesBegan(let keyIndex):
+            swipeCapture.cancel() // a long press and a swipe are exclusive (F5)
             // Not `machine`: this runs inside a machine call. The grid holds the current layout.
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]

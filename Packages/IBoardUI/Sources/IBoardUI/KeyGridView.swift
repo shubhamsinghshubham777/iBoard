@@ -29,6 +29,13 @@ public final class KeyGridView: UIView {
         didSet { if appearance != oldValue { applyTheme() } }
     }
 
+    /// The swipe trail (M4-01), above all key layers. Style follows the theme (`trailStyle`).
+    public let trail = SwipeTrailLayer()
+    /// Trail colour / width / fade; nil follows the native tokens.
+    public var trailStyle: SwipeTrailStyle? {
+        didSet { trail.trailStyle = trailStyle ?? SwipeTrailStyle(color: tokens.actionKeyFill) }
+    }
+
     private var tokens = NativeThemeTokens.light
     private var keyLayers: [CALayer] = []
     private var isAction: [Bool] = []
@@ -45,6 +52,7 @@ public final class KeyGridView: UIView {
         isOpaque = false
         backgroundColor = .clear // P-22: the system draws the backdrop
         applyThemeColors()
+        layer.addSublayer(trail)
         registerForTraitChanges([UITraitDisplayScale.self]) { (view: KeyGridView, _) in
             if let layout = view.layout { view.apply(layout: layout) }
         }
@@ -155,6 +163,7 @@ public final class KeyGridView: UIView {
         fillPressed = tokens.keyPressedFill.cgColor
         actionFill = tokens.actionKeyFill.cgColor
         actionFillPressed = tokens.actionKeyPressedFill.cgColor
+        trail.trailStyle = trailStyle ?? SwipeTrailStyle(color: tokens.actionKeyFill)
     }
 
     private func color(forKey i: Int, pressed: Bool) -> CGColor {

@@ -13,6 +13,8 @@ import IBoardUI
 enum EngineHost {
     struct Loaded: Sendable {
         var engine: EngineBridge?
+        /// Swipe decoder sharing the lexicon / model with `engine`; reads the personal model per swipe.
+        var swipe: SwipeEngine?
         var learner: PersonalLearner
         var wordCount: Int
         var storageMode: PersonalStorageMode
@@ -21,6 +23,8 @@ enum EngineHost {
     /// Blocking: call from a background task only.
     static func load(layout: KeyboardLayout, hasFullAccess: Bool) -> Loaded {
         var bridge: EngineBridge?
+        var lexicon: Lexicon?
+        var lm: NGramModel?
         var words = 0
         if let lexURL = Bundle.main.url(forResource: "lexicon", withExtension: "iblex"),
            let lex = try? Lexicon(url: lexURL, verifyChecksum: false) {
@@ -28,6 +32,8 @@ enum EngineHost {
             // bundle is code-signed, so integrity is already covered.
             let model = Bundle.main.url(forResource: "lm", withExtension: "iblm")
                 .flatMap { try? NGramModel(url: $0, lexicon: lex, verifyChecksum: false) }
+            lexicon = lex
+            lm = model
             bridge = EngineBridge(EngineActor(layout: layout, lexicon: lex, model: model))
             words = lex.wordCount
         }
@@ -44,7 +50,12 @@ enum EngineHost {
                 _ = try? PersonalStorageFactory.migrate(from: localStorage, to: storage)
             }
         }
-        let learner = PersonalLearner(store: PersonalStore(storage: storage))
-        return Loaded(engine: bridge, learner: learner, wordCount: words, storageMode: storage.mode)
+        let store = PersonalStore(storage: storage)
+        let learner = PersonalLearner(store: store)
+        var swipe: SwipeEngine?
+        if let lexicon {
+            swipe = SwipeEngine(layout: layout, lexicon: lexicon, model: lm, personal: { await store.scorer() })
+        }
+        return Loaded(engine: bridge, swipe: swipe, learner: learner, wordCount: words, storageMode: storage.mode)
     }
 }
