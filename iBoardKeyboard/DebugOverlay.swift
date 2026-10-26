@@ -10,9 +10,16 @@ final class DebugOverlayView: UIView {
 
     private let label = UILabel()
     private var timer: Timer?
+    /// Extra status lines (engine / personal-store counts). Numbers and flags only, never typed text.
+    var extraLines: [String] = []
+    /// Called on every refresh so the host can update `extraLines`.
+    var refreshHook: (() -> Void)?
+    /// Long-press on the top-left corner: the placeholder incognito toggle (F15 UI is not built yet).
+    var onToggleIncognito: (() -> Void)?
 
     /// Installs the hidden toggle area and the overlay into `host`.
-    static func install(in host: UIView) {
+    @discardableResult
+    static func install(in host: UIView) -> DebugOverlayView {
         let overlay = DebugOverlayView()
         overlay.translatesAutoresizingMaskIntoConstraints = false
         host.addSubview(overlay)
@@ -32,6 +39,25 @@ final class DebugOverlayView: UIView {
             hotspot.heightAnchor.constraint(equalToConstant: 44),
         ])
         overlay.setVisible(UserDefaults.standard.bool(forKey: defaultsKey))
+
+        let incog = UIView()
+        incog.translatesAutoresizingMaskIntoConstraints = false
+        incog.backgroundColor = .clear
+        incog.accessibilityIdentifier = "debug-incognito-toggle"
+        incog.addGestureRecognizer(UILongPressGestureRecognizer(target: overlay, action: #selector(toggleIncognito(_:))))
+        host.addSubview(incog)
+        NSLayoutConstraint.activate([
+            incog.topAnchor.constraint(equalTo: host.topAnchor),
+            incog.leadingAnchor.constraint(equalTo: host.leadingAnchor),
+            incog.widthAnchor.constraint(equalToConstant: 44),
+            incog.heightAnchor.constraint(equalToConstant: 44),
+        ])
+        return overlay
+    }
+
+    @objc private func toggleIncognito(_ g: UILongPressGestureRecognizer) {
+        guard g.state == .began else { return }
+        onToggleIncognito?()
     }
 
     override init(frame: CGRect) {
@@ -75,7 +101,8 @@ final class DebugOverlayView: UIView {
     }
 
     private func refresh() {
-        var lines = [String(format: "mem %.1f MB", Perf.memoryFootprintMB())]
+        refreshHook?()
+        var lines = [String(format: "mem %.1f MB", Perf.memoryFootprintMB())] + extraLines
         for s in Perf.summaries() where s.count > 0 {
             lines.append(String(format: "%@ p50 %.1f p95 %.1f ms (n%d)", s.metric.label,
                                 s.p50Milliseconds ?? 0, s.p95Milliseconds ?? 0, s.count))

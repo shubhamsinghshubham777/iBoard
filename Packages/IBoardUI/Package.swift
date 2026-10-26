@@ -8,15 +8,20 @@ let package = Package(
     dependencies: [
         .package(path: "../IBoardCore"),
         .package(path: "../IBoardLayout"),
+        .package(path: "../IBoardEngine"),
         .package(path: "../IBoardTheme"),
     ],
     targets: [
         .target(name: "IBoardUI", dependencies: [
             .product(name: "IBoardCore", package: "IBoardCore"),
             .product(name: "IBoardLayout", package: "IBoardLayout"),
+            .product(name: "IBoardEngine", package: "IBoardEngine"),
             .product(name: "IBoardTheme", package: "IBoardTheme"),
         ]),
-        .testTarget(name: "IBoardUITests", dependencies: ["IBoardUI"]),
+        .testTarget(name: "IBoardUITests", dependencies: [
+            "IBoardUI",
+            .product(name: "IBoardEngine", package: "IBoardEngine"),
+        ]),
     ],
     swiftLanguageModes: [.v6]
 )

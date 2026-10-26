@@ -1,5 +1,6 @@
 import UIKit
 import IBoardCore
+import IBoardEngine
 import IBoardLayout
 import IBoardTheme
 import IBoardUI
@@ -29,6 +30,16 @@ final class KeyboardViewController: UIInputViewController {
     private lazy var input = InputController(proxy: ProxyAdapter(controller: self))
     private var haptic: UIImpactFeedbackGenerator?
     private var autoShiftPending = false
+    private lazy var coordinator = TypingCoordinator(input: input)
+    private var engineLoadStarted = false
+    private var lastDocumentID: UUID?
+    private var stripTouchID: Int?
+    /// Keyboard-local placeholder for the incognito toggle (F15 UI comes later). Never leaves the extension.
+    static let incognitoKey = "iBoard.incognito"
+    #if DEBUG
+    private var engineStatus = "engine: loading"
+    private weak var debugOverlay: DebugOverlayView?
+    #endif
 
     /// What the current layout was computed from; used to skip redundant relayouts.
     private struct LayoutKey: Equatable {
@@ -48,6 +59,8 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         settings = SettingsStore().load()
         refreshAppearanceAndTraits()
+        coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
+        applyFieldConfig(forceFieldChange: true)
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
         grid.accessibilityValue = "haptics=\(settings.haptics) fullAccess=\(hasFullAccess)"
@@ -68,6 +81,8 @@ final class KeyboardViewController: UIInputViewController {
         handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
         view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
+        coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
+        coordinator.onStripChange = { [weak self] content in self?.strip.slotTexts = content.texts }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
         }
@@ -77,7 +92,9 @@ final class KeyboardViewController: UIInputViewController {
         h.isActive = true
         heightConstraint = h
         #if DEBUG
-        DebugOverlayView.install(in: view)
+        debugOverlay = DebugOverlayView.install(in: view)
+        debugOverlay?.onToggleIncognito = { [weak self] in self?.toggleIncognito() }
+        debugOverlay?.refreshHook = { [weak self] in self?.refreshDebugStatus() }
         #endif
     }
 
@@ -89,7 +106,10 @@ final class KeyboardViewController: UIInputViewController {
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
         refreshAppearanceAndTraits()
+        applyFieldConfig(forceFieldChange: false)
         updateAutoShift()
+        // The proxy settles a run-loop turn after the host's edit.
+        DispatchQueue.main.async { [weak self] in self?.coordinator.resync() }
     }
 
     /// Applies field traits (autocapitalisation, auto-enabled return key) and the shift state they imply.
@@ -104,8 +124,100 @@ final class KeyboardViewController: UIInputViewController {
         guard machine != nil, layoutKind == .letters else { return }
         // Manual caps lock stays unless the field forces all caps / the field changed to a mode without it.
         if machine!.shift == .capsLock && input.traits.autoCap != .allCharacters { return }
-        machine!.setShift(input.autoShift()) { [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) } }
+        machine!.setShift(coordinator.autoShift(context: textDocumentProxy.documentContextBeforeInput)) {
+            [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) }
+        }
     }
+
+    /// Maps the field's UIKit traits into the engine's value types and tells the coordinator (F2 traits, F4 exclusions).
+    private func applyFieldConfig(forceFieldChange: Bool) {
+        let proxy = textDocumentProxy
+        func sw(_ v: Int?) -> TraitSwitch { v == 1 ? .no : (v == 2 ? .yes : .default) } // UITextAutocorrectionType etc.
+        let kind = FieldKeyboardKind(uikitRawValue: proxy.keyboardType?.rawValue ?? 0)
+        let learning = FieldTraits(
+            contentType: FieldContentType(rawValue: proxy.textContentType?.rawValue),
+            keyboardType: kind,
+            isSecureTextEntry: proxy.isSecureTextEntry ?? false
+        )
+        let excluded = learning.exclusion != nil
+        var punct = PunctuationTraits(
+            autocapitalization: {
+                switch proxy.autocapitalizationType ?? .none {
+                case .words: .words
+                case .sentences: .sentences
+                case .allCharacters: .allCharacters
+                default: .none
+                }
+            }(),
+            smartQuotes: sw(proxy.smartQuotesType?.rawValue),
+            smartDashes: sw(proxy.smartDashesType?.rawValue),
+            doubleSpacePeriod: !excluded
+        )
+        if excluded { punct.smartQuotes = .no; punct.smartDashes = .no }
+        let config = FieldConfig(
+            learning: learning,
+            autocorrect: AutocorrectTraits(autocorrection: sw(proxy.autocorrectionType?.rawValue),
+                                           spellChecking: sw(proxy.spellCheckingType?.rawValue)),
+            punctuation: punct
+        )
+        let doc = proxy.documentIdentifier
+        if forceFieldChange || doc != lastDocumentID {
+            lastDocumentID = doc
+            coordinator.fieldDidChange(config)
+        } else {
+            coordinator.updateConfig(config)
+        }
+    }
+
+    private func toggleIncognito() {
+        let on = !UserDefaults.standard.bool(forKey: Self.incognitoKey)
+        UserDefaults.standard.set(on, forKey: Self.incognitoKey)
+        coordinator.setIncognito(on)
+    }
+
+    /// Starts the background engine + personal learner load once, with the first letters layout.
+    private func startEngineLoad(layout: KeyboardLayout) {
+        guard !engineLoadStarted, layout.kind == .letters else { return }
+        engineLoadStarted = true
+        let fullAccess = hasFullAccess
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let loaded = EngineHost.load(layout: layout, hasFullAccess: fullAccess)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.coordinator.setEngine(loaded.engine)
+                self.coordinator.setLearner(loaded.learner)
+                #if DEBUG
+                self.engineStatus = loaded.engine == nil
+                    ? "engine: none (stub)" : "engine: bundled \(loaded.wordCount) words"
+                self.personalStore = loaded.learner
+                self.personalMode = loaded.storageMode == .appGroup ? "app-group" : "local"
+                #endif
+            }
+        }
+    }
+
+    #if DEBUG
+    private var personalStore: PersonalLearner?
+    private var personalMode = "-"
+    private var debugStatusInFlight = false
+    /// Counts and flags only; never any word.
+    private func refreshDebugStatus() {
+        guard !debugStatusInFlight else { return }
+        debugStatusInFlight = true
+        let status = engineStatus, mode = personalMode, learner = personalStore
+        Task { [weak self] in
+            var lines = [status]
+            if let learner {
+                let st = await learner.store.stats()
+                let learning = await learner.isLearning
+                let inc = await learner.incognito
+                lines.append("personal(\(mode)): u\(st.unigrams) b\(st.bigrams) t\(st.trigrams) learning=\(learning) incog=\(inc.isActive)")
+            }
+            self?.debugOverlay?.extraLines = lines
+            self?.debugStatusInFlight = false
+        }
+    }
+    #endif
 
     /// The proxy's context can lag an edit by a run-loop turn, so edits schedule one coalesced re-evaluation.
     private func scheduleAutoShift() {
@@ -145,6 +257,7 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         machine?.cancelAll { _ in }
+        coordinator.keyboardWillDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
     }
@@ -204,6 +317,8 @@ final class KeyboardViewController: UIInputViewController {
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
         strip.frame = layout.stripFrame
+        coordinator.setLayout(layout)
+        startEngineLoad(layout: layout)
         handle.frame = CGRect(x: (size.width - ResizeHandleView.size.width) / 2, y: 0, width: ResizeHandleView.size.width, height: ResizeHandleView.size.height)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
@@ -218,18 +333,40 @@ final class KeyboardViewController: UIInputViewController {
     private func handleTouch(_ phase: KeyTouchPhase, _ id: Int, _ point: CGPoint, _ time: TimeInterval) {
         guard machine != nil else { return }
         let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
+        // A touch that starts on the suggestion strip is a slot tap, not a key press.
+        if phase == .began, strip.frame.contains(point), !strip.isShowingAlternates, stripTouchID == nil {
+            stripTouchID = id
+            return
+        }
+        if stripTouchID == id {
+            if phase == .ended || phase == .cancelled {
+                stripTouchID = nil
+                if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
+                    let slot = Int((point.x - strip.frame.minX) / (strip.frame.width / CGFloat(SuggestionStripView.slotCount)))
+                    coordinator.tapSlot(slot)
+                    feedback()
+                    scheduleAutoShift()
+                }
+            }
+            return
+        }
         switch phase {
         case .began:
             perfDown = Perf.begin(.touchDownToHighlight)
+            coordinator.trackTouch(id: id, at: point)
             machine!.touchDown(id: id, at: point, time: time, emit: sink)
         case .moved:
+            coordinator.trackTouch(id: id, at: point)
             machine!.touchMoved(id: id, to: point, emit: sink)
         case .ended:
+            coordinator.trackTouch(id: id, at: point)
             perfUp = Perf.begin(.touchUpToInsert)
             machine!.touchUp(id: id, at: point, time: time, emit: sink)
             perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
+            coordinator.releaseTouch(id: id)
         case .cancelled:
             machine!.touchCancelled(id: id, emit: sink)
+            coordinator.releaseTouch(id: id)
         }
         if consumeShiftOnce {
             consumeShiftOnce = false
@@ -246,18 +383,18 @@ final class KeyboardViewController: UIInputViewController {
             grid.setHighlighted(index, on)
             if on, let p = perfDown { Perf.end(p); perfDown = nil }
         case .insert(let text):
-            input.insert(text)
+            coordinator.insert(text)
             feedback()
             scheduleAutoShift()
         case .deleteBackward:
-            input.deleteBackward()
+            coordinator.deleteBackward()
             feedback()
             scheduleAutoShift()
         case .deleteWord:
-            input.deleteWord()
+            coordinator.deleteWord()
             scheduleAutoShift()
         case .returnKey:
-            if input.returnKey() { feedback(); scheduleAutoShift() }
+            if coordinator.returnKey() { feedback(); scheduleAutoShift() }
         case .advanceKeyboard:
             advanceToNextInputMode()
         case .shiftChanged(let state):
@@ -274,7 +411,7 @@ final class KeyboardViewController: UIInputViewController {
         case .alternatesEnded(let p):
             handle.isHidden = false
             if let text = strip.end(at: p) {
-                input.insert(text)
+                coordinator.insertDirect(text)
                 feedback()
                 consumeShiftOnce = true
                 scheduleAutoShift()
@@ -285,6 +422,7 @@ final class KeyboardViewController: UIInputViewController {
         case .layerChanged(let kind):
             layoutKind = kind
             layerChangePending = true
+            coordinator.endWordLiterally()
         }
         if let p = perfUp, !isHighlight(event) { Perf.end(p); perfUp = nil }
     }
