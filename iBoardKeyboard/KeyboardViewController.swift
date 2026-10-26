@@ -4,7 +4,7 @@ import IBoardLayout
 import IBoardTheme
 import IBoardUI
 
-/// Hosts the key grid (M1-03). Typing is not wired yet (M1-04): touches only highlight the key under the finger.
+/// Hosts the key grid (M1-03) and drives it through the touch state machine (M1-04).
 final class KeyboardViewController: UIInputViewController {
     /// Settings read from the App Group on appear (works without Full Access).
     private(set) var settings = IBoardSettings.defaults
@@ -14,6 +14,11 @@ final class KeyboardViewController: UIInputViewController {
     private var layoutKind: LayoutKind = .letters
     private var lastLayoutKey: LayoutKey?
     private var perfDown: PerfInterval?
+    private var perfUp: PerfInterval?
+    private var machine: KeyboardInputMachine?
+    private var layerChangePending = false
+    private var repeatLink: CADisplayLink?
+    private var hapticsEnabled: Bool { settings.haptics && hasFullAccess }
 
     /// What the current layout was computed from; used to skip redundant relayouts.
     private struct LayoutKey: Equatable {
@@ -39,7 +44,7 @@ final class KeyboardViewController: UIInputViewController {
         grid.frame = view.bounds
         grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         grid.accessibilityIdentifier = "key-grid"
-        grid.touchHandler = { [weak self] phase, id, point, _ in self?.handleTouch(phase, point) }
+        grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
@@ -62,6 +67,21 @@ final class KeyboardViewController: UIInputViewController {
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
         refreshAppearanceAndTraits()
+        updateAutoShift()
+    }
+
+    /// Minimal auto-capitalisation on appear / external text changes (full input-layer rules come later).
+    private func updateAutoShift() {
+        guard machine != nil, layoutKind == .letters, machine!.shift != .capsLock else { return }
+        let before = textDocumentProxy.documentContextBeforeInput ?? ""
+        var want = ShiftState.off
+        switch textDocumentProxy.autocapitalizationType ?? .none {
+        case .allCharacters: want = .capsLock
+        case .sentences: if before.isEmpty || before.hasSuffix("\n") { want = .once }
+        case .words: if before.isEmpty || before.hasSuffix(" ") || before.hasSuffix("\n") { want = .once }
+        default: break
+        }
+        machine!.setShift(want) { [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) } }
     }
 
     // MARK: Layout
@@ -86,6 +106,13 @@ final class KeyboardViewController: UIInputViewController {
         relayoutIfNeeded()
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        machine?.cancelAll { _ in }
+        grid.clearHighlights()
+        updateRepeatTimer()
+    }
+
     private func relayoutIfNeeded() {
         let size = view.bounds.size
         guard size.width > 0, size.height > 0 else { return }
@@ -99,29 +126,111 @@ final class KeyboardViewController: UIInputViewController {
 
         let want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind)
         if abs((heightConstraint?.constant ?? 0) - want) > 0.5 { heightConstraint?.constant = want }
-        grid.apply(layout: LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind))
-    }
-
-    // MARK: Touches (interim: highlight only, replaced by the state machine in M1-04)
-
-    private var highlightedKey = -1
-
-    private func handleTouch(_ phase: KeyTouchPhase, _ point: CGPoint) {
-        switch phase {
-        case .began, .moved:
-            if phase == .began { perfDown = Perf.begin(.touchDownToHighlight) }
-            let index = grid.layout?.nearestHit(to: point)?.keyIndex ?? -1
-            if index != highlightedKey {
-                grid.setHighlighted(highlightedKey, false)
-                grid.setHighlighted(index, true)
-                highlightedKey = index
-            }
-            if let p = perfDown { Perf.end(p); perfDown = nil }
-        case .ended, .cancelled:
-            grid.setHighlighted(highlightedKey, false)
-            highlightedKey = -1
+        let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind)
+        grid.apply(layout: layout)
+        if machine == nil {
+            machine = KeyboardInputMachine(layout: layout)
+            updateAutoShift()
+        } else {
+            machine!.setLayout(layout)
         }
     }
+
+    // MARK: Touches -> state machine -> text proxy
+
+    private func handleTouch(_ phase: KeyTouchPhase, _ id: Int, _ point: CGPoint, _ time: TimeInterval) {
+        guard machine != nil else { return }
+        let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
+        switch phase {
+        case .began:
+            perfDown = Perf.begin(.touchDownToHighlight)
+            machine!.touchDown(id: id, at: point, time: time, emit: sink)
+        case .moved:
+            machine!.touchMoved(id: id, to: point, emit: sink)
+        case .ended:
+            perfUp = Perf.begin(.touchUpToInsert)
+            machine!.touchUp(id: id, time: time, emit: sink)
+            perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
+        case .cancelled:
+            machine!.touchCancelled(id: id, emit: sink)
+        }
+        applyDeferredLayerChange()
+        updateRepeatTimer()
+    }
+
+    /// Runs inside machine calls: must not touch `machine` (exclusive access).
+    private func handle(_ event: KeyEvent) {
+        switch event {
+        case .highlight(let index, let on):
+            grid.setHighlighted(index, on)
+            if on, let p = perfDown { Perf.end(p); perfDown = nil }
+        case .insert(let text):
+            textDocumentProxy.insertText(text)
+            feedback()
+        case .deleteBackward:
+            textDocumentProxy.deleteBackward()
+            feedback()
+        case .deleteWord:
+            let n = max(wordDeleteCount(before: textDocumentProxy.documentContextBeforeInput ?? ""), 1)
+            for _ in 0..<n { textDocumentProxy.deleteBackward() }
+        case .returnKey:
+            textDocumentProxy.insertText("\n")
+            feedback()
+        case .advanceKeyboard:
+            advanceToNextInputMode()
+        case .shiftChanged(let state):
+            grid.setShift(state)
+        case .layerChanged(let kind):
+            layoutKind = kind
+            layerChangePending = true
+        }
+        if let p = perfUp, !isHighlight(event) { Perf.end(p); perfUp = nil }
+    }
+
+    private func isHighlight(_ e: KeyEvent) -> Bool {
+        if case .highlight = e { return true }
+        return false
+    }
+
+    private func feedback() {
+        // M1-05 owns click + haptics; until then only the existing opt-in haptic.
+        if hapticsEnabled { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+    }
+
+    private func applyDeferredLayerChange() {
+        guard layerChangePending else { return }
+        layerChangePending = false
+        lastLayoutKey = nil
+        relayoutIfNeeded()
+        grid.clearHighlights()
+    }
+
+    // MARK: Delete repeat
+
+    private func updateRepeatTimer() {
+        if machine?.nextDeadline != nil {
+            guard repeatLink == nil else { return }
+            let link = CADisplayLink(target: RepeatTarget { [weak self] in self?.tickRepeat() }, selector: #selector(RepeatTarget.fire))
+            link.preferredFrameRateRange = CAFrameRateRange(minimum: 20, maximum: 30)
+            link.add(to: .main, forMode: .common)
+            repeatLink = link
+        } else {
+            repeatLink?.invalidate()
+            repeatLink = nil
+        }
+    }
+
+    private func tickRepeat() {
+        let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
+        machine?.tick(now: ProcessInfo.processInfo.systemUptime, emit: sink)
+        updateRepeatTimer()
+    }
+}
+
+private final class RepeatTarget: NSObject {
+    let action: () -> Void
+    init(_ action: @escaping () -> Void) { self.action = action }
+    @objc func fire() { action() }
 }
 
 // MARK: - UIKit -> layout value mapping
