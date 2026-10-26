@@ -1,4 +1,4 @@
-# Personal model (M3-01, M3-02)
+# Personal model (M3-01, M3-02, M3-03, M3-06, M3-07)
 
 Code: `Packages/IBoardEngine/Sources/IBoardEngine/Personal/`. Tests: `Packages/IBoardEngine/Tests/IBoardEngineTests/Personal/`.
 
@@ -95,3 +95,73 @@ sentence). Nothing is logged; only counts are exposed. Typed words are never put
 - Reentrancy: `PersonalLearner` mutates tracking state synchronously and then awaits the store; events arriving during an
   await are ordered by the actor but write jobs may interleave with later events. Fine for counts; not asserted by tests.
 - Never-correct: the store holds the list; automatic additions after reverts are NOT implemented (left to M2-05/M3-04).
+
+## 3. Phrase model and smart wide chip (M3-03, D-13)
+
+Code: `Personal/PhraseModel.swift`. `PersonalStore.phraseSuggester(config:baseLM:)` returns an immutable `PhraseSuggester`
+(index of the phrase table built at creation; one pass over at most 1k phrases, NOT benchmarked).
+`suggest(context:currentPrefix:)` -> `PhraseSuggestion?` for `Suggestions.phrase` (`.slot` has role `.phrase`).
+
+- Match: the last k (1...5) sentence words equal the first k words of a table phrase; the rest (>= 2 words, shown up to
+  `maxWords` = 4) is the continuation. One-word continuations are normal next-word prediction, never a chip.
+- Confidence = lifetime uses(phrase) / lifetime uses(context k-gram) (uni/bi/tri/phrase tables; all count one per
+  observation, unlike the 0.3/0.7/1.0 weight schedule). Optional base LM agreement (`PhraseBaseLanguageModel`, adapter
+  `NGramPhraseBaseLM`) scales it by `(1 - 0.15) + 0.15 * agreement`; words unknown to the base LM count as 0.5.
+- Gates (`PhraseConfig`, all UNTUNED placeholders, not evaluated on real data): confidence >= 0.6, uses >= 2, effective
+  weight after decay >= 1.0, no forgotten word. Longest confident continuation wins, then confidence.
+- A partially typed word (`currentPrefix`) must prefix the first continuation word.
+- Chip semantics are data (`PhraseChipSemantics.standard`): tap = `.insertAllWords` (`tapText`), long-press =
+  `.insertNextWordOnly` (`longPressText`). The controller must add the leading space and decide whether the strip slot
+  widens; not wired into `EngineActor` here (that file is outside this task's scope).
+- `PersonalStore` gained `currentTime` and `apply(ops:)` (used by import).
+
+## 4. Adaptive touch model (M3-06, F14)
+
+Code: `Personal/AdaptiveTouchModel.swift`. Value type `AdaptiveTouchModel`, owned by the keyboard controller (not a store actor).
+
+- Input: `record(CommittedWordTouches, in: TouchModelContext)`; one `TouchSample` per letter = offset of the touch from the
+  centre of the *intended* key (the committed word's letter), in key units. Accepted only if confidence >= 0.9, not
+  corrected, not restored, >= 2 letters; per-axis outliers beyond 0.75 key sizes are dropped (mis-taps).
+- State: per context (orientation x display class: `TouchModelContext`) and per letter: count, mean, covariance (EMA with
+  rate `max(1/n, 0.02)`). Only aggregates are stored, never text or touch order.
+- Output `keyModels(for:)`: `[KeyIdentity: KeySpatialModel]`; mean shrunk by `n/(n+12)` and clamped to +-0.3 key size; sigma
+  blended with the 0.30 prior (`n/(n+60)`) and bounded to 0.18...0.42; keys with < 3 samples omitted. The covariance
+  cross term is stored but the decoder's `KeySpatialModel` is diagonal, so it is unused today.
+- **Decoder hook (no decoder edit needed):** `TapDecoderParameters.keyModels` already exists, so
+  `var p = TapDecoderParameters(); adaptive.apply(to: &p, context: ctx); TapDecoder(layout:lexicon:model:parameters: p)`.
+  The decoder is immutable, so the controller rebuilds it on a layout change or every N accepted words. Note the decoder's
+  `literal` (nearest key) then also uses the shifted means.
+- Reset: `reset(context)` / `resetAll()`; `AdaptiveTouchFileStore.delete()` removes the file.
+- Persistence: JSON `{"version":1,"models":[...]}` (`AdaptiveTouchCodec`), <= 256 KB, validated and clamped on decode
+  (unknown version, malformed, non-finite, bad keys), atomic file write, tolerant load (corrupt file = empty model).
+- Evidence (synthetic only, `AdaptiveTouchModelTests`): sloppy typist (0.22 key low bias, side-dependent x bias, noise 0.27)
+  raw key-error rate 9.0 % -> 4.7 % after ~1,800 letters (48 % relative reduction); neutral typist (noise 0.20)
+  0.33 % -> 0.41 % (a small increase from estimation noise, asserted <= +0.2 pt absolute). NOT validated on real traces.
+
+## 5. `.iboarddict` import / export core (M3-07, F4)
+
+Code: `Personal/DictionaryExchange.swift` (no UI; the app screens and the hand-over to the single-writer keyboard are a
+later app task). API: `PersonalStore.exportDictionary()` / `importDictionary(_:options:)`, or the pure
+`DictionaryExporter.export`, `DictionaryDecoder.decode`, `DictionaryMerger.plan` (-> `[PersonalOp]`).
+
+Format v1: UTF-8 JSON lines. Line 1 header `{"format":"iboarddict","version":1,"created":epoch,"generator":"iBoard"}`, then
+`{"t":"word","w":..,"s":casing?,"c":decayed weight,"u":uses,"f":["neverCorrect"]?}`,
+`{"t":"phrase","w":[3-6 words],"c":..,"u":..}`, `{"t":"forget","w":..,"at":epoch}`, `{"t":"never","w":..}`.
+Bigram/trigram counts are not exported. Export is deterministic (sorted keys and records), drops entries decayed below
+`minKeepWeight`, and does not export forgotten words as words. Words are exported in clear text by design: it is the
+user's own backup; the app must treat the file as sensitive.
+
+Validation (decode): file <= 8 MB, <= 100k lines, line <= 2048 bytes, BOM/CRLF tolerated; header must be present, format
+`iboarddict`, version 1 (newer versions refused). Bad lines are skipped and counted by reason (`DictionaryDecodeReport`,
+counts only, never words): invalid UTF-8, too long, malformed JSON, unknown type (forward compatible), invalid field,
+invalid word (`LearnableWord` filter for words and phrase words; a looser filter for forget/never lists), invalid weight
+(non-finite or <= 0; > 1000 clamped; uses clamped to 1...10000). Duplicates merge by max. Caps keep the heaviest:
+10k words, 1k phrases, 2k per list. Per-line JSON parsing is bounded by the line limit (a 1500-deep nesting line is
+rejected, tested).
+
+Merge (`DictionaryMerger`, non-destructive by default): forget wins (file forgets remove local words/phrases; words and
+phrases containing a locally or file-forgotten word are skipped); counts do not add up (weight = max(local decayed,
+imported); uses compared saturating at 3, realised as up to 3 add ops so imported phrases with uses >= 2 count as learned);
+local casing wins; never-correct is a union; forget timestamps are clamped to now; `replaceExisting` emits `.clear` first.
+Re-importing the same file is a no-op (tested). All ops go through one journal transaction (`PersonalStore.apply(ops:)`).
+Tests: round trip, determinism, idempotency, merge rules, header/limit validation, 400 fuzzed mutations (no crash, only valid data).
