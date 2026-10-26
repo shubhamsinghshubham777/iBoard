@@ -561,6 +561,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [~] **M2-04 EngineActor & strip wiring** — Background engine, cancellation by sequence number, strip updates.
   Depends: M2-03, M1-06.
   **Partial (2026-10-27):** engine side done: Swift 6 `EngineActor`, sequence-number cancellation (stale dropped, 40-request burst test), `Suggestions` (3 slots + reserved phrase slot + autocorrect proposal). Strip wiring in the keyboard is NOT done.
+  **Update (2026-10-27):** wired into the keyboard: `TypingCoordinator` + `EngineHost` (bundled 219-word synthetic lexicon, off-main load), strip shows suggestions, autocorrect + backspace restore, SmartPunctuation and PersonalLearner events; simulator-verified (keystroke→suggestions p95 ≈2 ms on the Mac sim, 24–25 MB), nothing learned in an email field. Not done: personal model into suggestions, strip taps live, Full Access mode, device. `docs/KEYBOARD_WIRING.md`.
 - [x] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
   `autocorrectionType`. Depends: M2-04.
   **Result (2026-10-27):** engine-side conservative autocorrect policy (posterior ≥0.97, 0.995 for valid words; autocorrectionType/spellCheckingType respected; backspace restore; never-correct after 2 restores, in memory only) — 119 engine tests green; not wired into the keyboard.
@@ -578,17 +579,22 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M3-02 Learning events & policy** — Kept-word detection, excluded fields, incognito toggle/indicator (F15).
   Depends: M3-01.
   **Result (2026-10-27):** learning policy: 20 excluded content types × 12 keyboard types × incognito, kept-word detection, forget list (30 days, 3 deliberate retypes), word filter; 25 tests; the keyboard controller still has to call the events (contract in `PersonalLearner.swift`). Not run in the extension.
-- [ ] **M3-03 Phrase model + smart wide chip (D-13)** — Depends: M3-02.
+- [~] **M3-03 Phrase model + smart wide chip (D-13)** — Depends: M3-02.
+  **Partial (2026-10-27):** engine side: `PhraseModel` (confidence ≥0.6, uses ≥2, wide-chip slot, tap = all words / long-press = next word); 11 tests; not wired into EngineActor; thresholds untuned.
 - [ ] **M3-04 Forget & never-correct UX** — Long-press suggestion → forget; lists persist. Depends: M3-02.
 - [ ] **M3-05 UILexicon import** — Contacts + Text Replacements, cheap refresh. Depends: M3-01.
-- [ ] **M3-06 Adaptive touch model (F14)** — Depends: M3-02.
-- [ ] **M3-07 Import/export `.iboarddict`** (app side). Depends: M3-01, M1-08.
+- [~] **M3-06 Adaptive touch model (F14)** — Depends: M3-02.
+  **Partial (2026-10-27):** engine side: `AdaptiveTouchModel` (EMA mean/cov per orientation×display class, ±30% clamp); synthetic sloppy-typist key error 9.0%→4.7%, neutral 0.33%→0.41%; hook is `adaptive.apply(to:&params,…)` + rebuild TapDecoder; not wired, no real traces.
+- [~] **M3-07 Import/export `.iboarddict`** (app side). Depends: M3-01, M1-08.
+  **Partial (2026-10-27):** core only: versioned `.iboarddict` JSON-lines encode/decode/validate/merge with corrupt-input tests; the app import/export screens are not built.
 
 ### M4 — Swipe typing (F3)
 - [ ] **M4-01 Gesture capture & trail** — Resampling, trail layer, tap-vs-swipe disambiguation. Depends: M1-04.
-- [ ] **M4-02 Swipe decoder** — Template matching + LM + personal model; benchmarks. Depends: M2-02, M3-01.
+- [x] **M4-02 Swipe decoder** — Template matching + LM + personal model; benchmarks. Depends: M2-02, M3-01.
+  **Result (2026-10-27):** `SwipeDecoder` (SHARK2-style shape+location, trie-pruned, LM + personal re-score, layout-agnostic incl. Duo) — macOS release p95 0.04–0.41 ms (12k/60k-word lexicons; debug 3–8 ms); not measured on a device or with a 100k+ real lexicon. `docs/SWIPE.md`.
 - [ ] **M4-03 Swipe UX** — Auto-space, whole-word backspace, re-pick alternatives. Depends: M4-02.
-- [ ] **M4-04 Swipe eval set & tuning** — Recorded + synthetic traces; F3 numbers. Depends: M4-03.
+- [~] **M4-04 Swipe eval set & tuning** — Recorded + synthetic traces; F3 numbers. Depends: M4-03.
+  **Partial (2026-10-27):** synthetic eval only: top-1 97.0–98.4% / top-3 98.9–99.4% across profiles (generator shares the decoder's geometry, so this is a regression guard, not evidence F3's 90%/97% targets are met on real swipes). Needs recorded real traces.
 
 ### M5 — Gestures & editing (F5)
 - [ ] **M5-01 Gesture arbiter** — Implement the F5 conflict matrix with recorded-trace tests. Depends: M4-01.
@@ -615,7 +621,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M7-04 Hinglish eval set** — Accuracy targets equal to F2/F3 on mixed text. Depends: M7-03.
 
 ### M8 — Themes, feel & landscape (F10, F12, F13)
-- [ ] **M8-01 Theme model + presets (Native, Native Glass, …)** — Depends: M0-04, M1-03.
+- [x] **M8-01 Theme model + presets (Native, Native Glass, …)** — Depends: M0-04, M1-03.
+  **Result (2026-10-27):** versioned `Theme` model + presets (Native token-identical, Native Glass key-only per P-22, Midnight, Paper, High Contrast ≥7:1), export/import with validation, accessibility resolution (M8-05 logic) — 12 tests; IBoardUI still renders from `NativeThemeTokens`, `Theme` not wired into rendering. `docs/THEMES.md`.
 - [ ] **M8-02 Theme studio (app)** — Live preview, photo pipeline, export/import. Depends: M8-01, M1-08.
 - [ ] **M8-03 Haptics & sound packs** — Depends: M1-05.
 - [ ] **M8-04 Landscape layouts (F13)** — Depends: M1-02.
@@ -643,8 +650,9 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M11-06 Companion app Duo pass** — Run `app-resizability` skill; fix findings. Depends: M10-02.
 
 ### M12 — iCloud sync (opt-in)
-- [ ] **M12-01 CloudKit private DB schema** — Per-device grow-only counters merged by sum; forget/never-correct as
+- [~] **M12-01 CloudKit private DB schema** — Per-device grow-only counters merged by sum; forget/never-correct as
   last-writer-wins sets. Depends: M3-01.
+  **Partial (2026-10-27):** pure merge model in new `Packages/IBoardSync` (per-device counters summed; forget as max-merged floor stamp, never-correct LWW+tombstones; commutative/associative/idempotent over 300 random histories; 8 tests) and `docs/SYNC.md` with a proposed CloudKit mapping; no CloudKit code yet; sync keys must be encrypted/hashed (typed words are sensitive).
 - [ ] **M12-02 Sync engine in app** (keyboard never touches the network for sync). Depends: M12-01.
 - [ ] **M12-03 Settings & conflict tests** — Depends: M12-02.
 
@@ -747,6 +755,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · round 3 (wiring, swipe, personal model v2, themes, sync) ·** Four worktree agents merged cleanly. Verification after merge: `swift test` green — Core 15, Layout 23, Engine 172, OTP 11, Theme 12, UI 66, Sync 8; `scripts/build.sh` green; wiring agent ran the keyboard on an iPhone 12 simulator. Known gaps to give an agent next: `Suggestions`/`SuggestionSlot` need public initialisers (IBoardUI carries mirror types), `PersonalStore.scorer()` and phrase chip not connected to `EngineActor`, tap decoder has no transposition (`teh`→`the`), adaptive touch model not applied. Needs the owner/device: perf gate M1-09 on iPhone 12, feel of haptics/sound, Duo (M0-10).
 
 - **2026-10-27 · M1-05/06/07, M2-04..07, M3-01/02 (parallel round 2) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 15, Layout 23, Engine 119, OTP 11, Theme 3, UI 40; `scripts/build.sh` green; agent A drove an iPhone 12 simulator. Statuses are `[~]` where behaviour is only simulator- or unit-tested. Risks: handle/app height settings can disagree (Full Access limit); engine eval numbers are synthetic; portrait height changed after an orientation fix. Next: wire EngineActor + personal learning events into the keyboard (needs an agent that owns KeyboardViewController), M4 swipe, M5 gestures, real-device pass.
 
