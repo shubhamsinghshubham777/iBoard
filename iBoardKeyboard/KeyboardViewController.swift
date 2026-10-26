@@ -84,6 +84,7 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
+        coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
         coordinator.onStripChange = { [weak self] content in self?.strip.slotTexts = content.texts }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
@@ -187,6 +188,7 @@ final class KeyboardViewController: UIInputViewController {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 self.coordinator.setEngine(loaded.engine)
+                self.coordinator.setSwipeDecoder(loaded.swipe)
                 self.coordinator.setLearner(loaded.learner)
                 #if DEBUG
                 self.engineStatus = loaded.engine == nil
@@ -404,10 +406,21 @@ final class KeyboardViewController: UIInputViewController {
         updateRepeatTimer()
     }
 
-    /// The swipe finger lifted: fade the trail. (Text insertion is wired in M4-03.)
+    /// The swipe finger lifted: fade the trail and hand the path to the typing coordinator (decode, insert word with
+    /// auto-space, strip alternatives). A pending shift is consumed like for a typed letter.
     private func finishSwipe(id: Int, at point: CGPoint, time: TimeInterval) {
-        _ = swipeCapture.end(id: id, at: point, time: time)
+        let points = swipeCapture.end(id: id, at: point, time: time)
+        coordinator.releaseTouch(id: id)
         grid.trail.finish()
+        guard let points else { return }
+        let shift = grid.shift
+        coordinator.swipeEnded(points: points, shift: shift)
+        if shift == .once {
+            let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
+            machine?.setShift(.off, emit: sink)
+        }
+        feedback()
+        scheduleAutoShift()
     }
 
     /// Runs inside machine calls: must not touch `machine` (exclusive access).

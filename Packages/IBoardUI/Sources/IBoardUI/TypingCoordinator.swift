@@ -167,6 +167,8 @@ final class OrderedQueue {
 @MainActor
 public final class TypingCoordinator {
     public var onStripChange: ((StripContent) -> Void)?
+    /// The coordinator edited the field asynchronously (a decoded swipe was inserted): the host re-evaluates shift.
+    public var onAsyncEdit: (() -> Void)?
     /// Whether shift is currently on (capitalises predictions).
     public var shiftActive: () -> Bool = { false }
     public private(set) var content = StripContent.empty
@@ -200,6 +202,17 @@ public final class TypingCoordinator {
     private var latestRequest: UInt64 = 0
     private var lastFieldTraits: FieldTraits?
 
+    // Swipe typing (M4-03). Memory only.
+    private var swipeDecoder: (any SwipeDecoding)?
+    private let swipeQueue = OrderedQueue()
+    private var swipePending = false
+    private var deferredInput: [@MainActor () -> Void] = []
+    /// The word the last swipe inserted and the text that followed it (the implied space). Valid until anything else
+    /// is typed; it is what whole-word backspace, re-pick and "." after a swipe act on.
+    private var lastSwipe: (word: String, trailing: String)?
+    /// The strip currently shows the swipe's alternatives.
+    private var swipeStripShown = false
+
     public init(input: InputController, now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
         self.input = input
         self.now = now
@@ -212,6 +225,17 @@ public final class TypingCoordinator {
         if let engine, let l = lettersLayout { engineQueue.enqueue { await engine.updateLayout(l) } }
         if engine != nil { requestPrediction() } else { setContent(.empty) }
     }
+
+    public func setSwipeDecoder(_ decoder: (any SwipeDecoding)?) {
+        swipeDecoder = decoder
+        if let decoder, let l = lettersLayout { swipeQueue.enqueue { await decoder.updateLayout(l) } }
+    }
+
+    public var hasSwipeDecoder: Bool { swipeDecoder != nil }
+    /// A swipe is being decoded (input that arrives meanwhile is replayed after the word is inserted).
+    public var isSwipePending: Bool { swipePending }
+    /// The word the last swipe inserted, while it is still the last thing in the field.
+    public var lastSwipedWord: String? { lastSwipe?.word }
 
     public func setLearner(_ learner: (any PersonalLearning)?) {
         self.learner = learner
@@ -227,6 +251,7 @@ public final class TypingCoordinator {
     /// Waits until queued engine and learner work has finished (tests).
     public func waitForIdle() async {
         await engineQueue.drain()
+        await swipeQueue.drain()
         await learnerQueue.drain()
     }
 
@@ -242,6 +267,7 @@ public final class TypingCoordinator {
         for (i, k) in layout.keys.enumerated() { if case .letter(let s) = k.identity { map[s] = i } }
         letterKey = map
         if let engine { engineQueue.enqueue { await engine.updateLayout(layout) } }
+        if let swipeDecoder { swipeQueue.enqueue { await swipeDecoder.updateLayout(layout) } }
     }
 
     public func setIncognito(_ on: Bool) {
@@ -256,6 +282,8 @@ public final class TypingCoordinator {
         resetSession()
         autocorrectState.noteOtherInput()
         lastCommit = nil
+        lastSwipe = nil
+        swipeStripShown = false
         awaitingContinue = false
         lastFieldTraits = new.learning
         if let learner {
@@ -297,7 +325,20 @@ public final class TypingCoordinator {
     /// A key's text output (already cased by shift).
     public func insert(_ text: String) {
         guard !text.isEmpty else { return }
+        if deferWhileSwiping({ $0.insert(text) }) { return }
+        let swiped = lastSwipe
         noteTyped()
+        if let swiped, SwipeSpacing.closers.contains(text) {
+            // "hello " + "." -> "hello.": take the implied space back.
+            let ctx = input.proxy.contextBefore
+            if ctx == nil || ctx!.hasSuffix(swiped.word + swiped.trailing) {
+                for _ in 0..<swiped.trailing.count { input.proxy.deleteBackwardOnce() }
+                autocorrectState.noteOtherInput()
+                let left = ctx.map { String($0.dropLast(swiped.trailing.count)) } ?? swiped.word
+                insertSeparatorOrSymbol(text, leftContext: left)
+                return
+            }
+        }
         autocorrectState.noteOtherInput()
         if text.count == 1, let c = text.first, c.isLetter, config.suggestionsEnabled, let h = hit(forLetter: text) {
             let interval = Perf.begin(.keystrokeToSuggestions)
@@ -322,15 +363,16 @@ public final class TypingCoordinator {
 
     /// Alternates and other direct insertions: ends the word literally, then inserts.
     public func insertDirect(_ text: String) {
+        if deferWhileSwiping({ $0.insertDirect(text) }) { return }
         noteTyped()
         autocorrectState.noteOtherInput()
         endWordLiterally()
         input.insert(text)
     }
 
-    private func insertSeparatorOrSymbol(_ text: String) {
+    private func insertSeparatorOrSymbol(_ text: String, leftContext: String? = nil) {
         let token = tokenPrefix + word
-        var lc = input.proxy.contextBefore ?? ""
+        var lc = leftContext ?? input.proxy.contextBefore ?? ""
         if !token.isEmpty, !lc.hasSuffix(token) { lc = token }
         let e = SmartPunctuation.edit(forInserting: text, leftContext: lc, traits: config.punctuation)
         var deleteCount = e.deleteBackward
@@ -373,6 +415,23 @@ public final class TypingCoordinator {
     }
 
     public func deleteBackward() {
+        if deferWhileSwiping({ $0.deleteBackward() }) { return }
+        if let swiped = lastSwipe {
+            lastSwipe = nil
+            swipeStripShown = false
+            let ctx = input.proxy.contextBefore
+            let text = swiped.word + swiped.trailing
+            if ctx == nil || ctx!.hasSuffix(text) {
+                // Backspace right after a swipe deletes the whole word (F3).
+                noteSwipeWordRemoved()
+                for _ in 0..<text.count { input.proxy.deleteBackwardOnce() }
+                autocorrectState.noteOtherInput()
+                lastCommit = nil
+                resetSession()
+                requestPrediction(afterInserting: ctx.map { String($0.dropLast(text.count)) })
+                return
+            }
+        }
         // Backspace directly after an autocorrection restores what the user typed.
         if let edit = autocorrectState.backspace(at: now(), settings: autocorrectSettings) {
             for _ in 0..<edit.deleteBackward { input.proxy.deleteBackwardOnce() }
@@ -427,6 +486,7 @@ public final class TypingCoordinator {
     }
 
     public func deleteWord() {
+        if deferWhileSwiping({ $0.deleteWord() }) { return }
         noteTyped(); autocorrectState.noteOtherInput()
         input.deleteWord()
         if awaitingContinue, lastCommit != nil, let learner { learnerQueue.enqueue { await learner.lastWordReopened() } }
@@ -439,6 +499,7 @@ public final class TypingCoordinator {
     /// Returns whether the field accepted the return key.
     @discardableResult
     public func returnKey() -> Bool {
+        if deferWhileSwiping({ $0.returnKey() }) { return true }
         let token = tokenPrefix + word
         guard input.returnKey() else { return false }
         noteTyped(); autocorrectState.noteOtherInput()
@@ -453,6 +514,7 @@ public final class TypingCoordinator {
 
     /// Layer switch, keyboard hidden, anything that makes the word session meaningless.
     public func endWordLiterally() {
+        if deferWhileSwiping({ $0.endWordLiterally() }) { return }
         let token = tokenPrefix + word
         if !token.isEmpty {
             commit(token, source: .typed)
@@ -463,6 +525,8 @@ public final class TypingCoordinator {
     }
 
     public func keyboardWillDisappear() {
+        lastSwipe = nil
+        swipeStripShown = false
         endWordLiterally()
         autocorrectState.noteOtherInput()
         flushLearner()
@@ -473,6 +537,12 @@ public final class TypingCoordinator {
     /// A tap on strip slot `index` (0...2).
     public func tapSlot(_ index: Int) {
         guard index >= 0, index < content.slots.count, let slot = content.slots[index], !slot.text.isEmpty else { return }
+        if deferWhileSwiping({ $0.tapSlot(index) }) { return }
+        if swipeStripShown, let swiped = lastSwipe {
+            scheduleIdleFlush()
+            repick(slot.text, replacing: swiped)
+            return
+        }
         noteTyped()
         autocorrectState.noteOtherInput()
         let typed = word
@@ -494,17 +564,109 @@ public final class TypingCoordinator {
         requestPrediction(afterInserting: slot.text + " ")
     }
 
+    // MARK: Swipe typing (M4-03)
+
+    /// Runs `op` after the pending swipe is inserted, so keys typed while the decoder works keep their order.
+    private func deferWhileSwiping(_ op: @escaping @MainActor (TypingCoordinator) -> Void) -> Bool {
+        guard swipePending else { return false }
+        deferredInput.append { [unowned self] in op(self) }
+        return true
+    }
+
+    /// The finger lifted after a swipe. The word being typed (if any) is committed as typed, the path is decoded on
+    /// the engine's queue, and the best word is inserted with auto-space before and an implied space after.
+    /// `shift` is the shift state at lift time. Nothing is inserted when there is no decoder yet or no match.
+    public func swipeEnded(points: [SwipePoint], shift: ShiftState) {
+        guard config.suggestionsEnabled, let decoder = swipeDecoder, points.count >= 2 else { return }
+        if deferWhileSwiping({ $0.swipeEnded(points: points, shift: shift) }) { return }
+        noteTyped(clearingSwipe: false)
+        autocorrectState.noteOtherInput()
+        endWordLiterally()
+        swipePending = true
+        let previous = prevWords
+        swipeQueue.enqueue { [weak self] in
+            let outcome = await decoder.decode(points: points, previousWords: previous)
+            await self?.applySwipe(outcome, shift: shift)
+        }
+    }
+
+    private func applySwipe(_ outcome: SwipeOutcome?, shift: ShiftState) {
+        defer {
+            swipePending = false
+            let ops = deferredInput
+            deferredInput = []
+            for op in ops { op() }
+        }
+        guard let outcome, !outcome.words.isEmpty else { return }
+        defer { onAsyncEdit?() }
+        let words = outcome.words.prefix(3).map { SwipeSpacing.cased($0, shift: shift) }
+        let best = words[0]
+        // After another swipe the field already ends with the implied space (the proxy may lag a run-loop turn).
+        let lead = lastSwipe != nil ? "" : (SwipeSpacing.needsSpace(before: input.proxy.contextBefore) ? " " : "")
+        input.insert(lead + best + " ")
+        autocorrectState.noteOtherInput()
+        commit(best, source: .swipe)
+        prevWords = Array((prevWords + [best.lowercased()]).suffix(2))
+        lastCommit = nil
+        lastSwipe = (best, " ")
+        word = ""
+        hits = []
+        lastSuggestions = nil
+        // Strip: the best word in the middle, the next two beside it; tapping one replaces the word.
+        var order: [StripSlot?] = [nil, nil, nil]
+        for (i, w) in words.enumerated() {
+            let slot = StripSlot(text: w, role: i == 0 ? .best : .alternative)
+            order[i == 0 ? 1 : (i == 1 ? 0 : 2)] = slot
+        }
+        swipeStripShown = true
+        setContent(StripContent(texts: order.map { $0?.text ?? "" }, slots: order, isPrediction: false))
+    }
+
+    /// A tap on a swipe alternative: the word just inserted is replaced (F3 re-pick).
+    private func repick(_ text: String, replacing swiped: (word: String, trailing: String)) {
+        let ctx = input.proxy.contextBefore
+        let old = swiped.word + swiped.trailing
+        lastSwipe = nil
+        swipeStripShown = false
+        guard ctx == nil || ctx!.hasSuffix(old) else { requestPrediction(); return }
+        autocorrectState.noteOtherInput()
+        if text != swiped.word {
+            for _ in 0..<old.count { input.proxy.deleteBackwardOnce() }
+            input.insert(text + swiped.trailing)
+            noteSwipeWordRemoved()
+            commit(text, source: .suggestionTapped)
+            prevWords = Array((prevWords + [text.lowercased()]).suffix(2))
+        }
+        lastSwipe = (text, swiped.trailing)
+        let base = ctx.map { String($0.dropLast(old.count)) }
+        requestPrediction(afterInserting: base.map { $0 + text + swiped.trailing })
+    }
+
+    /// The swiped word was deleted or replaced: it must not be learned as accepted.
+    private func noteSwipeWordRemoved() {
+        if awaitingContinue {
+            awaitingContinue = false
+            if let learner { learnerQueue.enqueue { await learner.lastWordReopened() } }
+        }
+        if !prevWords.isEmpty { prevWords.removeLast() }
+    }
+
     // MARK: Context resync
 
     /// The host text changed (`textDidChange`): drop the word session when the proxy no longer agrees with it.
     public func resync() {
+        if swipePending { return } // the word is about to be inserted; the proxy is not up to date
         let ctx = input.proxy.contextBefore
+        if let ctx, let swiped = lastSwipe, !ctx.hasSuffix(swiped.word + swiped.trailing) {
+            lastSwipe = nil
+            swipeStripShown = false
+        }
         if let ctx {
             let token = tokenPrefix + word
             if !token.isEmpty, !ctx.hasSuffix(token) { resetSession(); autocorrectState.noteOtherInput() }
             if let lc = lastCommit, !ctx.hasSuffix(lc.text + lc.trailing) { lastCommit = nil; awaitingContinue = false }
         }
-        guard word.isEmpty, tokenPrefix.isEmpty, let ctx else { return }
+        guard word.isEmpty, tokenPrefix.isEmpty, !swipeStripShown, let ctx else { return }
         let words = ContextWords.previous(in: ctx)
         if words != prevWords || content == .empty {
             prevWords = words
@@ -526,7 +688,11 @@ public final class TypingCoordinator {
 
     // MARK: Learner helpers
 
-    private func noteTyped() {
+    private func noteTyped(clearingSwipe: Bool = true) {
+        if clearingSwipe {
+            lastSwipe = nil
+            swipeStripShown = false
+        }
         if awaitingContinue {
             awaitingContinue = false
             if let learner { learnerQueue.enqueue { await learner.typingContinued() } }
