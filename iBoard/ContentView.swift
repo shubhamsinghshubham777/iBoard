@@ -11,7 +11,7 @@ struct ContentView: View {
                 Section("Try it") { TryKeyboardView() }
                 Section {
                     NavigationLink("Settings") { SettingsView() }
-                    NavigationLink("Import and export dictionary") { DictionaryTransferView(store: DictionaryStore()) }
+                    NavigationLink("Dictionary") { DictionaryManagerView() }
                 }
             }
             .navigationTitle("iBoard")
