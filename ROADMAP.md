@@ -512,8 +512,9 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M0-12 Build & test scripts** — `scripts/build.sh` (app + extension, simulator), `scripts/test.sh` (`swift test`
   for packages + `xcodebuild test`), documented in `CLAUDE.md`. Optional GitHub Actions workflow on push.
   **Result (2026-10-26):** `scripts/build.sh`, `scripts/test.sh [--no-ui]`, CI workflow; both run green locally (UI tests not run).
-- [ ] **M0-13 Performance harness** — `os_signpost` intervals for every §6 metric, a debug overlay toggle in the
+- [x] **M0-13 Performance harness** — `os_signpost` intervals for every §6 metric, a debug overlay toggle in the
   keyboard showing live latency/memory, and macOS benchmarks for engine functions with thresholds.
+  **Result (2026-10-26):** `Perf` signposts + p50/p95 ring buffer (IBoardCore), `Benchmark` helper with threshold test (IBoardEngine, 10× slack until the real engine exists), DEBUG-only overlay in the keyboard, `docs/PERFORMANCE.md`. Only `touchUpToInsert` is instrumented so far; overlay/signposts not exercised at runtime.
 - [x] **M0-14 Open-source scaffolding** — `README.md` (pitch, screenshots later, build steps, privacy), `CONTRIBUTING.md`
   (agent protocol summary, coding style, how to run bootstrap), `CODE_OF_CONDUCT.md`, `SECURITY.md`, `NOTICE`
   (vendored skills, data attributions), issue templates. Depends: none.
@@ -725,6 +726,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-13 done ·** Agent-built perf harness merged. Verification: `swift test` IBoardCore (7) and IBoardEngine (2) pass; `scripts/build.sh` succeeds with the overlay; agent also confirmed a Release build compiles. Not verified: overlay and signposts at runtime, absence of overlay in the Release binary. Follow-ups: instrument the other five metrics as M1 lands; M1-09 gate uses this.
 
 - **2026-10-26 · M0-07 done (spike failed) ·** Foundation Models is `deviceNotEligible` on the owner's iPhone 12 (console output captured from a throwaway app). Not tested: extension call, eligible device. Consequence: AI stays post-v1/optional per D-16. M0-13 running in a worktree agent.
 
