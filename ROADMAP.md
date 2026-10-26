@@ -3,7 +3,7 @@
 > The single source of truth for building iBoard. Every agent reads this before working and updates it before
 > finishing. If code and this document disagree, fix one of them in the same commit.
 
-**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-02`
+**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-03`
 
 ---
 
@@ -68,7 +68,7 @@
 
 | Milestone | Goal | Status |
 |---|---|---|
-| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (M0-01 done) |
+| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (M0-01, M0-02 done) |
 | **M1** Keyboard shell & layout engine | A fast, native-looking keyboard that types letters | Not started |
 | **M2** Language engine v1 (English) | Suggestions, conservative autocorrect, smart punctuation | Not started |
 | **M3** Learning & personal model | Learns words/phrases, adaptive touch model, incognito | Not started |
@@ -460,12 +460,13 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   Done when: `xcodebuild -version` shows 27.1+, both simulators boot, skills refreshed.
   **Result (2026-10-26):** Xcode 27.1 selected; simulators `iPhone 12` (iOS 27.0) and `iPhone Duo` (iOS 27.1) boot and build the app;
   `app-resizability` exported; all six `iphone-duo-*` skills kept (§11).
-- [~] **M0-02 Project structure** *(built; only the simulator "types a" check is outstanding — see log)* — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
+- [x] **M0-02 Project structure** — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
   entitlement placeholder, `Config/Base.xcconfig` + gitignored `Config/Local.xcconfig` (team ID, bundle prefix;
   move `DEVELOPMENT_TEAM` out of the pbxproj), local Swift packages from §7 with empty modules and one test each,
   Swift 6 mode for packages (D-25), shared schemes in `xcshareddata` (the auto-generated scheme lives in
   gitignored `xcuserdata`). Depends: M0-01. Done when: app + extension build, keyboard can be enabled in the
   simulator and types "a".
+  **Result (2026-10-26):** `project.yml` (D-28) + Config xcconfigs, `iBoardKeyboard` stub, 6 Swift 6 packages; owner confirmed typing "a" in Safari's search field on the iPhone 12 sim.
 - [ ] **M0-03 👤 Spike: memory ceiling** — Debug build that allocates in steps inside the extension and logs the
   footprint at termination; run on the owner's iPhone 12 (if available) and in the simulator. Record the limit in
   §5 and re-baseline §6. Depends: M0-02. Unblocks: M2, M4, M8, M9.
@@ -705,6 +706,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-02 done ·** Owner enabled iBoard on the iPhone 12 simulator and confirmed the "a" key types into Safari's search field (Notes isn't installed on the sim). Closes the gap in the entry below. Next: M0-03 needs the owner's device; agents can take M0-04, M0-05 or M0-12.
 
 - **2026-10-26 · M0-02 (built, not closed) ·** Added `project.yml` (D-28), `Config/Base.xcconfig` + `Local.xcconfig(.example)`, `iBoardKeyboard` extension (stub "a" key, no Full Access requested), App Group entitlements on app + extension, iCloud placeholder note, six Swift 6 packages (§7) with one test each, shared scheme in `xcshareddata`; `DEVELOPMENT_TEAM` no longer in the pbxproj. Verification: `swift test` passes in all six packages; app + extension build for generic simulator and the iPhone 12 simulator (extension embedded in PlugIns). **Not verified:** enabling the keyboard and typing "a" — simctl has no tap/typing and the Xcode device-interaction tools weren't available; I pre-seeded `AppleKeyboards` in the iPhone 12 sim but the screen was black after reboot. Follow-up: enable iBoard in Settings > Keyboards on a sim, type in Notes, then tick M0-02. Note: git repo has no remote, so nothing was pushed.
 
