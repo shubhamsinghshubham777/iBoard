@@ -11,6 +11,11 @@ final class KeyboardViewController: UIInputViewController {
 
     private let grid = KeyGridView()
     private let strip = SuggestionStripView()
+    private let handle = ResizeHandleView()
+    private let overrides = LocalLayoutOverrides()
+    /// Scale while the handle is being dragged (not persisted until the drag ends).
+    private var liveScale: Double?
+    private var dragStartHeight: CGFloat = 0
     private var consumeShiftOnce = false
     private var heightConstraint: NSLayoutConstraint?
     private var layoutKind: LayoutKind = .letters
@@ -31,6 +36,7 @@ final class KeyboardViewController: UIInputViewController {
         var safe: LayoutInsets
         var traits: LayoutTraits
         var kind: LayoutKind
+        var layoutSettings: LayoutSettings
     }
 
     /// P-23: `playInputClick` only sounds when the input view adopts `UIInputViewAudioFeedback`.
@@ -56,8 +62,13 @@ final class KeyboardViewController: UIInputViewController {
         grid.accessibilityIdentifier = "key-grid"
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
+        handle.onDragBegan = { [weak self] in self?.dragStartHeight = self?.view.bounds.height ?? 0 }
+        handle.onDragChanged = { [weak self] dy in self?.dragHandle(translationY: dy) }
+        handle.onDragEnded = { [weak self] in self?.endDrag() }
+        handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
+        view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: KeyboardViewController, _) in
+        registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
         }
 
@@ -113,7 +124,8 @@ final class KeyboardViewController: UIInputViewController {
         let proxy = textDocumentProxy
         return LayoutTraits(
             displayClass: .phone,
-            orientation: view.bounds.width > view.bounds.height ? .landscape : .portrait,
+            // A keyboard is always wider than tall, so bounds can't tell; iPhone landscape has a compact height class.
+            orientation: traitCollection.verticalSizeClass == .compact ? .landscape : .portrait,
             keyboardKind: KeyboardKind(proxy.keyboardType ?? .default),
             returnKey: ReturnKeyKind(proxy.returnKeyType ?? .default),
             needsInputModeSwitchKey: needsInputModeSwitchKey
@@ -137,6 +149,44 @@ final class KeyboardViewController: UIInputViewController {
         updateRepeatTimer()
     }
 
+    private var heightKey: String {
+        HeightKey.make(displayClass: DisplayClass.phone.rawValue, orientation: currentTraits().orientation.rawValue)
+    }
+
+    /// Layout settings from the app (App Group) overridden by what the user did in the keyboard (F11, F1).
+    private func currentLayoutSettings() -> LayoutSettings {
+        var ls = LayoutSettings()
+        ls.numberRow = overrides.numberRow ?? settings.numberRow
+        ls.heightScale = CGFloat(liveScale ?? overrides.heightScale(forKey: heightKey) ?? settings.heightScale(forKey: heightKey))
+        return ls
+    }
+
+    private func dragHandle(translationY dy: CGFloat) {
+        let size = view.bounds.size
+        guard size.width > 0 else { return }
+        let safe = LayoutInsets(top: 0, left: view.safeAreaInsets.left, bottom: view.safeAreaInsets.bottom, right: view.safeAreaInsets.right)
+        let traits = currentTraits()
+        func h(_ scale: CGFloat) -> CGFloat {
+            var ls = currentLayoutSettings(); ls.heightScale = scale
+            return LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
+        }
+        // Dragging up grows the keyboard (it is bottom-anchored).
+        liveScale = ResizeMath.scale(forHeight: dragStartHeight - dy, height0: h(0), height1: h(1))
+        relayoutIfNeeded()
+    }
+
+    private func endDrag() {
+        if let s = liveScale { overrides.setHeightScale(s, forKey: heightKey) }
+        liveScale = nil
+        relayoutIfNeeded()
+    }
+
+    private func toggleNumberRow() {
+        overrides.setNumberRow(!(overrides.numberRow ?? settings.numberRow))
+        lastLayoutKey = nil
+        relayoutIfNeeded()
+    }
+
     private func relayoutIfNeeded() {
         let size = view.bounds.size
         guard size.width > 0, size.height > 0 else { return }
@@ -144,15 +194,17 @@ final class KeyboardViewController: UIInputViewController {
             top: 0, left: view.safeAreaInsets.left, bottom: view.safeAreaInsets.bottom, right: view.safeAreaInsets.right
         )
         let traits = currentTraits()
-        let key = LayoutKey(size: size, safe: safe, traits: traits, kind: layoutKind)
+        let ls = currentLayoutSettings()
+        let key = LayoutKey(size: size, safe: safe, traits: traits, kind: layoutKind, layoutSettings: ls)
         guard key != lastLayoutKey else { return }
         lastLayoutKey = key
 
-        let want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind)
+        let want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         if abs((heightConstraint?.constant ?? 0) - want) > 0.5 { heightConstraint?.constant = want }
-        let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind)
+        let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
         strip.frame = layout.stripFrame
+        handle.frame = CGRect(x: (size.width - ResizeHandleView.size.width) / 2, y: 0, width: ResizeHandleView.size.width, height: ResizeHandleView.size.height)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
             updateAutoShift()
@@ -215,10 +267,12 @@ final class KeyboardViewController: UIInputViewController {
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]
             let options = KeyAlternates.options(for: key.identity, uppercase: grid.shift != .off) ?? []
+            handle.isHidden = true
             strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
+            handle.isHidden = false
             if let text = strip.end(at: p) {
                 input.insert(text)
                 feedback()
@@ -227,6 +281,7 @@ final class KeyboardViewController: UIInputViewController {
             }
         case .alternatesCancelled:
             strip.cancelAlternates()
+            handle.isHidden = false
         case .layerChanged(let kind):
             layoutKind = kind
             layerChangePending = true

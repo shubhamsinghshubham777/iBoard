@@ -47,9 +47,29 @@ struct SettingsView: View {
         Form {
             Toggle("Haptic feedback (needs Full Access)", isOn: $settings.haptics)
             Toggle("Key click sound", isOn: $settings.keyClickSound)
+            Toggle("Number row", isOn: $settings.numberRow)
+            Section("Keyboard height (80% to 140%)") {
+                HeightSlider(title: "iPhone portrait", key: HeightKey.make(displayClass: "phone", orientation: "portrait"), settings: $settings)
+                HeightSlider(title: "iPhone landscape", key: HeightKey.make(displayClass: "phone", orientation: "landscape"), settings: $settings)
+            }
         }
         .navigationTitle("Settings")
         .onChange(of: settings) { _, new in SettingsStore().save(new) }
+    }
+}
+
+struct HeightSlider: View {
+    let title: String
+    let key: String
+    @Binding var settings: IBoardSettings
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("\(title): \(Int((settings.heightScale(forKey: key) * 100).rounded())) %")
+            Slider(
+                value: Binding(get: { settings.heightScale(forKey: key) }, set: { settings.heightScales[key] = HeightScale.clamp($0) }),
+                in: HeightScale.range
+            )
+        }
     }
 }
 

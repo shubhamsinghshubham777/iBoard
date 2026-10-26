@@ -98,3 +98,22 @@ private final class Sink {
     var def = AlternatesSelection(options: ["è", "é"], stripFrame: strip, originRegion: origin)
     #expect(def.end(at: CGPoint(x: origin.midX, y: origin.midY)) == "è") // never left the key: default commits
 }
+
+@Test func resizeMathInterpolatesAndClamps() {
+    // height(s) = 44 + 216 s + 0  ->  h0 = 44, h1 = 260
+    #expect(ResizeMath.scale(forHeight: 260, height0: 44, height1: 260) == 1)
+    #expect(abs(ResizeMath.scale(forHeight: 44 + 216 * 1.2, height0: 44, height1: 260) - 1.2) < 1e-9)
+    #expect(ResizeMath.scale(forHeight: 100, height0: 44, height1: 260) == 0.8)
+    #expect(ResizeMath.scale(forHeight: 900, height0: 44, height1: 260) == 1.4)
+    #expect(ResizeMath.scale(forHeight: 200, height0: 100, height1: 100) == 1)
+}
+
+@Test func preferredHeightIsLinearInScaleSoResizeMathInverts() {
+    let t = LayoutTraits()
+    func h(_ s: CGFloat) -> CGFloat {
+        LayoutEngine.preferredHeight(width: 390, traits: t, kind: .letters, settings: LayoutSettings(heightScale: s))
+    }
+    let s = ResizeMath.scale(forHeight: h(1.25), height0: h(0), height1: h(1))
+    #expect(abs(s - 1.25) < 1e-6)
+    #expect(h(1.4) > h(1) && h(0.8) < h(1))
+}
