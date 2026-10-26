@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+DerivedData/
+build/
+*.xcresult
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local signing / team overrides (see ROADMAP.md, task M0-02)
+Config/Local.xcconfig
+
+# Agent skills that may NOT be redistributed in this open-source repo.
+# Restore them locally with: scripts/bootstrap-agent-skills.sh
+# - Apple's Xcode-provided skills (covered by the Xcode license)
+.agents/skills/swiftui-specialist/
+.agents/skills/swiftui-whats-new-27/
+.agents/skills/app-intents-specialist/
+.agents/skills/app-intents-whats-new-27/
+.agents/skills/uikit-app-modernization/
+.agents/skills/app-resizability/
+.agents/skills/device-interaction/
+.agents/skills/modernize-tests/
+.claude/skills/swiftui-specialist
+.claude/skills/swiftui-whats-new-27
+.claude/skills/app-intents-specialist
+.claude/skills/app-intents-whats-new-27
+.claude/skills/uikit-app-modernization
+.claude/skills/app-resizability
+.claude/skills/device-interaction
+.claude/skills/modernize-tests
+# - dpearson2699/swift-ios-skills (PolyForm Perimeter 1.0.0, not open source)
+.agents/skills/debugging-instruments/
+.agents/skills/ios-memgraph-analysis/
+.agents/skills/app-store-review/
+.agents/skills/ios-accessibility/
+.claude/skills/debugging-instruments
+.claude/skills/ios-memgraph-analysis
+.claude/skills/app-store-review
+.claude/skills/ios-accessibility
+
+# Scratch output from skills/tools
+xcode-skills/
+artifacts/

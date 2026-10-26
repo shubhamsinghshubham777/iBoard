@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "skills": {
+    "app-store-review": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/app-store-review/SKILL.md",
+      "computedHash": "564f895241f3c3a38f9962395ddca451a1ecb42912a643f8c01482d2173110f6"
+    },
+    "debugging-instruments": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/debugging-instruments/SKILL.md",
+      "computedHash": "ccaa83079af0dd3be7e2a80503f8b419de470a0c5497b6e6053a6a6eb2fa35b7"
+    },
+    "ios-accessibility": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ios-accessibility/SKILL.md",
+      "computedHash": "b7d8e7a257de72382f524a6cd59b8230cc852cd487d476c50d7b60b678ba1f4d"
+    },
+    "ios-memgraph-analysis": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ios-memgraph-analysis/SKILL.md",
+      "computedHash": "769b80eff52bcd630744a33fa27da07dd6c2af71e9b64bbba70a3fdb54a7dcce"
+    },
+    "iphone-duo-adaptive-layout": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-adaptive-layout/SKILL.md",
+      "computedHash": "88160bdea8d617329f7456b604a189d1d39cadce769f7edd22eeeb5371cda426"
+    },
+    "iphone-duo-design-review": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-design-review/SKILL.md",
+      "computedHash": "6977308db668fbe69cc67c21d65fd514d18a3b74fbfcdb03b73a7d8e6ed64d80"
+    },
+    "iphone-duo-dual-pane-patterns": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-dual-pane-patterns/SKILL.md",
+      "computedHash": "4395cf25f2dcb7fb02ac6ad5d9d0d4ae8234d6dbe0192f4eba5db2819a07085f"
+    },
+    "iphone-duo-hinge-and-scenes": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-hinge-and-scenes/SKILL.md",
+      "computedHash": "78dcd2d6fc3ce865d6a21d71b6ddb3615434771e59d72b409da931ac3765dda9"
+    },
+    "iphone-duo-readiness": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-readiness/SKILL.md",
+      "computedHash": "24b268588fc2e9fee2ac272ba275eb52124d2839ebf34aec3cfe0e9364b6c0b7"
+    },
+    "iphone-duo-vertical-bars": {
+      "source": "mirzaaghazadeh/iphone-duo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/iphone-duo-vertical-bars/SKILL.md",
+      "computedHash": "7cd21a83db41beee537e6e6d768516b82dbcc3eae568ca7b69d9aa03eab3bb8a"
+    },
+    "swift-concurrency": {
+      "source": "avdlee/swift-concurrency-agent-skill",
+      "sourceType": "github",
+      "skillPath": "skills/swift-concurrency/SKILL.md",
+      "computedHash": "49e4df69412710a0ca320c21a9d26cf4abb6d2c553960cffaceea5a09e3be792"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+iBoard
+Copyright 2026 Shubham Singh
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party material included in this repository:
+
+- .agents/skills/iphone-duo-* — from https://github.com/mirzaaghazadeh/iphone-duo-skills
+  Copyright (c) 2026 Navid Mirzaaghazadeh. MIT License (see LICENSE in each skill folder).
+  Not affiliated with, endorsed by, or sponsored by Apple Inc.
+
+- .agents/skills/swift-concurrency — from https://github.com/AvdLee/Swift-Concurrency-Agent-Skill
+  Copyright (c) 2026 Antoine van der Lee. MIT License (see .agents/skills/swift-concurrency/LICENSE).
+
+Language data attributions will be listed in docs/DATA_SOURCES.md.
