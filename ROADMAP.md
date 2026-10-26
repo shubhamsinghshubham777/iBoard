@@ -3,7 +3,7 @@
 > The single source of truth for building iBoard. Every agent reads this before working and updates it before
 > finishing. If code and this document disagree, fix one of them in the same commit.
 
-**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-03` (👤)
+**Last updated:** 2026-10-26 · **Phase:** M0 (Foundations & spikes) · **Next task:** `M0-04`
 
 ---
 
@@ -176,6 +176,7 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-17 | Xcode ships exportable agent skills (`xcrun agent skills export`); Xcode 27.1 renames UIKit modernization to **App Resizability** with SwiftUI + iPhone Duo support. | Skills setup (§11). | Verified 2026-10-26 with Xcode 27.1 (27A9275): `uikit-app-modernization` gone, `app-resizability` present |
 | P-19 | The **iOS 27.1 simulator runtime (24A94425) supports only the iPhone Duo**; iPhone 12 simulators use the iOS 27.0 runtime (matches the owner's device). | Create `iPhone Duo` on iOS 27.1 and `iPhone 12` on iOS 27.0. | `simctl list runtimes -j`, 2026-10-26 |
 | P-20 | On the owner's Mac, `~/Library/Developer/CoreSimulator/Devices` is a symlink to `/Volumes/SSD/Library/Developer/CoreSimulator/Devices`. CoreSimulatorService currently gets EPERM (macOS privacy, external volume) writing there, so `simctl create` fails with "device remained in Creating state". | **Resolved 2026-10-26:** owner granted access; simulator creation works. If it recurs on another machine, grant Full Disk Access to CoreSimulatorService. | CoreSimulator.log, 2026-10-26 |
+| P-21 | **Keyboard extension memory ceiling on iPhone 12 / iOS 27.0 is ~76–80 MB** (`phys_footprint`); empty keyboard ≈ 5 MB; no memory warning arrived before the kill. Single run, device only. | §6 caps (30 target / 40 hard) stay; enforce them ourselves; retest on other devices. | `docs/spikes/M0-03.md`, 2026-10-26 |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | `xcode-select -p` points at 27.1 (verified 2026-10-26). Always check `xcodebuild -version` at session start. | Owner's machine, 2026-10-26 |
 
 ---
@@ -469,9 +470,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   gitignored `xcuserdata`). Depends: M0-01. Done when: app + extension build, keyboard can be enabled in the
   simulator and types "a".
   **Result (2026-10-26):** `project.yml` (D-28) + Config xcconfigs, `iBoardKeyboard` stub, 6 Swift 6 packages; owner confirmed typing "a" in Safari's search field on the iPhone 12 sim.
-- [ ] **M0-03 👤 Spike: memory ceiling** — Debug build that allocates in steps inside the extension and logs the
+- [x] **M0-03 👤 Spike: memory ceiling** — Debug build that allocates in steps inside the extension and logs the
   footprint at termination; run on the owner's iPhone 12 (if available) and in the simulator. Record the limit in
   §5 and re-baseline §6. Depends: M0-02. Unblocks: M2, M4, M8, M9.
+  **Result (2026-10-26):** iPhone 12 / iOS 27.0 jetsam limit is 76–80 MB footprint (P-21); budgets in §6 unchanged. `docs/spikes/M0-03.md`.
 - [ ] **M0-04 Spike: translucency** — Try `UIInputView(.keyboard)`, `UIVisualEffectView`, Liquid Glass
   (`glassEffect`/`UIGlassEffect`) and a clear background in the extension on iOS 27: does the host show through?
   Screenshot each in light/dark over a colourful host. Record what "Native" and "Native Glass" can be. Unblocks: M1-03, M8.
@@ -689,7 +691,7 @@ license here; never vendor non-open-source skills.
 
 | ID | Risk / question | Mitigation / owner |
 |---|---|---|
-| R-01 | Memory ceiling lower than budget → crashes on iPhone 12. | M0-03 first; mmap everything; memory-warning handling; emoji panel isolation. |
+| R-01 | Memory ceiling lower than budget → crashes on iPhone 12. **Measured ~76–80 MB (P-21); budget OK.** | M0-03 first; mmap everything; memory-warning handling; emoji panel isolation. |
 | R-02 | Translucency can't show the host → "glass" looks fake. | M0-04; design Native Glass around the system keyboard material if that's all we get. |
 | R-03 | App Group not readable without Full Access → settings from the app don't apply. | M0-05; in-keyboard essential settings fallback. |
 | R-04 | Shortcuts automation UX changes or requires confirmation in a future iOS. | Keep clipboard fallback; onboarding detects stale codes; re-test each iOS release. |
@@ -716,6 +718,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-03 done ·** Probe build on the owner's iPhone 12 allocated until the extension was killed: last footprint recorded 76 MB (limit in [76, 81) MB), idle ≈ 5 MB, no memory warning first. Verification: owner read the on-screen "last run" value (screenshot); one run only. Follow-ups: the throwaway probe build is still installed on the phone (replace on next install); next serial spikes M0-04 then device parts of M0-05/08/09.
 
 - **2026-10-26 · M0-04/05/08/09/10 (partial, parallel agents) ·** Five spike agents, each with its own simulator and worktree; merged docs only (`docs/spikes/`). Outcome: M0-09 mostly answered, M0-05 partially (sim ignores Open Access), M0-08 and M0-10 untested, M0-04 agent never finished (no commit). Cause: five booted simulators drove load to ~500 and made `axe` taps unreliable; `simctl clone` fails on booted sims; `axe touch --down --up` is more reliable than `axe tap` on keyboard UI. Lesson: run simulator spikes one at a time. Follow-ups: re-run M0-04 and M0-08 serially; do M0-03/05/08/09 device parts on the iPhone; M0-10 needs the owner at Simulator/Device Hub.
 
