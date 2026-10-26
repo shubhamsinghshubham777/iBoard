@@ -14,14 +14,13 @@ CLAUDE_DIR="$ROOT/.claude/skills"
 mkdir -p "$SKILLS_DIR" "$CLAUDE_DIR"
 
 # --- 1. Apple skills from Xcode -------------------------------------------
-# app-resizability ships with Xcode 27.1+ (it replaces uikit-app-modernization).
+# Requires Xcode 27.1+ (app-resizability replaced uikit-app-modernization in 27.1).
 APPLE_SKILLS=(
   swiftui-specialist
   swiftui-whats-new-27
   app-intents-specialist
   app-intents-whats-new-27
   app-resizability
-  uikit-app-modernization
   device-interaction
   modernize-tests
 )

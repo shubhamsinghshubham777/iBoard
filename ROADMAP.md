@@ -83,7 +83,7 @@
 | **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Not started |
 | **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Not started |
 
-**Current blockers:** Xcode 27.1 not yet installed (`M0-01`, 👤).
+**Current blockers:** none. `M0-01` in progress — Xcode 27.1 installed and skills refreshed; iOS 27.1 simulator runtime downloading.
 
 ---
 
@@ -170,7 +170,8 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-14 | **Keyboard extensions currently receive no hinge state or reserved regions** on iPhone Duo (simulator, Xcode 27.1 RC). Feedback FB25187339 filed by KeyboardKit. | Duo split is rule-based (D-20); re-test on device and each iOS release. | keyboardkit.com blog 2026-10-14; KeyboardKit issue #1095 |
 | P-15 | Keyboard extensions can't draw outside their view bounds. | (Also why balloons look clipped on the top row.) All transient UI — alternates, selection preview, chips — lives inside the keyboard's own area. | Long-standing behavior; recheck in `M0-09` |
 | P-16 | SQLite/file locks held in a shared App Group container when a process is suspended can get it terminated (`0xdead10cc`). | Short transactions; no locks across suspension; single writer. | Apple TN on 0xdead10cc; design rule |
-| P-17 | Xcode ships exportable agent skills (`xcrun agent skills export`); Xcode 27.1 renames UIKit modernization to **App Resizability** with SwiftUI + iPhone Duo support. | Skills setup (§11). | developer.apple.com/iphone-duo/prepare; tech talk 111461 |
+| P-17 | Xcode ships exportable agent skills (`xcrun agent skills export`); Xcode 27.1 renames UIKit modernization to **App Resizability** with SwiftUI + iPhone Duo support. | Skills setup (§11). | Verified 2026-10-26 with Xcode 27.1 (27A9275): `uikit-app-modernization` gone, `app-resizability` present |
+| P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | Until the owner runs `xcode-select`, prefix commands with `DEVELOPER_DIR=/Volumes/SSD/Applications/Xcode-27.1.0.app/Contents/Developer`. Check with `xcodebuild -version`. | Owner's machine, 2026-10-26 |
 
 ---
 
@@ -448,7 +449,7 @@ Conflict-resolution rules (all thresholds tunable, covered by tests):
 Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Keep results to one line when checking off.
 
 ### M0 — Foundations & spikes
-- [ ] **M0-01 👤 Install Xcode 27.1 and the iPhone Duo simulator** — Owner installs Xcode 27.1 (Xcodes.app or App Store)
+- [~] **M0-01 👤 Install Xcode 27.1 and the iPhone Duo simulator** — Owner installs Xcode 27.1 (Xcodes.app or App Store)
   and selects it (`sudo xcode-select -s`). Then an agent: installs/updates the iOS 27.1 simulator runtime
   (`xcodebuild -downloadPlatform iOS`), creates `iPhone 12` and `iPhone Duo` simulators (`xcrun simctl create`),
   re-runs `scripts/bootstrap-agent-skills.sh` (now exports `app-resizability`), then compares `app-resizability` with
@@ -631,11 +632,11 @@ Skills live in `.agents/skills/` (linked into `.claude/skills/`). Load the relev
 
 | Skill | Source / license | In repo? | Use for |
 |---|---|---|---|
-| `iphone-duo-readiness`, `-adaptive-layout`, `-design-review`, `-dual-pane-patterns`, `-hinge-and-scenes`, `-vertical-bars` | mirzaaghazadeh/iphone-duo-skills, MIT | ✅ vendored | M0-10, M11, companion app on Duo (until `app-resizability` supersedes, M0-01) |
+| `iphone-duo-readiness`, `-adaptive-layout`, `-design-review`, `-dual-pane-patterns`, `-hinge-and-scenes`, `-vertical-bars` | mirzaaghazadeh/iphone-duo-skills, MIT | ✅ vendored | M0-10, M11, companion app on Duo: hinge, reserved regions/fold, ArrangementView, poses, vertical bars, Duo App Store assets. Kept after M0-01 review — `app-resizability` covers none of these. **If they conflict with an Apple skill, Apple wins.** |
 | `swift-concurrency` | avdlee/swift-concurrency-agent-skill, MIT | ✅ vendored | EngineActor, Swift 6 mode, Sendable issues |
 | `swiftui-specialist`, `swiftui-whats-new-27` | Apple (Xcode), not redistributable | bootstrap | Companion app |
 | `app-intents-specialist`, `app-intents-whats-new-27` | Apple (Xcode) | bootstrap | OTP intent (M6) — background `supportedModes` |
-| `app-resizability` (Xcode 27.1+) / `uikit-app-modernization` | Apple (Xcode) | bootstrap | Size-agnostic layouts, Duo |
+| `app-resizability` (Xcode 27.1+) | Apple (Xcode) | bootstrap | **Authoritative** for size-agnostic layout, removing `UIScreen.main`/orientation/idiom, asymmetric safe areas, Duo readiness |
 | `device-interaction` | Apple (Xcode) | bootstrap | Simulator screenshots/taps for verification |
 | `modernize-tests` | Apple (Xcode) | bootstrap | Swift Testing conventions |
 | `debugging-instruments`, `ios-memgraph-analysis` | dpearson2699, PolyForm Perimeter | bootstrap | Perf/memory gates (M0-03, M1-09, M13-02) |
@@ -682,8 +683,8 @@ license here; never vendor non-open-source skills.
 | R-08 | Gesture conflicts (flick vs swipe) feel unpredictable. | Recorded-trace tests; tunable thresholds; flicks can be disabled. |
 | R-09 | App Review rejects due to Full Access messaging or Shortcuts onboarding. | Follow 4.4.1 strictly; core works without Full Access; no app launching from keyboard. |
 | R-10 | `adjustTextPosition` units differ by host (UTF-16 vs grapheme). | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
-| Q-01 | Does the owner have a physical base iPhone 12 for perf gates? | 👤 answer in progress log. |
-| Q-02 | Public GitHub repo name/owner and whether commits should use a GitHub no-reply email. | 👤 before M13-06. |
+| Q-01 | ~~Physical base iPhone 12?~~ **Answered 2026-10-26:** yes — "Shubham’s iPhone", iPhone13,2, iOS 27.0 (24A437), Developer Mode on, paired over Wi-Fi (UDID `00008101-0014596A1E01001E`). | Use for every 👤 perf gate; agents can deploy with `xcrun devicectl` when it's reachable. |
+| Q-02 | Public GitHub repo name/owner. **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
 
 ---
 
@@ -699,6 +700,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-01 (in progress) ·** Owner installed Xcode 27.1 via Xcodes at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (not yet `xcode-select`ed, P-18). Re-ran bootstrap with 27.1: `app-resizability` exported; `uikit-app-modernization` no longer ships and was removed from the script. Reviewed `app-resizability` vs vendored `iphone-duo-*`: it covers legacy screen/orientation/idiom APIs and safe areas but not hinge, fold/reserved-region layout, ArrangementView or Duo design, so all six community skills stay (§11, Apple wins on conflict). Owner's iPhone 12 found via `devicectl`: iOS 27.0, Developer Mode on, Wi-Fi paired (Q-01). Commit email stays public (Q-02). iOS 27.1 simulator runtime download started (`xcodebuild -downloadPlatform iOS`). Follow-ups: create iPhone 12 + iPhone Duo simulators when the runtime lands; owner runs `xcode-select`.
 
 - **2026-10-26 · planning ·** Product discovery with the owner; all decisions in §4 recorded. Research: OTP via iOS 27
   shortcut-distributable Message automations (P-02), iPhone Duo geometry and the extension fold limitation (P-13,
