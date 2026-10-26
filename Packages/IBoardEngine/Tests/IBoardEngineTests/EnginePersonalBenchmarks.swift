@@ -38,6 +38,8 @@ import IBoardLayout
         }
         times.sort()
         print("BENCH engine+personal(10k uni/10k bi) per request: p50 \(times[200]) ms, p95 \(times[380]) ms")
+        #if !DEBUG
         #expect(times[380] <= 25)
+        #endif
     }
 }

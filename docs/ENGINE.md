@@ -41,9 +41,21 @@ Format of the data files: `docs/LEXICON_FORMAT.md`.
 Deterministic: no clocks or random numbers, ties are broken by key index, trie node, then word id. Immutable and
 `Sendable`; each `decode` allocates a few small arrays (not yet allocation-free).
 
+Edit-aware readings (engine-gap-3, `enableEdits`, default on): the beam is layered by touches consumed and each reading
+may use ONE edit: adjacent transposition (touches k, k+1 swapped; `transpositionPenalty` 3 nats), an extra tap
+(`insertionPenalty` 8) or a missing letter (`deletionPenalty` 8, never before the first touch or after the last: that is
+a completion). Zero-edit hypotheses are pruned exactly as before (`beamWidth`), one-edit ones in their own
+`editBeamWidth` (12) quota, repeats of (node, edits) are dropped, and a word reached both ways keeps its best score.
+Edit readings join the same-length posterior, so `teh` -> `the` and `adn` -> `and` get autocorrect proposals with
+posterior > 0.97, while deletion/insertion readings mostly show up as suggestions (their posterior rarely clears the
+policy threshold). Penalties are untuned guesses. Synthetic eval after the change (noise-only typing, so no real
+transpositions): precision 100 / 99.9 %, false-correction 0 %, recall 70.2 / 67.7 % at noise 0.25 / 0.35 (before:
+70.5 / 68.4 %); the small recall loss is posterior mass moved to transposed readings. Release, macOS, 12k-word fixture:
+decode p95 0.0054 ms -> 0.0208 ms per keystroke.
+
 Scope and limits: decodes letter taps of a single word (letter keys of the layout, one Unicode scalar each);
-apostrophes and other punctuation inside words, capitalisation, space-ending and transposition errors are not handled
-here. The defaults (sigma, beam, penalties) are untuned guesses validated only on synthetic traces.
+apostrophes and other punctuation inside words, capitalisation and space-ending are not handled here; at most one edit
+per word. The defaults (sigma, beam, penalties) are untuned guesses validated only on synthetic traces.
 
 ## EngineActor and strip model (M2-04)
 

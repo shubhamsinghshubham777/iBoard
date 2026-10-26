@@ -41,6 +41,14 @@ public struct TapDecoderParameters: Sendable, Equatable {
     public var completionsPerSource = 6
     /// Length of the returned candidate list.
     public var maxCandidates = 8
+    /// Edit-aware candidates (at most one edit per reading): adjacent transposition ("teh" -> "the"), a missing
+    /// letter ("helo" -> "hello") and an extra tap ("helllo" -> "hello"). Each charges a flat penalty in nats.
+    public var enableEdits = true
+    public var transpositionPenalty = 3.0
+    public var deletionPenalty = 8.0
+    public var insertionPenalty = 8.0
+    /// Hypotheses kept per layer that already used their edit (the zero-edit beam keeps `beamWidth`).
+    public var editBeamWidth = 12
 
     public init() {}
 }
@@ -92,6 +100,8 @@ public struct TapDecoder: Sendable {
     }
 
     private let letters: [LetterKey]
+    /// Distinct letter scalars, ascending (labels tried for a missing letter).
+    private let labels: [UInt32]
 
     public init(layout: KeyboardLayout, lexicon: Lexicon, model: NGramModel? = nil,
                 parameters: TapDecoderParameters = TapDecoderParameters()) {
@@ -107,6 +117,7 @@ public struct TapDecoder: Sendable {
                 spatial: sm, logNorm: -log(sm.sigmaX * sm.sigmaY)))
         }
         letters = l
+        labels = Array(Set(l.map(\.scalar))).sorted()
         self.lexicon = lexicon
         self.model = model
         self.parameters = parameters
@@ -126,6 +137,34 @@ public struct TapDecoder: Sendable {
         var cursor: TrieCursor
         var spatial: Double
         var priority: Double
+        /// 0 or 1 edits used so far, and the nats charged for it.
+        var edits: UInt8 = 0
+        var penalty: Double = 0
+    }
+
+    /// Orders by priority, then trie node, then edits; drops repeats of (node, edits); keeps the best `beamWidth`
+    /// zero-edit and `editBeamWidth` one-edit hypotheses. With no edits this equals the plain beam prune.
+    private func prune(_ hs: inout [Hypothesis]) {
+        hs.sort {
+            if $0.priority != $1.priority { return $0.priority > $1.priority }
+            if $0.cursor.node != $1.cursor.node { return $0.cursor.node < $1.cursor.node }
+            return $0.edits < $1.edits
+        }
+        var kept: [Hypothesis] = []
+        kept.reserveCapacity(min(hs.count, parameters.beamWidth + parameters.editBeamWidth))
+        var zero = 0, one = 0
+        for h in hs {
+            if h.edits == 0 {
+                if zero >= parameters.beamWidth { continue }
+                zero += 1
+            } else {
+                if one >= parameters.editBeamWidth { continue }
+                if kept.contains(where: { $0.edits == 1 && $0.cursor == h.cursor }) { continue }
+                one += 1
+            }
+            kept.append(h)
+        }
+        hs = kept
     }
 
     private func lmLog(_ id: Lexicon.WordID, _ ctx: LMContext) -> Double {
@@ -176,35 +215,80 @@ public struct TapDecoder: Sendable {
         }
         let literal = String(literalScalars)
 
-        // 2. Beam search through the trie. Priority = spatial + optimistic LM (best word below the node).
-        var beam: [Hypothesis] = [Hypothesis(cursor: lexicon.root, spatial: 0, priority: 0)]
-        var next: [Hypothesis] = []
-        next.reserveCapacity(p.beamWidth * keyCap)
-        for t in 0..<n {
-            next.removeAll(keepingCapacity: true)
-            for h in beam {
-                for j in 0..<candCount[t] {
-                    let label = letters[candKey[t * keyCap + j]].scalar
-                    guard let c = lexicon.child(of: h.cursor, label: label) else { continue }
-                    let s = h.spatial + candLL[t * keyCap + j]
-                    next.append(Hypothesis(cursor: c, spatial: s,
-                                           priority: s + p.lmWeight * lexicon.bestLogProbability(under: c)))
+        // 2. Beam search through the trie, layered by number of touches consumed. Priority = spatial + optimistic LM
+        // (best word below the node) - edit penalty. Zero-edit hypotheses behave exactly as the plain beam; reading
+        // hypotheses with one edit live next to them (transposition jumps two touches, an extra tap jumps one without
+        // a letter, a missing letter adds a letter without a touch).
+        let editsOn = p.enableEdits && n >= 2
+        var layers = [[Hypothesis]](repeating: [], count: n + 1)
+        layers[0] = [Hypothesis(cursor: lexicon.root, spatial: 0, priority: 0)]
+        var finalBeam: [Hypothesis] = []
+        for k in 0...n {
+            var layer = layers[k]
+            layers[k] = []
+            if editsOn, k > 0, k < n {
+                let base = layer.count
+                for i in 0..<base where layer[i].edits == 0 {
+                    let h = layer[i]
+                    for label in labels {
+                        guard let c = lexicon.child(of: h.cursor, label: label) else { continue }
+                        layer.append(Hypothesis(cursor: c, spatial: h.spatial,
+                                                priority: h.spatial + p.lmWeight * lexicon.bestLogProbability(under: c) - p.deletionPenalty,
+                                                edits: 1, penalty: p.deletionPenalty))
+                    }
                 }
             }
-            if next.isEmpty { beam.removeAll(); break }
-            next.sort { $0.priority != $1.priority ? $0.priority > $1.priority : $0.cursor.node < $1.cursor.node }
-            if next.count > p.beamWidth { next.removeLast(next.count - p.beamWidth) }
-            swap(&beam, &next)
+            prune(&layer)
+            if k == n { finalBeam = layer; break }
+            for h in layer {
+                for j in 0..<candCount[k] {
+                    let label = letters[candKey[k * keyCap + j]].scalar
+                    guard let c = lexicon.child(of: h.cursor, label: label) else { continue }
+                    let s = h.spatial + candLL[k * keyCap + j]
+                    layers[k + 1].append(Hypothesis(cursor: c, spatial: s,
+                                                    priority: s + p.lmWeight * lexicon.bestLogProbability(under: c) - h.penalty,
+                                                    edits: h.edits, penalty: h.penalty))
+                }
+                guard editsOn, h.edits == 0 else { continue }
+                // Extra tap: this touch produced no letter.
+                layers[k + 1].append(Hypothesis(cursor: h.cursor, spatial: h.spatial,
+                                                priority: h.priority - p.insertionPenalty,
+                                                edits: 1, penalty: p.insertionPenalty))
+                // Transposition: touches k and k+1 were typed in the wrong order.
+                if k + 1 < n {
+                    for jx in 0..<candCount[k + 1] {
+                        let x = letters[candKey[(k + 1) * keyCap + jx]].scalar
+                        guard let cx = lexicon.child(of: h.cursor, label: x) else { continue }
+                        for jy in 0..<candCount[k] {
+                            let y = letters[candKey[k * keyCap + jy]].scalar
+                            guard y != x, let cy = lexicon.child(of: cx, label: y) else { continue }
+                            let s = h.spatial + candLL[(k + 1) * keyCap + jx] + candLL[k * keyCap + jy]
+                            layers[k + 2].append(Hypothesis(
+                                cursor: cy, spatial: s,
+                                priority: s + p.lmWeight * lexicon.bestLogProbability(under: cy) - p.transpositionPenalty,
+                                edits: 1, penalty: p.transpositionPenalty))
+                        }
+                    }
+                }
+            }
         }
+        // Completions come from the zero-edit beam only (as before).
+        let beam = finalBeam.filter { $0.edits == 0 }
 
         // 3. Same-length readings (words ending exactly here), plus the literal.
         var full: [TapCandidate] = []
         var seen: Set<UInt32> = []
-        for h in beam {
+        var fullIndex: [UInt32: Int] = [:]
+        for h in finalBeam {
             guard let w = lexicon.wordID(at: h.cursor) else { continue }
+            let score = h.spatial + p.lmWeight * lmLog(w, context) - h.penalty
+            if let i = fullIndex[w] {
+                if score > full[i].score { full[i].score = score }
+                continue
+            }
             seen.insert(w)
-            full.append(TapCandidate(word: lexicon.word(of: w), wordID: w,
-                                     score: h.spatial + p.lmWeight * lmLog(w, context),
+            fullIndex[w] = full.count
+            full.append(TapCandidate(word: lexicon.word(of: w), wordID: w, score: score,
                                      isCompletion: false, isLiteral: false))
         }
         var literalIndex: Int?
