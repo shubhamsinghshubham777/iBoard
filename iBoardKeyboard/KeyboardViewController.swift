@@ -11,7 +11,9 @@ final class KeyboardViewController: UIInputViewController {
         key.accessibilityIdentifier = "key-a"
         key.translatesAutoresizingMaskIntoConstraints = false
         key.addAction(UIAction { [weak self] _ in
+            let t = Perf.begin(.touchUpToInsert)
             self?.textDocumentProxy.insertText("a")
+            Perf.end(t)
         }, for: .touchUpInside)
         view.addSubview(key)
         NSLayoutConstraint.activate([
@@ -21,5 +23,8 @@ final class KeyboardViewController: UIInputViewController {
             key.heightAnchor.constraint(equalToConstant: 48),
             view.heightAnchor.constraint(equalToConstant: 216),
         ])
+        #if DEBUG
+        DebugOverlayView.install(in: view)
+        #endif
     }
 }
