@@ -62,6 +62,25 @@ instead of mirroring them. With no touches the actor predicts the next word (uni
 words as context; real successor lists come with M3-02). Requests carry previous words only for the call; nothing typed is
 stored or logged.
 
+### Personal model in the engine (engine-gap-2)
+
+Optional and injectable: `EngineActor(..., personal: (any PersonalScoreProvider)?, phrases: PhraseSuggester?)`,
+`setPersonal(scorer:phrases:)` (nil removes it) and `refreshPersonal(from: PersonalStore, phraseConfig:)` (takes fresh
+immutable snapshots; call it after learning batches, not per keystroke). Without it behaviour is unchanged.
+- Typing: every decoder candidate's LM term is replaced by `PersonalInterpolation.mix(base, personal)` (OOV candidates use
+  `oovLogProbability` as the base), forgotten words are dropped, up to 3 personal completions of the typed prefix are added
+  (spatial term of the literal, completion penalty), the same-length posterior / autocorrect proposal is recomputed, a
+  literal the personal model knows is not quoted and counts as `literalIsWord`, and a never-correct literal gets no proposal.
+- Prediction (no touches): the 64 base unigrams are mixed with the personal score; personal top unigrams and bigram
+  successors of the last word (`PersonalScoreProvider.successors(after:limit:)`, default empty, implemented by
+  `PersonalScorer`) join the candidate pool.
+- `Suggestions.phrase` = `PhraseSuggester.suggest(context: previousWords, currentPrefix: literal)?.slot`, so
+  `EngineRequest.previousWords` should carry the words of the current sentence (up to 5 are used for phrases, 2 for the LM).
+- Personal trust is tiny until real data accumulates (`PersonalInterpolation.trust`: 0.4 * mass / (mass + 300)); a handful
+  of observations barely moves rankings. Untuned.
+- Measured, macOS release, 10k unigrams + 10k bigrams: engine request p50 0.07 ms, p95 0.8 ms
+  (`EnginePersonalBenchmarks`). Not a device number.
+
 ## Autocorrect policy (M2-05)
 
 `Sources/IBoardEngine/Autocorrect/`. `AutocorrectPolicy.decide(...)` is pure. Corrects only when: autocorrection and

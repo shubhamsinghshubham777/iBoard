@@ -21,8 +21,14 @@ public protocol PersonalScoreProvider: Sendable {
     func score(word: String, context: [String]) -> PersonalScore?
     /// Personal words starting with `prefix`, best first.
     func completions(prefix: String, limit: Int) -> [PersonalCompletion]
+    /// Personal words that most often follow `word` (bigram successors), best first. Default: none.
+    func successors(after word: String, limit: Int) -> [PersonalCompletion]
     func isForgotten(_ word: String) -> Bool
     func isNeverCorrect(_ word: String) -> Bool
+}
+
+extension PersonalScoreProvider {
+    public func successors(after word: String, limit: Int) -> [PersonalCompletion] { [] }
 }
 
 public enum PersonalInterpolation {
@@ -97,6 +103,20 @@ public struct PersonalScorer: PersonalScoreProvider {
         var out: [PersonalCompletion] = []
         for (k, e) in state.unigrams where k.hasPrefix(p) && state.forgotten[k] == nil {
             out.append(PersonalCompletion(word: state.surfaces[k] ?? k, weight: state.effective(e, at: now)))
+        }
+        out.sort { $0.weight != $1.weight ? $0.weight > $1.weight : $0.word < $1.word }
+        return Array(out.prefix(limit))
+    }
+
+    public func successors(after word: String, limit: Int) -> [PersonalCompletion] {
+        let a = PersonalStore.normalize(word)
+        guard limit > 0, !a.isEmpty else { return [] }
+        let head = a + String(PersonalModelState.separator)
+        var out: [PersonalCompletion] = []
+        for (k, e) in state.bigrams where k.hasPrefix(head) {
+            let w = String(k.dropFirst(head.count))
+            guard !w.isEmpty, state.forgotten[w] == nil else { continue }
+            out.append(PersonalCompletion(word: state.surfaces[w] ?? w, weight: state.effective(e, at: now)))
         }
         out.sort { $0.weight != $1.weight ? $0.weight > $1.weight : $0.word < $1.word }
         return Array(out.prefix(limit))

@@ -45,13 +45,18 @@ public struct EngineRequest: Sendable {
 public actor EngineActor {
     private let lexicon: Lexicon
     private let model: NGramModel?
-    private let parameters: TapDecoderParameters
+    private var parameters: TapDecoderParameters
     private var layout: KeyboardLayout
     private var decoder: TapDecoder
+    private var personal: (any PersonalScoreProvider)?
+    private var phrases: PhraseSuggester?
     private nonisolated let latest = Mutex<UInt64>(0)
 
     public init(layout: KeyboardLayout, lexicon: Lexicon, model: NGramModel? = nil,
-                parameters: TapDecoderParameters = TapDecoderParameters()) {
+                parameters: TapDecoderParameters = TapDecoderParameters(),
+                personal: (any PersonalScoreProvider)? = nil, phrases: PhraseSuggester? = nil) {
+        self.personal = personal
+        self.phrases = phrases
         self.layout = layout
         self.lexicon = lexicon
         self.model = model
@@ -79,6 +84,22 @@ public actor EngineActor {
         decoder = TapDecoder(layout: layout, lexicon: lexicon, model: model, parameters: parameters)
     }
 
+    /// Installs (or, with nil, removes) the personal model snapshot. Snapshots are immutable: call again after the
+    /// personal store changed (for example after a learning batch) to pick up new words. Typed text is never kept.
+    public func setPersonal(scorer: (any PersonalScoreProvider)?, phrases: PhraseSuggester? = nil) {
+        personal = scorer
+        self.phrases = phrases
+    }
+
+    /// Convenience: takes fresh scorer and phrase-suggester snapshots from `store` (the phrase confidence also uses
+    /// the base n-gram model when there is one).
+    public func refreshPersonal(from store: PersonalStore, phraseConfig: PhraseConfig = PhraseConfig()) async {
+        let base: (any PhraseBaseLanguageModel)? = model.map { NGramPhraseBaseLM(lexicon: lexicon, model: $0) }
+        let s = await store.scorer()
+        let p = await store.phraseSuggester(config: phraseConfig, baseLM: base)
+        setPersonal(scorer: s, phrases: p)
+    }
+
     /// Computes the strip for the request, or nil when it was superseded.
     public func submit(_ request: EngineRequest) -> Suggestions? {
         if isStale(request.sequence) { return nil }
@@ -101,16 +122,79 @@ public actor EngineActor {
         return f.uppercased() + s.dropFirst()
     }
 
+    private func baseLog(_ id: Lexicon.WordID?, _ ctx: LMContext) -> Double {
+        guard let id else { return parameters.oovLogProbability }
+        return model?.logProbability(id, context: ctx) ?? lexicon.logProbability(of: id)
+    }
+
+    /// Folds the personal model into a decode result: learned words and n-grams re-weight the language-model term of
+    /// every candidate, forgotten words disappear, personal completions of the typed prefix are added, and the
+    /// autocorrect decision is recomputed over the same-length readings.
+    private func blend(_ res: TapDecodeResult, previous: [String], ctx: LMContext,
+                       with p: any PersonalScoreProvider) -> (TapDecodeResult, literalKnown: Bool) {
+        let lw = parameters.lmWeight
+        var cands: [TapCandidate] = []
+        for var c in res.candidates {
+            if !c.isLiteral, p.isForgotten(c.word) { continue }
+            if let s = p.score(word: c.word, context: previous) {
+                let b = baseLog(c.wordID, ctx)
+                c.score += lw * (PersonalInterpolation.mix(baseLogProb: b, personal: s) - b)
+            }
+            cands.append(c)
+        }
+        let literalKnown = res.candidates.first { $0.isLiteral }.map { c in
+            c.wordID != nil || p.score(word: c.word, context: previous) != nil } ?? false
+        if let lit = res.candidates.first(where: { $0.isLiteral }) {
+            // Spatial log-likelihood of the literal, reused for completions of the typed prefix.
+            let spatial = lit.score - lw * (PersonalInterpolation.mix(baseLogProb: baseLog(lit.wordID, ctx),
+                                             personal: p.score(word: lit.word, context: previous)))
+            var have = Set(cands.map { $0.word.lowercased() })
+            for pc in p.completions(prefix: res.literal, limit: 3) {
+                let low = pc.word.lowercased()
+                guard low.count > res.literal.count, have.insert(low).inserted,
+                      let s = p.score(word: low, context: previous) else { continue }
+                let id = lexicon.lookup(low)
+                let b = baseLog(id, ctx)
+                cands.append(TapCandidate(word: id.map { lexicon.word(of: $0) } ?? pc.word, wordID: id,
+                                          score: spatial + lw * PersonalInterpolation.mix(baseLogProb: b, personal: s)
+                                              - parameters.completionPenalty,
+                                          isCompletion: true, isLiteral: false))
+            }
+        }
+        cands.sort {
+            if $0.score != $1.score { return $0.score > $1.score }
+            if $0.isCompletion != $1.isCompletion { return !$0.isCompletion }
+            return ($0.wordID ?? .max) < ($1.wordID ?? .max)
+        }
+        if cands.count > parameters.maxCandidates { cands.removeLast(cands.count - parameters.maxCandidates) }
+        // Same-length posterior again.
+        let same = cands.filter { !$0.isCompletion }
+        var autocorrect: TapCandidate?
+        var confidence = 0.0
+        var literalPosterior = 0.0
+        if let top = same.first {
+            let z = same.reduce(0.0) { $0 + exp($1.score - top.score) }
+            literalPosterior = same.first { $0.isLiteral }.map { exp($0.score - top.score) / z } ?? 0
+            if !top.isLiteral, !p.isNeverCorrect(res.literal) { autocorrect = top; confidence = 1 / z }
+        }
+        return (TapDecodeResult(literal: res.literal, candidates: cands, autocorrect: autocorrect,
+                                autocorrectConfidence: confidence, literalPosterior: literalPosterior), literalKnown)
+    }
+
     private func typing(_ r: EngineRequest, _ ctx: LMContext) -> Suggestions {
-        let res: TapDecodeResult
+        var res: TapDecodeResult
         switch r.touches {
         case .hits(let h): res = decoder.decode(hits: h, layout: layout, context: ctx)
         case .points(let p): res = decoder.decode(points: p, context: ctx)
         }
+        var personalLiteral = false
+        if let p = personal {
+            (res, personalLiteral) = blend(res, previous: r.previousWords, ctx: ctx, with: p)
+        }
         let up = r.capitalizeFirst
         let cap = { (s: String) -> String in up ? Self.capitalized(s) : s }
         let literalCandidate = res.candidates.first { $0.isLiteral }
-        let literalIsWord = literalCandidate?.wordID != nil
+        let literalIsWord = literalCandidate?.wordID != nil || personalLiteral
         var seen: Set<String> = [res.literal]
         let others = res.candidates.filter { !$0.isLiteral && seen.insert($0.word).inserted }
         let showQuotes = !literalIsWord || res.autocorrect != nil
@@ -123,21 +207,50 @@ public actor EngineActor {
         let proposal = res.autocorrect.map {
             AutocorrectProposal(word: cap($0.word), confidence: res.autocorrectConfidence, literalIsWord: literalIsWord)
         }
-        return Suggestions(sequence: r.sequence, literal: res.literal, slots: slots, phrase: nil, autocorrect: proposal)
+        let phrase = phrases?.suggest(context: r.previousWords, currentPrefix: res.literal)?.slot
+        return Suggestions(sequence: r.sequence, literal: res.literal, slots: slots, phrase: phrase, autocorrect: proposal)
     }
 
     /// Next-word prediction (no touches): the most likely words under the context. Unigram candidates re-ranked
-    /// by the n-gram model; real successor lists arrive with the phrase model (M3-02).
+    /// by the n-gram model, then by the personal model (learned words, personal bigram successors).
     private func predict(_ r: EngineRequest, _ ctx: LMContext) -> Suggestions {
         let up = r.capitalizeFirst
         let cap = { (s: String) -> String in up ? Self.capitalized(s) : s }
         let ids = lexicon.completions(prefix: "", limit: 64)
-        let ranked = ids.map { ($0, model?.logProbability($0, context: ctx) ?? lexicon.logProbability(of: $0)) }
-            .sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
-        let slots = ranked.prefix(3).enumerated().map { i, e in
-            SuggestionSlot(text: cap(lexicon.word(of: e.0)), role: i == 0 ? .best : .alternative,
-                           showsQuotes: false, wordID: e.0, isCompletion: false)
+        var seen: Set<String> = []
+        var ranked: [(text: String, id: Lexicon.WordID?, lp: Double)] = []
+        for id in ids {
+            let w = lexicon.word(of: id)
+            var lp = baseLog(id, ctx)
+            if let p = personal {
+                if p.isForgotten(w) { continue }
+                lp = PersonalInterpolation.mix(baseLogProb: lp, personal: p.score(word: w, context: r.previousWords))
+            }
+            seen.insert(w)
+            ranked.append((w, id, lp))
         }
-        return Suggestions(sequence: r.sequence, literal: "", slots: slots, phrase: nil, autocorrect: nil)
+        if let p = personal {
+            var extra = p.completions(prefix: "", limit: 12)
+            if let last = r.previousWords.last { extra += p.successors(after: last, limit: 12) }
+            for pc in extra {
+                let low = pc.word.lowercased()
+                guard seen.insert(low).inserted, !p.isForgotten(low),
+                      let s = p.score(word: low, context: r.previousWords) else { continue }
+                let id = lexicon.lookup(low)
+                ranked.append((id.map { lexicon.word(of: $0) } ?? pc.word, id,
+                               PersonalInterpolation.mix(baseLogProb: baseLog(id, ctx), personal: s)))
+            }
+        }
+        ranked.sort {
+            if $0.lp != $1.lp { return $0.lp > $1.lp }
+            if $0.id != $1.id { return ($0.id ?? .max) < ($1.id ?? .max) }
+            return $0.text < $1.text
+        }
+        let slots = ranked.prefix(3).enumerated().map { i, e in
+            SuggestionSlot(text: cap(e.text), role: i == 0 ? .best : .alternative,
+                           showsQuotes: false, wordID: e.id, isCompletion: false)
+        }
+        let phrase = phrases?.suggest(context: r.previousWords)?.slot
+        return Suggestions(sequence: r.sequence, literal: "", slots: slots, phrase: phrase, autocorrect: nil)
     }
 }
