@@ -178,6 +178,9 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-20 | On the owner's Mac, `~/Library/Developer/CoreSimulator/Devices` is a symlink to `/Volumes/SSD/Library/Developer/CoreSimulator/Devices`. CoreSimulatorService currently gets EPERM (macOS privacy, external volume) writing there, so `simctl create` fails with "device remained in Creating state". | **Resolved 2026-10-26:** owner granted access; simulator creation works. If it recurs on another machine, grant Full Disk Access to CoreSimulatorService. | CoreSimulator.log, 2026-10-26 |
 | P-21 | **Keyboard extension memory ceiling on iPhone 12 / iOS 27.0 is ~76–80 MB** (`phys_footprint`); empty keyboard ≈ 5 MB; no memory warning arrived before the kill. Single run, device only. | §6 caps (30 target / 40 hard) stay; enforce them ourselves; retest on other devices. | `docs/spikes/M0-03.md`, 2026-10-26 |
 | P-22 | On iOS 27.0 (simulator) the keyboard extension sits on a system glass backdrop that blurs/tints the host by default; `UIInputView(.keyboard)`, a clear view and no background are identical. A full-sheet `UIVisualEffectView(systemChromeMaterial)` is near-opaque; a full-sheet `UIGlassEffect` shows a second visible layer. | No custom backdrop effect for Native/Native Glass (M1-03, M8-01); vary key tiles only. Retires most of R-02. Recheck on device. | `docs/spikes/M0-04.md`, 2026-10-26 |
+| P-23 | **Full Access matrix (iPhone 12, iOS 27.0):** OFF → extension can read App Group `UserDefaults` written by the app, `playInputClick` works (if Keyboard Feedback > Sound is on), `UILexicon` works; but extension writes to shared defaults do not reach the app, App Group file writes fail, network fails, pasteboard `string` is nil, haptics are not felt. ON → all work. The simulator enforces none of this. | App→keyboard settings can use App Group defaults without Full Access (R-03 largely retired); learning/personal model must live in extension-local storage without Full Access; haptics, network-free features that need shared writes, clipboard and sync require Full Access. | `docs/spikes/device-session-2026-10-26.md`, 2026-10-26 |
+| P-24 | **Text proxy (device):** `adjustTextPosition` offsets are UTF-16 units (can split emoji/ZWJ sequences); `documentContextBeforeInput` is capped at 500 chars and spans paragraphs; `selectedText` works in Notes; WhatsApp search field's cursor did not visibly move on `adjustTextPosition`; no marked-text accessor. | Cursor movement must step by grapheme boundaries computed by us (R-10), assume ≤500 chars of left context, keep per-host fallbacks. | same doc |
+| P-25 | **Pasteboard / lexicon (device):** first cross-app `UIPasteboard.string` read with Full Access shows the system paste prompt, blocks ~3 s, and the keyboard was dismissed; later reads ~23 ms. `hasStrings` false and `detectPatterns` fails without Full Access. `requestSupplementaryLexicon`/`detectPatterns` callbacks arrive off-main (Swift 6: use `@Sendable`). | Clipboard features (F9, M6-05) must read lazily on user action, never block the main thread, and degrade gracefully. | same doc |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | `xcode-select -p` points at 27.1 (verified 2026-10-26). Always check `xcodebuild -version` at session start. | Owner's machine, 2026-10-26 |
 
 ---
@@ -479,22 +482,22 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   (`glassEffect`/`UIGlassEffect`) and a clear background in the extension on iOS 27: does the host show through?
   Screenshot each in light/dark over a colourful host. Record what "Native" and "Native Glass" can be. Unblocks: M1-03, M8.
   **Result (2026-10-26, simulator iOS 27.0):** the system provides a blurred/tinted glass backdrop behind the extension by default (P-22); a full-sheet `UIVisualEffectView` or `UIGlassEffect` is worse (opaque / double layer). Native = default backdrop + system-like key tiles; Native Glass varies key fill/tint only. Not tested: system dark keyboard, per-key glass, cost, device. `docs/spikes/M0-04.md`.
-- [~] **M0-05 Spike: Full Access matrix** — With Full Access off/on: App Group `UserDefaults` read/write, file
+- [x] **M0-05 Spike: Full Access matrix** — With Full Access off/on: App Group `UserDefaults` read/write, file
   read/write, Darwin notifications, haptics, `playInputClick`, pasteboard read/write, network. Record as a table in §5.
   Unblocks: M1, M3, M6, M9.
-  **Partial (2026-10-26):** simulator does NOT enforce Open Access (everything works with `hasFullAccess == false`), so the sim can't answer the matrix; with Full Access on, App Group defaults/files and Darwin notifications work both ways. Real no-Full-Access behaviour needs the iPhone. See `docs/spikes/M0-05.md`.
+  **Result (2026-10-26):** device matrix recorded (P-23): without Full Access the keyboard can READ app-written App Group defaults and play clicks and read UILexicon, but cannot write shared defaults/files, use network, pasteboard or haptics. Not tested: Darwin cross-process delivery, network with Full Access. `docs/spikes/device-session-2026-10-26.md`, `M0-05.md`.
 - [ ] **M0-06 Spike: OTP pipeline** — Minimal App Intent + iOS 27 Message automation built by hand, then as a signed
   `.shortcut` file; confirm background run without opening the app, with locked phone, latency, and that the
   automation survives reboot; repeat with Email trigger. Record exact setup steps for onboarding. Unblocks: M6.
 - [ ] **M0-07 Spike: on-device AI** — Can the extension (or the app via an intent) call Foundation Models within the
   memory budget? Measure latency for proofreading 200 chars. Pass/fail recorded; drives D-16.
-- [~] **M0-08 Spike: text proxy behavior** — Across Notes, Messages, Mail, Safari, WhatsApp, Instagram: context length
+- [x] **M0-08 Spike: text proxy behavior** — Across Notes, Messages, Mail, Safari, WhatsApp, Instagram: context length
   before/after cursor, behavior at paragraph boundaries, `adjustTextPosition` units (UTF-16 vs grapheme) with emoji
   and Devanagari, `selectedText` updates, marked text support. Unblocks: M2, M5.
-  **Partial (2026-10-26):** NOT TESTED — soft keyboard never appeared under automation (axe flaky under load; Notes/Messages/Mail/etc. not on the sim). Re-run alone on one sim or on device. Tooling notes in `docs/spikes/M0-08.md`.
-- [~] **M0-09 Spike: misc keyboard behaviors** — Rendering limits at the top edge (P-15), pasteboard prompt and
+  **Result (2026-10-26):** P-24: `adjustTextPosition` is UTF-16 units (splits emoji), context before cursor capped at 500 chars and crosses paragraphs, `selectedText` works in Notes. Tested Notes/Messages/WhatsApp/Mail; Safari, Instagram, Devanagari-specific and marked text not tested — re-check in M5-02.
+- [x] **M0-09 Spike: misc keyboard behaviors** — Rendering limits at the top edge (P-15), pasteboard prompt and
   `detectPatterns` in a keyboard with Full Access, haptic latency, `UILexicon` contents and refresh cost.
-  **Partial (2026-10-26):** P-15 confirmed (views clip at the extension's top edge); pasteboard `string` is nil without Full Access while `hasStrings`/`detectPatterns` work; `UILexicon` returned 31 entries in the sim. Not tested: cross-app pasteboard prompt, real-contacts lexicon cost, haptic latency (device). See `docs/spikes/M0-09.md`.
+  **Result (2026-10-26):** P-25: P-15 holds; cross-app pasteboard read prompts (and disrupted the keyboard), `UILexicon` works without Full Access on device; haptic latency not measured. `docs/spikes/M0-09.md`, device session doc.
 - [~] **M0-10 Spike: iPhone Duo keyboard** — In the Duo simulator (27.1 final): extension frame and traits on outer/inner,
   rotation and fold transitions, whether `UIHingeInteraction`/`reservedRegions` now reach the extension (P-14);
   capture system keyboard screenshots in each pose as layout reference. Depends: M0-01, M0-02. Unblocks: M11.
@@ -695,14 +698,14 @@ license here; never vendor non-open-source skills.
 |---|---|---|
 | R-01 | Memory ceiling lower than budget → crashes on iPhone 12. **Measured ~76–80 MB (P-21); budget OK.** | M0-03 first; mmap everything; memory-warning handling; emoji panel isolation. |
 | R-02 | Translucency can't show the host → "glass" looks fake. **Mostly retired (P-22): the system backdrop shows the host; verify on device.** | M0-04; design Native Glass around the system keyboard material if that's all we get. |
-| R-03 | App Group not readable without Full Access → settings from the app don't apply. | M0-05; in-keyboard essential settings fallback. |
+| R-03 | ~~App Group not readable without Full Access.~~ **Measured (P-23): reads work without Full Access; only keyboard→app writes need it.** | M0-05; in-keyboard essential settings fallback. |
 | R-04 | Shortcuts automation UX changes or requires confirmation in a future iOS. | Keep clipboard fallback; onboarding detects stale codes; re-test each iOS release. |
 | R-05 | WhatsApp/Telegram OTPs unreachable (no Shortcuts trigger). | Clipboard fallback; watch for APIs. |
 | R-06 | Hinglish corpora licensing (often CC BY-SA or research-only). | M0-11; owner sign-off; community-contributed word lists. |
 | R-07 | Duo fold invisible to extensions (P-14) → can't react to folding live. | Rule-based split (D-20); duplicate FB25187339; adopt API when available. |
 | R-08 | Gesture conflicts (flick vs swipe) feel unpredictable. | Recorded-trace tests; tunable thresholds; flicks can be disabled. |
 | R-09 | App Review rejects due to Full Access messaging or Shortcuts onboarding. | Follow 4.4.1 strictly; core works without Full Access; no app launching from keyboard. |
-| R-10 | `adjustTextPosition` units differ by host (UTF-16 vs grapheme). | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
+| R-10 | `adjustTextPosition` units differ by host. **Measured (P-24): UTF-16 units in Notes/Messages; WhatsApp unreliable.** | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
 | Q-01 | ~~Physical base iPhone 12?~~ **Answered 2026-10-26:** yes — "Shubham’s iPhone", iPhone13,2, iOS 27.0 (24A437), Developer Mode on, paired over Wi-Fi (UDID `00008101-0014596A1E01001E`). | Use for every 👤 perf gate; agents can deploy with `xcrun devicectl` when it's reachable. |
 | Q-02 | ~~Public GitHub repo name/owner.~~ **Answered:** `shubhamsinghshubham777/iBoard`, public (D-30). **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
 
@@ -720,6 +723,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-05, M0-08, M0-09 done (device session) ·** With the owner's iPhone 12, one probe keyboard answered the Full Access matrix (P-23), text proxy behaviour (P-24) and pasteboard/lexicon (P-25); results pulled from the extension's log file via `devicectl` and crash reports. Two probe crashes were my own bugs (force-unwrap around the paste prompt; main-actor closure on an off-main callback). Not covered: Darwin delivery, network with Full Access, Safari/Instagram, Devanagari and marked text, haptic latency in ms. The probe build is still on the phone. Remaining M0 spikes: M0-06 (OTP pipeline, needs owner), M0-07 (on-device AI), M0-10 (Duo, needs owner).
 
 - **2026-10-26 · M0-04 done ·** Serial run on one clean iPhone 12 sim. Host content shows through the default system backdrop; custom full-sheet effects regress. Verification: screenshots light/dark over a striped Safari page (`docs/spikes/M0-04-assets/`). Not covered: system keyboard in dark mode, per-key glass, GPU/memory cost, real device. Next: M0-08 and device parts of M0-05/09 serially.
 
