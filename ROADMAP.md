@@ -144,6 +144,8 @@ may change them without ceremony.
 | D-24 | `(agent)` **Rendering stack:** keyboard UI in UIKit + Core Animation with manual frame layout (no SwiftUI, no Auto Layout in the key grid); companion app in SwiftUI. |
 | D-25 | `(agent)` **Swift 6 language mode** for all new Swift packages; engine types are `Sendable` and engine work runs off the main thread. |
 | D-26 | `(agent)` **Identifiers:** app `app.iBoard`, keyboard extension `app.iBoard.keyboard`, App Group `group.app.iBoard`, iCloud container `iCloud.app.iBoard`. Contributors override team/bundle prefix via `Config/Local.xcconfig` (gitignored). |
+| D-29 | **Data licensing (owner, 2026-10-26):** CC BY-SA data is acceptable for shipped dictionaries (derived dictionary files released under CC BY-SA 4.0 with attribution); non-commercial/research-only/unclear-licence sources stay excluded. Code remains Apache-2.0. |
+| D-30 | **Repo:** public from the start at github.com/shubhamsinghshubham777/iBoard; free GitHub features only (private vulnerability reporting enabled). |
 | D-28 | `(agent)` **Project generation:** `project.yml` (XcodeGen, `brew install xcodegen`) is the source of truth for `iBoard.xcodeproj`; re-run `xcodegen generate` after adding targets/files outside synchronized folders. Team ID lives in gitignored `Config/Local.xcconfig` (copy `Config/Local.xcconfig.example`). |
 | D-27 | `(agent)` **Selection rendering:** because keyboards cannot set selection, Shift+space selection is a keyboard-tracked "virtual selection" previewed in the suggestion strip; the marked-text highlight trick is not used by default. |
 
@@ -694,7 +696,7 @@ license here; never vendor non-open-source skills.
 | R-09 | App Review rejects due to Full Access messaging or Shortcuts onboarding. | Follow 4.4.1 strictly; core works without Full Access; no app launching from keyboard. |
 | R-10 | `adjustTextPosition` units differ by host (UTF-16 vs grapheme). | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
 | Q-01 | ~~Physical base iPhone 12?~~ **Answered 2026-10-26:** yes — "Shubham’s iPhone", iPhone13,2, iOS 27.0 (24A437), Developer Mode on, paired over Wi-Fi (UDID `00008101-0014596A1E01001E`). | Use for every 👤 perf gate; agents can deploy with `xcrun devicectl` when it's reachable. |
-| Q-02 | Public GitHub repo name/owner. **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
+| Q-02 | ~~Public GitHub repo name/owner.~~ **Answered:** `shubhamsinghshubham777/iBoard`, public (D-30). **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
 
 ---
 
@@ -710,6 +712,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · infra ·** Created public repo and pushed `main` (D-30); enabled private vulnerability reporting (API confirmed `enabled:true`). Owner approved CC BY-SA data (D-29), clearing the M0-11 sign-off for M2-01/M7. Installed AXe (`brew`, tap `cameroncooke/axe`, formula trusted) for simulator tap/type/describe-ui — agents can now drive simulator UI. Owner's iPhone 12 is paired/available for M0-03.
 
 - **2026-10-26 · M0-11, M0-12, M0-14, M6-01 done (parallel agents) ·** Four agents worked in isolated git worktrees on disjoint files; branches merged cleanly. Verification: `swift test` in IBoardOTP (3 tests, corpus 149/149, 0 FP); build.sh + test.sh --no-ui run green by the agent; M0-11/M0-14 are docs (links/paths checked, licenses sourced from live pages, some marked unverified). Follow-ups: 👤 sign-off on CC BY-SA sources (R-06); enable GitHub private vulnerability reporting; repo has no remote.
 
