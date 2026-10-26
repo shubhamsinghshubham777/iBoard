@@ -137,3 +137,31 @@ Code: `Personal/AdaptiveTouchModel.swift`. Value type `AdaptiveTouchModel`, owne
 - Evidence (synthetic only, `AdaptiveTouchModelTests`): sloppy typist (0.22 key low bias, side-dependent x bias, noise 0.27)
   raw key-error rate 9.0 % -> 4.7 % after ~1,800 letters (48 % relative reduction); neutral typist (noise 0.20)
   0.33 % -> 0.41 % (a small increase from estimation noise, asserted <= +0.2 pt absolute). NOT validated on real traces.
+
+## 5. `.iboarddict` import / export core (M3-07, F4)
+
+Code: `Personal/DictionaryExchange.swift` (no UI; the app screens and the hand-over to the single-writer keyboard are a
+later app task). API: `PersonalStore.exportDictionary()` / `importDictionary(_:options:)`, or the pure
+`DictionaryExporter.export`, `DictionaryDecoder.decode`, `DictionaryMerger.plan` (-> `[PersonalOp]`).
+
+Format v1: UTF-8 JSON lines. Line 1 header `{"format":"iboarddict","version":1,"created":epoch,"generator":"iBoard"}`, then
+`{"t":"word","w":..,"s":casing?,"c":decayed weight,"u":uses,"f":["neverCorrect"]?}`,
+`{"t":"phrase","w":[3-6 words],"c":..,"u":..}`, `{"t":"forget","w":..,"at":epoch}`, `{"t":"never","w":..}`.
+Bigram/trigram counts are not exported. Export is deterministic (sorted keys and records), drops entries decayed below
+`minKeepWeight`, and does not export forgotten words as words. Words are exported in clear text by design: it is the
+user's own backup; the app must treat the file as sensitive.
+
+Validation (decode): file <= 8 MB, <= 100k lines, line <= 2048 bytes, BOM/CRLF tolerated; header must be present, format
+`iboarddict`, version 1 (newer versions refused). Bad lines are skipped and counted by reason (`DictionaryDecodeReport`,
+counts only, never words): invalid UTF-8, too long, malformed JSON, unknown type (forward compatible), invalid field,
+invalid word (`LearnableWord` filter for words and phrase words; a looser filter for forget/never lists), invalid weight
+(non-finite or <= 0; > 1000 clamped; uses clamped to 1...10000). Duplicates merge by max. Caps keep the heaviest:
+10k words, 1k phrases, 2k per list. Per-line JSON parsing is bounded by the line limit (a 1500-deep nesting line is
+rejected, tested).
+
+Merge (`DictionaryMerger`, non-destructive by default): forget wins (file forgets remove local words/phrases; words and
+phrases containing a locally or file-forgotten word are skipped); counts do not add up (weight = max(local decayed,
+imported); uses compared saturating at 3, realised as up to 3 add ops so imported phrases with uses >= 2 count as learned);
+local casing wins; never-correct is a union; forget timestamps are clamped to now; `replaceExisting` emits `.clear` first.
+Re-importing the same file is a no-op (tested). All ops go through one journal transaction (`PersonalStore.apply(ops:)`).
+Tests: round trip, determinism, idempotency, merge rules, header/limit validation, 400 fuzzed mutations (no crash, only valid data).
