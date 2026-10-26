@@ -181,6 +181,7 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-23 | **Full Access matrix (iPhone 12, iOS 27.0):** OFF → extension can read App Group `UserDefaults` written by the app, `playInputClick` works (if Keyboard Feedback > Sound is on), `UILexicon` works; but extension writes to shared defaults do not reach the app, App Group file writes fail, network fails, pasteboard `string` is nil, haptics are not felt. ON → all work. The simulator enforces none of this. | App→keyboard settings can use App Group defaults without Full Access (R-03 largely retired); learning/personal model must live in extension-local storage without Full Access; haptics, network-free features that need shared writes, clipboard and sync require Full Access. | `docs/spikes/device-session-2026-10-26.md`, 2026-10-26 |
 | P-24 | **Text proxy (device):** `adjustTextPosition` offsets are UTF-16 units (can split emoji/ZWJ sequences); `documentContextBeforeInput` is capped at 500 chars and spans paragraphs; `selectedText` works in Notes; WhatsApp search field's cursor did not visibly move on `adjustTextPosition`; no marked-text accessor. | Cursor movement must step by grapheme boundaries computed by us (R-10), assume ≤500 chars of left context, keep per-host fallbacks. | same doc |
 | P-25 | **Pasteboard / lexicon (device):** first cross-app `UIPasteboard.string` read with Full Access shows the system paste prompt, blocks ~3 s, and the keyboard was dismissed; later reads ~23 ms. `hasStrings` false and `detectPatterns` fails without Full Access. `requestSupplementaryLexicon`/`detectPatterns` callbacks arrive off-main (Swift 6: use `@Sendable`). | Clipboard features (F9, M6-05) must read lazily on user action, never block the main thread, and degrade gracefully. | same doc |
+| P-26 | Foundation Models `SystemLanguageModel.default.availability` on iPhone 12 / iOS 27.0 = `unavailable(.deviceNotEligible)`. | No on-device AI features on the reference device; any AI must be an optional, availability-gated extra on newer hardware. | `docs/spikes/M0-07.md`, 2026-10-26 |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | `xcode-select -p` points at 27.1 (verified 2026-10-26). Always check `xcodebuild -version` at session start. | Owner's machine, 2026-10-26 |
 
 ---
@@ -489,8 +490,9 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M0-06 Spike: OTP pipeline** — Minimal App Intent + iOS 27 Message automation built by hand, then as a signed
   `.shortcut` file; confirm background run without opening the app, with locked phone, latency, and that the
   automation survives reboot; repeat with Email trigger. Record exact setup steps for onboarding. Unblocks: M6.
-- [ ] **M0-07 Spike: on-device AI** — Can the extension (or the app via an intent) call Foundation Models within the
+- [x] **M0-07 Spike: on-device AI** — Can the extension (or the app via an intent) call Foundation Models within the
   memory budget? Measure latency for proofreading 200 chars. Pass/fail recorded; drives D-16.
+  **Result (2026-10-26): FAIL on the reference device** — iPhone 12 reports `deviceNotEligible` for Foundation Models (P-26); no latency measured. AI stays post-v1/optional (D-16 unchanged). `docs/spikes/M0-07.md`.
 - [x] **M0-08 Spike: text proxy behavior** — Across Notes, Messages, Mail, Safari, WhatsApp, Instagram: context length
   before/after cursor, behavior at paragraph boundaries, `adjustTextPosition` units (UTF-16 vs grapheme) with emoji
   and Devanagari, `selectedText` updates, marked text support. Unblocks: M2, M5.
@@ -723,6 +725,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-07 done (spike failed) ·** Foundation Models is `deviceNotEligible` on the owner's iPhone 12 (console output captured from a throwaway app). Not tested: extension call, eligible device. Consequence: AI stays post-v1/optional per D-16. M0-13 running in a worktree agent.
 
 - **2026-10-26 · M0-05, M0-08, M0-09 done (device session) ·** With the owner's iPhone 12, one probe keyboard answered the Full Access matrix (P-23), text proxy behaviour (P-24) and pasteboard/lexicon (P-25); results pulled from the extension's log file via `devicectl` and crash reports. Two probe crashes were my own bugs (force-unwrap around the paste prompt; main-actor closure on an off-main callback). Not covered: Darwin delivery, network with Full Access, Safari/Instagram, Devanagari and marked text, haptic latency in ms. The probe build is still on the phone. Remaining M0 spikes: M0-06 (OTP pipeline, needs owner), M0-07 (on-device AI), M0-10 (Duo, needs owner).
 
