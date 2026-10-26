@@ -83,7 +83,7 @@
 | **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Not started |
 | **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Not started |
 
-**Current blockers:** none. `M0-01` in progress — Xcode 27.1 installed and skills refreshed; iOS 27.1 simulator runtime downloading.
+**Current blockers:** `M0-01` 👤 — simulator creation blocked by macOS privacy on the external SSD (P-20); owner grants access, then an agent creates the simulators.
 
 ---
 
@@ -171,6 +171,8 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-15 | Keyboard extensions can't draw outside their view bounds. | (Also why balloons look clipped on the top row.) All transient UI — alternates, selection preview, chips — lives inside the keyboard's own area. | Long-standing behavior; recheck in `M0-09` |
 | P-16 | SQLite/file locks held in a shared App Group container when a process is suspended can get it terminated (`0xdead10cc`). | Short transactions; no locks across suspension; single writer. | Apple TN on 0xdead10cc; design rule |
 | P-17 | Xcode ships exportable agent skills (`xcrun agent skills export`); Xcode 27.1 renames UIKit modernization to **App Resizability** with SwiftUI + iPhone Duo support. | Skills setup (§11). | Verified 2026-10-26 with Xcode 27.1 (27A9275): `uikit-app-modernization` gone, `app-resizability` present |
+| P-19 | The **iOS 27.1 simulator runtime (24A94425) supports only the iPhone Duo**; iPhone 12 simulators use the iOS 27.0 runtime (matches the owner's device). | Create `iPhone Duo` on iOS 27.1 and `iPhone 12` on iOS 27.0. | `simctl list runtimes -j`, 2026-10-26 |
+| P-20 | On the owner's Mac, `~/Library/Developer/CoreSimulator/Devices` is a symlink to `/Volumes/SSD/Library/Developer/CoreSimulator/Devices`. CoreSimulatorService currently gets EPERM (macOS privacy, external volume) writing there, so `simctl create` fails with "device remained in Creating state". | Owner must grant the service access (see M0-01) before simulators work. | CoreSimulator.log, 2026-10-26 |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | Until the owner runs `xcode-select`, prefix commands with `DEVELOPER_DIR=/Volumes/SSD/Applications/Xcode-27.1.0.app/Contents/Developer`. Check with `xcodebuild -version`. | Owner's machine, 2026-10-26 |
 
 ---
@@ -701,6 +703,7 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
 
+- **2026-10-26 · M0-01 (blocked 👤) ·** iOS 27.1 simulator runtime installed (24A94425); it supports only iPhone Duo (P-19). `simctl create` fails for both iPhone Duo (27.1) and iPhone 12 (27.0): CoreSimulatorService gets EPERM writing to the SSD-backed device set (P-20); restarting the service and running unsandboxed didn't help. Verification: CoreSimulator.log shows `NSPOSIXErrorDomain Code=1 "Operation not permitted"` on `/Volumes/SSD/Library/Developer/CoreSimulator/Devices/…`. Follow-ups: owner grants access (Full Disk Access for CoreSimulatorService, or opens Xcode 27.1 Device Hub and allows the removable-volume prompt), then re-run the two `simctl create` commands from M0-01 and boot both.
 - **2026-10-26 · M0-01 (in progress) ·** Owner installed Xcode 27.1 via Xcodes at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (not yet `xcode-select`ed, P-18). Re-ran bootstrap with 27.1: `app-resizability` exported; `uikit-app-modernization` no longer ships and was removed from the script. Reviewed `app-resizability` vs vendored `iphone-duo-*`: it covers legacy screen/orientation/idiom APIs and safe areas but not hinge, fold/reserved-region layout, ArrangementView or Duo design, so all six community skills stay (§11, Apple wins on conflict). Owner's iPhone 12 found via `devicectl`: iOS 27.0, Developer Mode on, Wi-Fi paired (Q-01). Commit email stays public (Q-02). iOS 27.1 simulator runtime download started (`xcodebuild -downloadPlatform iOS`). Follow-ups: create iPhone 12 + iPhone Duo simulators when the runtime lands; owner runs `xcode-select`.
 
 - **2026-10-26 · planning ·** Product discovery with the owner; all decisions in §4 recorded. Research: OTP via iOS 27
