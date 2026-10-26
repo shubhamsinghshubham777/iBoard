@@ -525,8 +525,9 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   iPhone 12, 12 mini, Pro Max and Duo sizes; derive key frames/gaps/radii/colours into `IBoardLayout` tokens with the
   screenshots stored under `docs/reference/`. Depends: M0-02.
   **Partial (2026-10-26):** iPhone 12 portrait only: 33 screenshots (letters/123/#+=, light+dark, 11 trait variants) and `docs/reference/native-metrics.{md,json}` (keyboard 390×328 at y=516; letter tiles 32.33×43 pt, pitch 38.33; radius ≈8.5; light #FFFFFF on #E2E3E8, dark #575757 on #373737). Missing: caps-lock, landscape, 12 mini / Pro Max / Duo, fonts only estimated; capture on a real device/Simulator.app for the rest.
-- [ ] **M1-02 Layout engine** — Pure function producing key frames + hit regions for letters/123/#+= and trait
+- [x] **M1-02 Layout engine** — Pure function producing key frames + hit regions for letters/123/#+= and trait
   variants; snapshot tests for every device size in §6 (no hardcoded device sizes). Depends: M1-01.
+  **Result (2026-10-26):** pure `LayoutEngine` + `HitModel` in IBoardLayout (23 tests green; iPhone 12 frames within ±1 pt of M1-01 measurements; natural keyboard height 260 pt = strip 44 + rows). Estimated, not measured: landscape, caps lock, 375/428/440/Duo sizes, globe layout. `docs/LAYOUT_ENGINE.md`. M1-03 consumes `KeyboardLayout`/`hit`; centre-gap split seam left for M11.
 - [ ] **M1-03 Key grid renderer** — CALayer-based grid, highlight on touch-down, Native theme tokens, light/dark.
   Depends: M1-02, M0-04.
 - [ ] **M1-04 Touch state machine v1** — Tap, multi-touch rollover (fast typing with overlapping touches), shift/caps,
@@ -729,6 +730,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M1-02 done ·** Layout engine merged from a worktree agent. Verification: `swift test` IBoardLayout 23 tests; `scripts/build.sh` green; geometry invariants (no overlaps, touch regions tile the area) and ±1 pt match to native-metrics.json at 390 pt wide. Follow-ups: capture caps lock/landscape/other sizes to replace estimates; M1-03 next (needs a simulator).
 
 - **2026-10-26 · M1-01 (partial), M2-01 done, M1-08 (built) ·** Three parallel worktree agents merged cleanly. Verification: LexiconBuilder 7 tests, IBoardCore 12 tests, `scripts/build.sh` green; M1-01 measured from simulator screenshots (see task note for gaps). Next: M1-02 layout engine (can use iPhone 12 tokens; other sizes need captures), runtime-verify M1-08, M0-06 OTP probe awaiting owner, M0-10 Duo awaiting owner.
 
