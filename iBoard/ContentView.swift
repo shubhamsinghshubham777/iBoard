@@ -13,6 +13,7 @@ struct ContentView: View {
                     NavigationLink("Settings") { SettingsView() }
                     NavigationLink("Dictionary") { DictionaryManagerView() }
                     NavigationLink("Typing insights") { InsightsView() }
+                    NavigationLink("Privacy, licenses and about") { AboutView() }
                 }
             }
             .navigationTitle("iBoard")
