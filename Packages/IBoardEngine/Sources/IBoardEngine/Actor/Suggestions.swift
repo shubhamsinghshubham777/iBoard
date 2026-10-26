@@ -19,6 +19,15 @@ public struct SuggestionSlot: Sendable, Equatable {
     public var wordID: Lexicon.WordID?
     /// True for a prediction longer than what was typed.
     public var isCompletion: Bool
+
+    public init(text: String, role: Role, showsQuotes: Bool = false, wordID: Lexicon.WordID? = nil,
+                isCompletion: Bool = false) {
+        self.text = text
+        self.role = role
+        self.showsQuotes = showsQuotes
+        self.wordID = wordID
+        self.isCompletion = isCompletion
+    }
 }
 
 /// The engine's autocorrect proposal; `AutocorrectPolicy` decides whether to apply it.
@@ -48,4 +57,16 @@ public struct Suggestions: Sendable, Equatable {
     /// Phrase chip that widens one slot (D-13). Always nil until M3-03.
     public var phrase: SuggestionSlot?
     public var autocorrect: AutocorrectProposal?
+
+    public init(sequence: UInt64, literal: String = "", slots: [SuggestionSlot] = [], phrase: SuggestionSlot? = nil,
+                autocorrect: AutocorrectProposal? = nil) {
+        self.sequence = sequence
+        self.literal = literal
+        self.slots = slots
+        self.phrase = phrase
+        self.autocorrect = autocorrect
+    }
+
+    /// An empty strip (no slots).
+    public static func empty(sequence: UInt64 = 0) -> Suggestions { Suggestions(sequence: sequence) }
 }

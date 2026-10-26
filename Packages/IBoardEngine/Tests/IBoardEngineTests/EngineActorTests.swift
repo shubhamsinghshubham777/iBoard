@@ -4,6 +4,17 @@ import Testing
 import IBoardEngine
 import IBoardLayout
 
+@Suite struct SuggestionsPublicInitTests {
+    @Test func constructibleFromOutsideTheModule() {
+        let slot = SuggestionSlot(text: "the", role: .best)
+        #expect(!slot.showsQuotes && slot.wordID == nil && !slot.isCompletion)
+        let s = Suggestions(sequence: 7, literal: "teh", slots: [slot],
+                            autocorrect: AutocorrectProposal(word: "the", confidence: 0.99, literalIsWord: false))
+        #expect(s.sequence == 7 && s.slots == [slot] && s.phrase == nil)
+        #expect(Suggestions.empty(sequence: 3).slots.isEmpty)
+    }
+}
+
 @Suite struct EngineActorTests {
     let lex: Lexicon
     let lm: NGramModel

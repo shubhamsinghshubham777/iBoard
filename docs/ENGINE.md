@@ -56,7 +56,9 @@ cursor jump); `updateLayout(_:)` rebuilds the decoder after a resize / layer cha
 `Suggestions`: up to 3 `SuggestionSlot`s in display order `[literal, best, alternative]` (literal is flagged `showsQuotes`
 when it is out of vocabulary or about to be corrected; the UI centres `best`), `phrase` (reserved for the D-13 wide chip,
 always nil now), and `autocorrect: AutocorrectProposal?` (word, posterior, whether the literal is itself a word).
-With no touches the actor predicts the next word (unigram candidates re-ranked by the n-gram model with the last two
+`SuggestionSlot(text:role:showsQuotes:wordID:isCompletion:)` and `Suggestions(sequence:literal:slots:phrase:autocorrect:)`
+(plus `Suggestions.empty(sequence:)`) are public with defaulted arguments, so UI code and its tests build them directly
+instead of mirroring them. With no touches the actor predicts the next word (unigram candidates re-ranked by the n-gram model with the last two
 words as context; real successor lists come with M3-02). Requests carry previous words only for the call; nothing typed is
 stored or logged.
 
