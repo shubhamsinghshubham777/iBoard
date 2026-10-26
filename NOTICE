@@ -13,3 +13,6 @@ Third-party material included in this repository:
   Copyright (c) 2026 Antoine van der Lee. MIT License (see .agents/skills/swift-concurrency/LICENSE).
 
 Language data attributions will be listed in docs/DATA_SOURCES.md.
+
+- CODE_OF_CONDUCT.md is adapted from the Contributor Covenant, version 2.1
+  (https://www.contributor-covenant.org), licensed under CC BY 4.0.
