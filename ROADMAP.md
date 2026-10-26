@@ -177,6 +177,7 @@ Verified facts that shape the design. Each has a source; "verify" items must be 
 | P-19 | The **iOS 27.1 simulator runtime (24A94425) supports only the iPhone Duo**; iPhone 12 simulators use the iOS 27.0 runtime (matches the owner's device). | Create `iPhone Duo` on iOS 27.1 and `iPhone 12` on iOS 27.0. | `simctl list runtimes -j`, 2026-10-26 |
 | P-20 | On the owner's Mac, `~/Library/Developer/CoreSimulator/Devices` is a symlink to `/Volumes/SSD/Library/Developer/CoreSimulator/Devices`. CoreSimulatorService currently gets EPERM (macOS privacy, external volume) writing there, so `simctl create` fails with "device remained in Creating state". | **Resolved 2026-10-26:** owner granted access; simulator creation works. If it recurs on another machine, grant Full Disk Access to CoreSimulatorService. | CoreSimulator.log, 2026-10-26 |
 | P-21 | **Keyboard extension memory ceiling on iPhone 12 / iOS 27.0 is ~76–80 MB** (`phys_footprint`); empty keyboard ≈ 5 MB; no memory warning arrived before the kill. Single run, device only. | §6 caps (30 target / 40 hard) stay; enforce them ourselves; retest on other devices. | `docs/spikes/M0-03.md`, 2026-10-26 |
+| P-22 | On iOS 27.0 (simulator) the keyboard extension sits on a system glass backdrop that blurs/tints the host by default; `UIInputView(.keyboard)`, a clear view and no background are identical. A full-sheet `UIVisualEffectView(systemChromeMaterial)` is near-opaque; a full-sheet `UIGlassEffect` shows a second visible layer. | No custom backdrop effect for Native/Native Glass (M1-03, M8-01); vary key tiles only. Retires most of R-02. Recheck on device. | `docs/spikes/M0-04.md`, 2026-10-26 |
 | P-18 | Xcode 27.1 is installed at `/Volumes/SSD/Applications/Xcode-27.1.0.app` (via Xcodes); Xcode 27.0 remains at `/Applications/Xcode.app`. | `xcode-select -p` points at 27.1 (verified 2026-10-26). Always check `xcodebuild -version` at session start. | Owner's machine, 2026-10-26 |
 
 ---
@@ -474,9 +475,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   footprint at termination; run on the owner's iPhone 12 (if available) and in the simulator. Record the limit in
   §5 and re-baseline §6. Depends: M0-02. Unblocks: M2, M4, M8, M9.
   **Result (2026-10-26):** iPhone 12 / iOS 27.0 jetsam limit is 76–80 MB footprint (P-21); budgets in §6 unchanged. `docs/spikes/M0-03.md`.
-- [ ] **M0-04 Spike: translucency** — Try `UIInputView(.keyboard)`, `UIVisualEffectView`, Liquid Glass
+- [x] **M0-04 Spike: translucency** — Try `UIInputView(.keyboard)`, `UIVisualEffectView`, Liquid Glass
   (`glassEffect`/`UIGlassEffect`) and a clear background in the extension on iOS 27: does the host show through?
   Screenshot each in light/dark over a colourful host. Record what "Native" and "Native Glass" can be. Unblocks: M1-03, M8.
+  **Result (2026-10-26, simulator iOS 27.0):** the system provides a blurred/tinted glass backdrop behind the extension by default (P-22); a full-sheet `UIVisualEffectView` or `UIGlassEffect` is worse (opaque / double layer). Native = default backdrop + system-like key tiles; Native Glass varies key fill/tint only. Not tested: system dark keyboard, per-key glass, cost, device. `docs/spikes/M0-04.md`.
 - [~] **M0-05 Spike: Full Access matrix** — With Full Access off/on: App Group `UserDefaults` read/write, file
   read/write, Darwin notifications, haptics, `playInputClick`, pasteboard read/write, network. Record as a table in §5.
   Unblocks: M1, M3, M6, M9.
@@ -692,7 +694,7 @@ license here; never vendor non-open-source skills.
 | ID | Risk / question | Mitigation / owner |
 |---|---|---|
 | R-01 | Memory ceiling lower than budget → crashes on iPhone 12. **Measured ~76–80 MB (P-21); budget OK.** | M0-03 first; mmap everything; memory-warning handling; emoji panel isolation. |
-| R-02 | Translucency can't show the host → "glass" looks fake. | M0-04; design Native Glass around the system keyboard material if that's all we get. |
+| R-02 | Translucency can't show the host → "glass" looks fake. **Mostly retired (P-22): the system backdrop shows the host; verify on device.** | M0-04; design Native Glass around the system keyboard material if that's all we get. |
 | R-03 | App Group not readable without Full Access → settings from the app don't apply. | M0-05; in-keyboard essential settings fallback. |
 | R-04 | Shortcuts automation UX changes or requires confirmation in a future iOS. | Keep clipboard fallback; onboarding detects stale codes; re-test each iOS release. |
 | R-05 | WhatsApp/Telegram OTPs unreachable (no Shortcuts trigger). | Clipboard fallback; watch for APIs. |
@@ -718,6 +720,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-04 done ·** Serial run on one clean iPhone 12 sim. Host content shows through the default system backdrop; custom full-sheet effects regress. Verification: screenshots light/dark over a striped Safari page (`docs/spikes/M0-04-assets/`). Not covered: system keyboard in dark mode, per-key glass, GPU/memory cost, real device. Next: M0-08 and device parts of M0-05/09 serially.
 
 - **2026-10-26 · M0-03 done ·** Probe build on the owner's iPhone 12 allocated until the extension was killed: last footprint recorded 76 MB (limit in [76, 81) MB), idle ≈ 5 MB, no memory warning first. Verification: owner read the on-screen "last run" value (screenshot); one run only. Follow-ups: the throwaway probe build is still installed on the phone (replace on next install); next serial spikes M0-04 then device parts of M0-05/08/09.
 
