@@ -475,22 +475,26 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M0-04 Spike: translucency** — Try `UIInputView(.keyboard)`, `UIVisualEffectView`, Liquid Glass
   (`glassEffect`/`UIGlassEffect`) and a clear background in the extension on iOS 27: does the host show through?
   Screenshot each in light/dark over a colourful host. Record what "Native" and "Native Glass" can be. Unblocks: M1-03, M8.
-- [ ] **M0-05 Spike: Full Access matrix** — With Full Access off/on: App Group `UserDefaults` read/write, file
+- [~] **M0-05 Spike: Full Access matrix** — With Full Access off/on: App Group `UserDefaults` read/write, file
   read/write, Darwin notifications, haptics, `playInputClick`, pasteboard read/write, network. Record as a table in §5.
   Unblocks: M1, M3, M6, M9.
+  **Partial (2026-10-26):** simulator does NOT enforce Open Access (everything works with `hasFullAccess == false`), so the sim can't answer the matrix; with Full Access on, App Group defaults/files and Darwin notifications work both ways. Real no-Full-Access behaviour needs the iPhone. See `docs/spikes/M0-05.md`.
 - [ ] **M0-06 Spike: OTP pipeline** — Minimal App Intent + iOS 27 Message automation built by hand, then as a signed
   `.shortcut` file; confirm background run without opening the app, with locked phone, latency, and that the
   automation survives reboot; repeat with Email trigger. Record exact setup steps for onboarding. Unblocks: M6.
 - [ ] **M0-07 Spike: on-device AI** — Can the extension (or the app via an intent) call Foundation Models within the
   memory budget? Measure latency for proofreading 200 chars. Pass/fail recorded; drives D-16.
-- [ ] **M0-08 Spike: text proxy behavior** — Across Notes, Messages, Mail, Safari, WhatsApp, Instagram: context length
+- [~] **M0-08 Spike: text proxy behavior** — Across Notes, Messages, Mail, Safari, WhatsApp, Instagram: context length
   before/after cursor, behavior at paragraph boundaries, `adjustTextPosition` units (UTF-16 vs grapheme) with emoji
   and Devanagari, `selectedText` updates, marked text support. Unblocks: M2, M5.
-- [ ] **M0-09 Spike: misc keyboard behaviors** — Rendering limits at the top edge (P-15), pasteboard prompt and
+  **Partial (2026-10-26):** NOT TESTED — soft keyboard never appeared under automation (axe flaky under load; Notes/Messages/Mail/etc. not on the sim). Re-run alone on one sim or on device. Tooling notes in `docs/spikes/M0-08.md`.
+- [~] **M0-09 Spike: misc keyboard behaviors** — Rendering limits at the top edge (P-15), pasteboard prompt and
   `detectPatterns` in a keyboard with Full Access, haptic latency, `UILexicon` contents and refresh cost.
-- [ ] **M0-10 Spike: iPhone Duo keyboard** — In the Duo simulator (27.1 final): extension frame and traits on outer/inner,
+  **Partial (2026-10-26):** P-15 confirmed (views clip at the extension's top edge); pasteboard `string` is nil without Full Access while `hasStrings`/`detectPatterns` work; `UILexicon` returned 31 entries in the sim. Not tested: cross-app pasteboard prompt, real-contacts lexicon cost, haptic latency (device). See `docs/spikes/M0-09.md`.
+- [~] **M0-10 Spike: iPhone Duo keyboard** — In the Duo simulator (27.1 final): extension frame and traits on outer/inner,
   rotation and fold transitions, whether `UIHingeInteraction`/`reservedRegions` now reach the extension (P-14);
   capture system keyboard screenshots in each pose as layout reference. Depends: M0-01, M0-02. Unblocks: M11.
+  **Partial (2026-10-26):** NOT TESTED — axe can't drive the Duo sim and simctl has no pose controls; only outer-display sizes confirmed (466×678 / 669×951 pt). Needs the owner in Simulator/Device Hub. See `docs/spikes/M0-10.md`.
 - [x] **M0-11 Language data & licensing** — Shortlist corpora/word lists for EN and Hinglish, emoji annotations (CLDR),
   keyboard eval data; record license, attribution and share-alike obligations in `docs/DATA_SOURCES.md`; prefer
   public-domain/CC BY/permissive; any CC BY-SA data needs 👤 sign-off (fine for open source, must be attributed and
@@ -712,6 +716,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-04/05/08/09/10 (partial, parallel agents) ·** Five spike agents, each with its own simulator and worktree; merged docs only (`docs/spikes/`). Outcome: M0-09 mostly answered, M0-05 partially (sim ignores Open Access), M0-08 and M0-10 untested, M0-04 agent never finished (no commit). Cause: five booted simulators drove load to ~500 and made `axe` taps unreliable; `simctl clone` fails on booted sims; `axe touch --down --up` is more reliable than `axe tap` on keyboard UI. Lesson: run simulator spikes one at a time. Follow-ups: re-run M0-04 and M0-08 serially; do M0-03/05/08/09 device parts on the iPhone; M0-10 needs the owner at Simulator/Device Hub.
 
 - **2026-10-26 · infra ·** Created public repo and pushed `main` (D-30); enabled private vulnerability reporting (API confirmed `enabled:true`). Owner approved CC BY-SA data (D-29), clearing the M0-11 sign-off for M2-01/M7. Installed AXe (`brew`, tap `cameroncooke/axe`, formula trusted) for simulator tap/type/describe-ui — agents can now drive simulator UI. Owner's iPhone 12 is paired/available for M0-03.
 
