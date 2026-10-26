@@ -12,6 +12,7 @@ struct ContentView: View {
                 Section {
                     NavigationLink("Settings") { SettingsView() }
                     NavigationLink("Dictionary") { DictionaryManagerView() }
+                    NavigationLink("Typing insights") { InsightsView() }
                 }
             }
             .navigationTitle("iBoard")
