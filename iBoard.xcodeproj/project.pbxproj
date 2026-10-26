@@ -14,6 +14,7 @@
 		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
 		5AB898199F29A6EA29F1905B /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 261EEFEA2D4EF829F24DE453 /* IBoardTheme */; };
 		5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9ECAB65BC0422F84297743E /* iBoardTests.swift */; };
+		68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */; };
 		710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */; };
 		7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A27A8EC462F171D099FC8 /* ContentView.swift */; };
 		803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 216285A7FBA94D1A19DDF35B /* IBoardCore */; };
@@ -69,6 +70,7 @@
 		12DDC771F6CEAAF72D0841AF /* IBoardCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardCore; path = Packages/IBoardCore; sourceTree = SOURCE_ROOT; };
 		14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardUITests.swift; sourceTree = "<group>"; };
 		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlay.swift; sourceTree = "<group>"; };
 		579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoardKeyboard.entitlements; sourceTree = "<group>"; };
 		6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 		BEB699DF9E939523A20ED08C /* iBoardKeyboard */ = {
 			isa = PBXGroup;
 			children = (
+				324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */,
 				6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */,
 				A79FA046627E67810DEBBE9E /* Info.plist */,
 				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
@@ -377,6 +380,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */,
 				E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
