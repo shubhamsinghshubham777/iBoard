@@ -3,254 +3,470 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 110;
+	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
+		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
+		487214379D09AB14642893EF /* iBoardKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4F4CAB1AD063D828AA750FEF /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = C1E596259DA263BECA26D1B3 /* IBoardTheme */; };
+		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
+		5AB898199F29A6EA29F1905B /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 261EEFEA2D4EF829F24DE453 /* IBoardTheme */; };
+		5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9ECAB65BC0422F84297743E /* iBoardTests.swift */; };
+		710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */; };
+		7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A27A8EC462F171D099FC8 /* ContentView.swift */; };
+		803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 216285A7FBA94D1A19DDF35B /* IBoardCore */; };
+		8EB80591B1223E71D47EFA0E /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
+		B4C5143AD95D645A595D9954 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
+		E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */; };
+		E7C782CA678D15985042543B /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3A69118370202808F7CF9940 /* IBoardCore */; };
+		F453CA0F57596485F438921E /* IBoardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 652B1E47E9E596FE161F1A79 /* IBoardEngine */; };
+		F9CFA65079D5759EAAB38BDC /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = 5BE31DF68AEC8878C6627475 /* IBoardOTP */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
-		513FA3E1308F1D9E00F23CB8 /* PBXContainerItemProxy */ = {
+		389AEAD041DEAB13D61B07E2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 513FA3CB308F1D9D00F23CB8 /* Project object */;
+			containerPortal = 99EDAA49D6400E9F84BB29FC /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 513FA3D2308F1D9D00F23CB8;
+			remoteGlobalIDString = AD56215A850F3640CEE35712;
+			remoteInfo = iBoardKeyboard;
+		};
+		3CFA1B8C819D3F4603071CDD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 99EDAA49D6400E9F84BB29FC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5F7AA4663176F88395DEBFDD;
 			remoteInfo = iBoard;
 		};
-		513FA3EB308F1D9E00F23CB8 /* PBXContainerItemProxy */ = {
+		5EE9AA71BC54EFBBC7FB4946 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 513FA3CB308F1D9D00F23CB8 /* Project object */;
+			containerPortal = 99EDAA49D6400E9F84BB29FC /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 513FA3D2308F1D9D00F23CB8;
+			remoteGlobalIDString = 5F7AA4663176F88395DEBFDD;
 			remoteInfo = iBoard;
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		33A224ADD2219C8B3E631998 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				487214379D09AB14642893EF /* iBoardKeyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		513FA3D3308F1D9D00F23CB8 /* iBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		513FA3E0308F1D9E00F23CB8 /* iBoardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		513FA3EA308F1D9E00F23CB8 /* iBoardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		11294C7D29525F83ADFFDDDB /* iBoard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoard.entitlements; sourceTree = "<group>"; };
+		1203E236665B6D0499F27E15 /* IBoardUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardUI; path = Packages/IBoardUI; sourceTree = SOURCE_ROOT; };
+		12DDC771F6CEAAF72D0841AF /* IBoardCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardCore; path = Packages/IBoardCore; sourceTree = SOURCE_ROOT; };
+		14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardUITests.swift; sourceTree = "<group>"; };
+		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoardKeyboard.entitlements; sourceTree = "<group>"; };
+		6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A79FA046627E67810DEBBE9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
+		CD7C21085C40332AA7A01200 /* iBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardApp.swift; sourceTree = "<group>"; };
+		D4A29BC0E785F7DA06C54B57 /* iBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD5AB664BB14DEFF640D46AA /* IBoardTheme */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardTheme; path = Packages/IBoardTheme; sourceTree = SOURCE_ROOT; };
+		E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = iBoardKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0C4552A210A9E81FABBE884 /* IBoardLayout */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardLayout; path = Packages/IBoardLayout; sourceTree = SOURCE_ROOT; };
+		F0E28990E75EBE5B420749B0 /* iBoardTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F3E1E2AE1791F3BB0D39310C /* IBoardOTP */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardOTP; path = Packages/IBoardOTP; sourceTree = SOURCE_ROOT; };
+		F9ED241EFC6047F1A191EDF2 /* IBoardEngine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardEngine; path = Packages/IBoardEngine; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		513FA3D5308F1D9D00F23CB8 /* iBoard */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iBoard;
-			sourceTree = "<group>";
-		};
-		513FA3E3308F1D9E00F23CB8 /* iBoardTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iBoardTests;
-			sourceTree = "<group>";
-		};
-		513FA3ED308F1D9E00F23CB8 /* iBoardUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iBoardUITests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
-		513FA3D0308F1D9D00F23CB8 /* Frameworks */ = {
+		1CA0CF9C8E6D6DCF9114B8D9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				E7C782CA678D15985042543B /* IBoardCore in Frameworks */,
+				18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */,
+				F453CA0F57596485F438921E /* IBoardEngine in Frameworks */,
+				F9CFA65079D5759EAAB38BDC /* IBoardOTP in Frameworks */,
+				4F4CAB1AD063D828AA750FEF /* IBoardTheme in Frameworks */,
+				8EB80591B1223E71D47EFA0E /* IBoardUI in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
-		513FA3DD308F1D9E00F23CB8 /* Frameworks */ = {
+		4835373383178E41BEE5E405 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */,
+				5AB898199F29A6EA29F1905B /* IBoardTheme in Frameworks */,
+				B4C5143AD95D645A595D9954 /* IBoardOTP in Frameworks */,
 			);
-		};
-		513FA3E7308F1D9E00F23CB8 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		513FA3CA308F1D9D00F23CB8 = {
+		1D2D62562C5A61CF6BB273DA /* iBoardTests */ = {
 			isa = PBXGroup;
 			children = (
-				513FA3D5308F1D9D00F23CB8 /* iBoard */,
-				513FA3E3308F1D9E00F23CB8 /* iBoardTests */,
-				513FA3ED308F1D9E00F23CB8 /* iBoardUITests */,
-				513FA3D4308F1D9D00F23CB8 /* Products */,
+				B9ECAB65BC0422F84297743E /* iBoardTests.swift */,
+			);
+			path = iBoardTests;
+			sourceTree = "<group>";
+		};
+		29C50743FAAA6AD1175F2206 /* iBoard */ = {
+			isa = PBXGroup;
+			children = (
+				6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */,
+				A81A27A8EC462F171D099FC8 /* ContentView.swift */,
+				11294C7D29525F83ADFFDDDB /* iBoard.entitlements */,
+				CD7C21085C40332AA7A01200 /* iBoardApp.swift */,
+			);
+			path = iBoard;
+			sourceTree = "<group>";
+		};
+		461F96B303F47DF8EDBA4BF8 = {
+			isa = PBXGroup;
+			children = (
+				EED913B27068807561016C56 /* Config */,
+				29C50743FAAA6AD1175F2206 /* iBoard */,
+				BEB699DF9E939523A20ED08C /* iBoardKeyboard */,
+				1D2D62562C5A61CF6BB273DA /* iBoardTests */,
+				6BDAFBA434AEC18A6DCD4851 /* iBoardUITests */,
+				7785DC327E0118873155405F /* Packages */,
+				9F4E88B8D767574FF04FA66C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		513FA3D4308F1D9D00F23CB8 /* Products */ = {
+		6BDAFBA434AEC18A6DCD4851 /* iBoardUITests */ = {
 			isa = PBXGroup;
 			children = (
-				513FA3D3308F1D9D00F23CB8 /* iBoard.app */,
-				513FA3E0308F1D9E00F23CB8 /* iBoardTests.xctest */,
-				513FA3EA308F1D9E00F23CB8 /* iBoardUITests.xctest */,
+				14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */,
+			);
+			path = iBoardUITests;
+			sourceTree = "<group>";
+		};
+		7785DC327E0118873155405F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				12DDC771F6CEAAF72D0841AF /* IBoardCore */,
+				F9ED241EFC6047F1A191EDF2 /* IBoardEngine */,
+				F0C4552A210A9E81FABBE884 /* IBoardLayout */,
+				F3E1E2AE1791F3BB0D39310C /* IBoardOTP */,
+				DD5AB664BB14DEFF640D46AA /* IBoardTheme */,
+				1203E236665B6D0499F27E15 /* IBoardUI */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		9F4E88B8D767574FF04FA66C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D4A29BC0E785F7DA06C54B57 /* iBoard.app */,
+				E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */,
+				F0E28990E75EBE5B420749B0 /* iBoardTests.xctest */,
+				AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BEB699DF9E939523A20ED08C /* iBoardKeyboard */ = {
+			isa = PBXGroup;
+			children = (
+				6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */,
+				A79FA046627E67810DEBBE9E /* Info.plist */,
+				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
+			);
+			path = iBoardKeyboard;
+			sourceTree = "<group>";
+		};
+		EED913B27068807561016C56 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				28F4239BEE521E378F7112E1 /* Base.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		513FA3D2308F1D9D00F23CB8 /* iBoard */ = {
+		3257EFE8BA7C2240A5E2ED3D /* iBoardUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 513FA3F2308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoard" */;
+			buildConfigurationList = 6B2EE4D6AC547BF31F5AEA54 /* Build configuration list for PBXNativeTarget "iBoardUITests" */;
 			buildPhases = (
-				513FA3CF308F1D9D00F23CB8 /* Sources */,
-				513FA3D0308F1D9D00F23CB8 /* Frameworks */,
-				513FA3D1308F1D9D00F23CB8 /* Resources */,
-			);
-			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				513FA3D5308F1D9D00F23CB8 /* iBoard */,
-			);
-			name = iBoard;
-			productName = iBoard;
-			productReference = 513FA3D3308F1D9D00F23CB8 /* iBoard.app */;
-			productType = "com.apple.product-type.application";
-		};
-		513FA3DF308F1D9E00F23CB8 /* iBoardTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 513FA3F5308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoardTests" */;
-			buildPhases = (
-				513FA3DC308F1D9E00F23CB8 /* Sources */,
-				513FA3DD308F1D9E00F23CB8 /* Frameworks */,
-				513FA3DE308F1D9E00F23CB8 /* Resources */,
+				46947F9B930F0A0FC14B819E /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				513FA3E2308F1D9E00F23CB8 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				513FA3E3308F1D9E00F23CB8 /* iBoardTests */,
-			);
-			name = iBoardTests;
-			productName = iBoardTests;
-			productReference = 513FA3E0308F1D9E00F23CB8 /* iBoardTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		513FA3E9308F1D9E00F23CB8 /* iBoardUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 513FA3F8308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoardUITests" */;
-			buildPhases = (
-				513FA3E6308F1D9E00F23CB8 /* Sources */,
-				513FA3E7308F1D9E00F23CB8 /* Frameworks */,
-				513FA3E8308F1D9E00F23CB8 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				513FA3EC308F1D9E00F23CB8 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				513FA3ED308F1D9E00F23CB8 /* iBoardUITests */,
+				9940AB86034AF599F84429E1 /* PBXTargetDependency */,
 			);
 			name = iBoardUITests;
+			packageProductDependencies = (
+			);
 			productName = iBoardUITests;
-			productReference = 513FA3EA308F1D9E00F23CB8 /* iBoardUITests.xctest */;
+			productReference = AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		5C140C8E2844693F927DA56D /* iBoardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B5CF0305081D8AD51AE2EA6B /* Build configuration list for PBXNativeTarget "iBoardTests" */;
+			buildPhases = (
+				B2D1E00802B073932CBBE653 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				805340E7DE18E3BEC8CF1753 /* PBXTargetDependency */,
+			);
+			name = iBoardTests;
+			packageProductDependencies = (
+			);
+			productName = iBoardTests;
+			productReference = F0E28990E75EBE5B420749B0 /* iBoardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		5F7AA4663176F88395DEBFDD /* iBoard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 176176C93C1918F7C2F96FCB /* Build configuration list for PBXNativeTarget "iBoard" */;
+			buildPhases = (
+				4135C5A7620C362255D0BDA4 /* Sources */,
+				9DE4075E41B2593EA9879DDF /* Resources */,
+				4835373383178E41BEE5E405 /* Frameworks */,
+				33A224ADD2219C8B3E631998 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7376AF26671E7356F6054652 /* PBXTargetDependency */,
+			);
+			name = iBoard;
+			packageProductDependencies = (
+				216285A7FBA94D1A19DDF35B /* IBoardCore */,
+				261EEFEA2D4EF829F24DE453 /* IBoardTheme */,
+				BEA058F77D8001DCC3C01C35 /* IBoardOTP */,
+			);
+			productName = iBoard;
+			productReference = D4A29BC0E785F7DA06C54B57 /* iBoard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AD56215A850F3640CEE35712 /* iBoardKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7E29D510726C9F1D79098C5 /* Build configuration list for PBXNativeTarget "iBoardKeyboard" */;
+			buildPhases = (
+				E21EA03E3C052CAB4043ABD9 /* Sources */,
+				1CA0CF9C8E6D6DCF9114B8D9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = iBoardKeyboard;
+			packageProductDependencies = (
+				3A69118370202808F7CF9940 /* IBoardCore */,
+				F1581D34BA86755881CE8840 /* IBoardLayout */,
+				652B1E47E9E596FE161F1A79 /* IBoardEngine */,
+				5BE31DF68AEC8878C6627475 /* IBoardOTP */,
+				C1E596259DA263BECA26D1B3 /* IBoardTheme */,
+				09A44C1C9C141F17267A4259 /* IBoardUI */,
+			);
+			productName = iBoardKeyboard;
+			productReference = E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		513FA3CB308F1D9D00F23CB8 /* Project object */ = {
+		99EDAA49D6400E9F84BB29FC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2700;
-				LastUpgradeCheck = 2700;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					513FA3D2308F1D9D00F23CB8 = {
-						CreatedOnToolsVersion = 27.0;
+					3257EFE8BA7C2240A5E2ED3D = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 5F7AA4663176F88395DEBFDD;
 					};
-					513FA3DF308F1D9E00F23CB8 = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 513FA3D2308F1D9D00F23CB8;
+					5C140C8E2844693F927DA56D = {
+						ProvisioningStyle = Automatic;
 					};
-					513FA3E9308F1D9E00F23CB8 = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 513FA3D2308F1D9D00F23CB8;
+					5F7AA4663176F88395DEBFDD = {
+						ProvisioningStyle = Automatic;
+					};
+					AD56215A850F3640CEE35712 = {
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 513FA3CE308F1D9D00F23CB8 /* Build configuration list for PBXProject "iBoard" */;
+			buildConfigurationList = 4CBC8157966333A49300B1D8 /* Build configuration list for PBXProject "iBoard" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = 513FA3CA308F1D9D00F23CB8;
+			mainGroup = 461F96B303F47DF8EDBA4BF8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AC729E04098F0658C31FE434 /* XCLocalSwiftPackageReference "Packages/IBoardCore" */,
+				DC9D3495AE6117E7934F1F48 /* XCLocalSwiftPackageReference "Packages/IBoardEngine" */,
+				BFCD2F6BE8B632031FBE1055 /* XCLocalSwiftPackageReference "Packages/IBoardLayout" */,
+				6D62A48DB26CF91AD4820DD5 /* XCLocalSwiftPackageReference "Packages/IBoardOTP" */,
+				D144EEC28BC0367A9870D3F3 /* XCLocalSwiftPackageReference "Packages/IBoardTheme" */,
+				BE9EEA958B21CCB46B054161 /* XCLocalSwiftPackageReference "Packages/IBoardUI" */,
+			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 513FA3D4308F1D9D00F23CB8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				513FA3D2308F1D9D00F23CB8 /* iBoard */,
-				513FA3DF308F1D9E00F23CB8 /* iBoardTests */,
-				513FA3E9308F1D9E00F23CB8 /* iBoardUITests */,
+				5F7AA4663176F88395DEBFDD /* iBoard */,
+				AD56215A850F3640CEE35712 /* iBoardKeyboard */,
+				5C140C8E2844693F927DA56D /* iBoardTests */,
+				3257EFE8BA7C2240A5E2ED3D /* iBoardUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		513FA3D1308F1D9D00F23CB8 /* Resources */ = {
+		9DE4075E41B2593EA9879DDF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */,
 			);
-		};
-		513FA3DE308F1D9E00F23CB8 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		513FA3E8308F1D9E00F23CB8 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		513FA3CF308F1D9D00F23CB8 /* Sources */ = {
+		4135C5A7620C362255D0BDA4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */,
+				255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
-		513FA3DC308F1D9E00F23CB8 /* Sources */ = {
+		46947F9B930F0A0FC14B819E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
-		513FA3E6308F1D9E00F23CB8 /* Sources */ = {
+		B2D1E00802B073932CBBE653 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
+				5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E21EA03E3C052CAB4043ABD9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		513FA3E2308F1D9E00F23CB8 /* PBXTargetDependency */ = {
+		7376AF26671E7356F6054652 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 513FA3D2308F1D9D00F23CB8 /* iBoard */;
-			targetProxy = 513FA3E1308F1D9E00F23CB8 /* PBXContainerItemProxy */;
+			target = AD56215A850F3640CEE35712 /* iBoardKeyboard */;
+			targetProxy = 389AEAD041DEAB13D61B07E2 /* PBXContainerItemProxy */;
 		};
-		513FA3EC308F1D9E00F23CB8 /* PBXTargetDependency */ = {
+		805340E7DE18E3BEC8CF1753 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 513FA3D2308F1D9D00F23CB8 /* iBoard */;
-			targetProxy = 513FA3EB308F1D9E00F23CB8 /* PBXContainerItemProxy */;
+			target = 5F7AA4663176F88395DEBFDD /* iBoard */;
+			targetProxy = 5EE9AA71BC54EFBBC7FB4946 /* PBXContainerItemProxy */;
+		};
+		9940AB86034AF599F84429E1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5F7AA4663176F88395DEBFDD /* iBoard */;
+			targetProxy = 3CFA1B8C819D3F4603071CDD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		513FA3F0308F1D9E00F23CB8 /* Debug configuration for PBXProject "iBoard" */ = {
+		00E387A20AC1E00416D3BE58 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = iBoardKeyboard/iBoardKeyboard.entitlements;
+				INFOPLIST_FILE = iBoardKeyboard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX).keyboard";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		06B36E561BC83076B5315900 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iBoard/iBoard.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		071EC4464CB61FECA626AF00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)UITests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iBoard;
+			};
+			name = Release;
+		};
+		129E0EB7D1B6F0EAA3DB4304 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 28F4239BEE521E378F7112E1 /* Base.xcconfig */;
+			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -276,19 +492,19 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -296,25 +512,66 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
-		513FA3F1308F1D9E00F23CB8 /* Release configuration for PBXProject "iBoard" */ = {
+		23E8CF46D36377690F8F985A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = iBoardKeyboard/iBoardKeyboard.entitlements;
+				INFOPLIST_FILE = iBoardKeyboard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX).keyboard";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		7E5821E37588DDE1C7BDD681 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iBoard/iBoard.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B352F9B07C65A58BEF03EC30 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 28F4239BEE521E378F7112E1 /* Base.xcconfig */;
+			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -340,13 +597,13 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -354,201 +611,183 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
-		513FA3F3308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoard" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		513FA3F4308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoard" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		513FA3F6308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoardTests" */ = {
+		D5E6FB5C33AFEF14748A6901 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoardTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iBoard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iBoard";
-			};
-			name = Debug;
-		};
-		513FA3F7308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoardTests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoardTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iBoard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iBoard";
-			};
-			name = Release;
-		};
-		513FA3F9308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoardUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoardUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)UITests";
+				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = iBoard;
 			};
 			name = Debug;
 		};
-		513FA3FA308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoardUITests" */ = {
+		ECC875F9F4288C056F06239A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6NKFZTB3JJ;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.iBoardUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)Tests";
+				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = iBoard;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iBoard.app/iBoard";
 			};
 			name = Release;
+		};
+		F72C9484DE852DC6ED65B1E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(IBOARD_BUNDLE_PREFIX)Tests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iBoard.app/iBoard";
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		513FA3CE308F1D9D00F23CB8 /* Build configuration list for PBXProject "iBoard" */ = {
+		176176C93C1918F7C2F96FCB /* Build configuration list for PBXNativeTarget "iBoard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				513FA3F0308F1D9E00F23CB8 /* Debug configuration for PBXProject "iBoard" */,
-				513FA3F1308F1D9E00F23CB8 /* Release configuration for PBXProject "iBoard" */,
+				7E5821E37588DDE1C7BDD681 /* Debug */,
+				06B36E561BC83076B5315900 /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
-		513FA3F2308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoard" */ = {
+		4CBC8157966333A49300B1D8 /* Build configuration list for PBXProject "iBoard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				513FA3F3308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoard" */,
-				513FA3F4308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoard" */,
+				129E0EB7D1B6F0EAA3DB4304 /* Debug */,
+				B352F9B07C65A58BEF03EC30 /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
-		513FA3F5308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoardTests" */ = {
+		6B2EE4D6AC547BF31F5AEA54 /* Build configuration list for PBXNativeTarget "iBoardUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				513FA3F6308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoardTests" */,
-				513FA3F7308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoardTests" */,
+				D5E6FB5C33AFEF14748A6901 /* Debug */,
+				071EC4464CB61FECA626AF00 /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
-		513FA3F8308F1D9E00F23CB8 /* Build configuration list for PBXNativeTarget "iBoardUITests" */ = {
+		A7E29D510726C9F1D79098C5 /* Build configuration list for PBXNativeTarget "iBoardKeyboard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				513FA3F9308F1D9E00F23CB8 /* Debug configuration for PBXNativeTarget "iBoardUITests" */,
-				513FA3FA308F1D9E00F23CB8 /* Release configuration for PBXNativeTarget "iBoardUITests" */,
+				23E8CF46D36377690F8F985A /* Debug */,
+				00E387A20AC1E00416D3BE58 /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B5CF0305081D8AD51AE2EA6B /* Build configuration list for PBXNativeTarget "iBoardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F72C9484DE852DC6ED65B1E0 /* Debug */,
+				ECC875F9F4288C056F06239A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6D62A48DB26CF91AD4820DD5 /* XCLocalSwiftPackageReference "Packages/IBoardOTP" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardOTP;
+		};
+		AC729E04098F0658C31FE434 /* XCLocalSwiftPackageReference "Packages/IBoardCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardCore;
+		};
+		BE9EEA958B21CCB46B054161 /* XCLocalSwiftPackageReference "Packages/IBoardUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardUI;
+		};
+		BFCD2F6BE8B632031FBE1055 /* XCLocalSwiftPackageReference "Packages/IBoardLayout" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardLayout;
+		};
+		D144EEC28BC0367A9870D3F3 /* XCLocalSwiftPackageReference "Packages/IBoardTheme" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardTheme;
+		};
+		DC9D3495AE6117E7934F1F48 /* XCLocalSwiftPackageReference "Packages/IBoardEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardEngine;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		09A44C1C9C141F17267A4259 /* IBoardUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardUI;
+		};
+		216285A7FBA94D1A19DDF35B /* IBoardCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardCore;
+		};
+		261EEFEA2D4EF829F24DE453 /* IBoardTheme */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardTheme;
+		};
+		3A69118370202808F7CF9940 /* IBoardCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardCore;
+		};
+		5BE31DF68AEC8878C6627475 /* IBoardOTP */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardOTP;
+		};
+		652B1E47E9E596FE161F1A79 /* IBoardEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardEngine;
+		};
+		BEA058F77D8001DCC3C01C35 /* IBoardOTP */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardOTP;
+		};
+		C1E596259DA263BECA26D1B3 /* IBoardTheme */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardTheme;
+		};
+		F1581D34BA86755881CE8840 /* IBoardLayout */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardLayout;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 513FA3CB308F1D9D00F23CB8 /* Project object */;
-	validationLevel = 1;
+	rootObject = 99EDAA49D6400E9F84BB29FC /* Project object */;
 }

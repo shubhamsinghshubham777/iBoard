@@ -1,0 +1,7 @@
+// Shared build settings. Personal overrides live in Config/Local.xcconfig (gitignored).
+#include? "Local.xcconfig"
+
+IBOARD_BUNDLE_PREFIX = app.iBoard
+IBOARD_APP_GROUP = group.app.iBoard
+IPHONEOS_DEPLOYMENT_TARGET = 27.0
+SWIFT_VERSION = 6.0

@@ -1,0 +1,5 @@
+// Copy to Local.xcconfig (gitignored) and set your own values.
+DEVELOPMENT_TEAM = YOURTEAMID
+// Override only if you cannot sign app.iBoard; also change the App Group to match.
+// IBOARD_BUNDLE_PREFIX = com.example.iBoard
+// IBOARD_APP_GROUP = group.com.example.iBoard

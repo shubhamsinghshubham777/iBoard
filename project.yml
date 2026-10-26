@@ -1,0 +1,93 @@
+# XcodeGen spec — source of truth for iBoard.xcodeproj (`xcodegen generate`). See ROADMAP D-28.
+name: iBoard
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+options:
+  bundleIdPrefix: app
+  deploymentTarget: { iOS: "27.0" }
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+packages:
+  IBoardCore: { path: Packages/IBoardCore }
+  IBoardLayout: { path: Packages/IBoardLayout }
+  IBoardEngine: { path: Packages/IBoardEngine }
+  IBoardOTP: { path: Packages/IBoardOTP }
+  IBoardTheme: { path: Packages/IBoardTheme }
+  IBoardUI: { path: Packages/IBoardUI }
+targets:
+  iBoard:
+    type: application
+    platform: iOS
+    sources: [iBoard]
+    dependencies:
+      - target: iBoardKeyboard
+      - package: IBoardCore
+      - package: IBoardTheme
+      - package: IBoardOTP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX)
+        CODE_SIGN_ENTITLEMENTS: iBoard/iBoard.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: iBoard
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  iBoardKeyboard:
+    type: app-extension
+    platform: iOS
+    sources: [iBoardKeyboard]
+    dependencies:
+      - package: IBoardCore
+      - package: IBoardLayout
+      - package: IBoardEngine
+      - package: IBoardOTP
+      - package: IBoardTheme
+      - package: IBoardUI
+    info:
+      path: iBoardKeyboard/Info.plist
+      properties:
+        CFBundleDisplayName: iBoard
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+            RequestsOpenAccess: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX).keyboard
+        CODE_SIGN_ENTITLEMENTS: iBoardKeyboard/iBoardKeyboard.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+  iBoardTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [iBoardTests]
+    dependencies: [{ target: iBoard }]
+    settings:
+      base: { PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX)Tests, GENERATE_INFOPLIST_FILE: YES }
+  iBoardUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [iBoardUITests]
+    dependencies: [{ target: iBoard }]
+    settings:
+      base: { PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX)UITests, GENERATE_INFOPLIST_FILE: YES }
+schemes:
+  iBoard:
+    build:
+      targets: { iBoard: all, iBoardKeyboard: all }
+    test:
+      targets: [iBoardTests, iBoardUITests]

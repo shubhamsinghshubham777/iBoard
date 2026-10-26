@@ -1,0 +1,4 @@
+iCloud (M12, opt-in sync) needs these keys added to iBoard/iBoard.entitlements once the container exists:
+  com.apple.developer.icloud-container-identifiers = [iCloud.app.iBoard]
+  com.apple.developer.icloud-services = [CloudKit]
+Deliberately not enabled yet so the project signs with any team.

@@ -144,6 +144,7 @@ may change them without ceremony.
 | D-24 | `(agent)` **Rendering stack:** keyboard UI in UIKit + Core Animation with manual frame layout (no SwiftUI, no Auto Layout in the key grid); companion app in SwiftUI. |
 | D-25 | `(agent)` **Swift 6 language mode** for all new Swift packages; engine types are `Sendable` and engine work runs off the main thread. |
 | D-26 | `(agent)` **Identifiers:** app `app.iBoard`, keyboard extension `app.iBoard.keyboard`, App Group `group.app.iBoard`, iCloud container `iCloud.app.iBoard`. Contributors override team/bundle prefix via `Config/Local.xcconfig` (gitignored). |
+| D-28 | `(agent)` **Project generation:** `project.yml` (XcodeGen, `brew install xcodegen`) is the source of truth for `iBoard.xcodeproj`; re-run `xcodegen generate` after adding targets/files outside synchronized folders. Team ID lives in gitignored `Config/Local.xcconfig` (copy `Config/Local.xcconfig.example`). |
 | D-27 | `(agent)` **Selection rendering:** because keyboards cannot set selection, Shift+space selection is a keyboard-tracked "virtual selection" previewed in the suggestion strip; the marked-text highlight trick is not used by default. |
 
 ---
@@ -459,7 +460,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   Done when: `xcodebuild -version` shows 27.1+, both simulators boot, skills refreshed.
   **Result (2026-10-26):** Xcode 27.1 selected; simulators `iPhone 12` (iOS 27.0) and `iPhone Duo` (iOS 27.1) boot and build the app;
   `app-resizability` exported; all six `iphone-duo-*` skills kept (§11).
-- [~] **M0-02 Project structure** — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
+- [~] **M0-02 Project structure** *(built; only the simulator "types a" check is outstanding — see log)* — Add keyboard extension target `iBoardKeyboard`, App Group, iCloud container
   entitlement placeholder, `Config/Base.xcconfig` + gitignored `Config/Local.xcconfig` (team ID, bundle prefix;
   move `DEVELOPMENT_TEAM` out of the pbxproj), local Swift packages from §7 with empty modules and one test each,
   Swift 6 mode for packages (D-25), shared schemes in `xcshareddata` (the auto-generated scheme lives in
@@ -704,6 +705,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-26 · M0-02 (built, not closed) ·** Added `project.yml` (D-28), `Config/Base.xcconfig` + `Local.xcconfig(.example)`, `iBoardKeyboard` extension (stub "a" key, no Full Access requested), App Group entitlements on app + extension, iCloud placeholder note, six Swift 6 packages (§7) with one test each, shared scheme in `xcshareddata`; `DEVELOPMENT_TEAM` no longer in the pbxproj. Verification: `swift test` passes in all six packages; app + extension build for generic simulator and the iPhone 12 simulator (extension embedded in PlugIns). **Not verified:** enabling the keyboard and typing "a" — simctl has no tap/typing and the Xcode device-interaction tools weren't available; I pre-seeded `AppleKeyboards` in the iPhone 12 sim but the screen was black after reboot. Follow-up: enable iBoard in Settings > Keyboards on a sim, type in Notes, then tick M0-02. Note: git repo has no remote, so nothing was pushed.
 
 - **2026-10-26 · M0-01 done ·** Owner granted simulator access and selected Xcode 27.1. Created `iPhone 12` (iOS 27.0, 55FDD5FF-…) alongside the owner-created `iPhone Duo` (iOS 27.1, E295B4EA-…). Verification: both booted (`simctl bootstatus`), screenshots 1170×2532 and 2007×2853 px, template app builds for both destinations (exit 0). Next: M0-02.
 - **2026-10-26 · M0-01 (blocked 👤) ·** iOS 27.1 simulator runtime installed (24A94425); it supports only iPhone Duo (P-19). `simctl create` fails for both iPhone Duo (27.1) and iPhone 12 (27.0): CoreSimulatorService gets EPERM writing to the SSD-backed device set (P-20); restarting the service and running unsandboxed didn't help. Verification: CoreSimulator.log shows `NSPOSIXErrorDomain Code=1 "Operation not permitted"` on `/Volumes/SSD/Library/Developer/CoreSimulator/Devices/…`. Follow-ups: owner grants access (Full Disk Access for CoreSimulatorService, or opens Xcode 27.1 Device Hub and allows the removable-volume prompt), then re-run the two `simctl create` commands from M0-01 and boot both.
