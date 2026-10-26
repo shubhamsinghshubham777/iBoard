@@ -1,0 +1,7657 @@
+{
+ "schema": "iboard-native-metrics/1",
+ "captured": "2026-10-26",
+ "source": {
+  "os": "iOS 27.0 simulator (24A434)",
+  "device": "iPhone 12 (390x844 pt @3x)",
+  "keyboard": "system English (US) with Hindi (Hinglish) transliteration enabled (space bar shows \"EN HI\", prediction bar has an \"A\" script-switch button)",
+  "host": "Safari showing http://127.0.0.1 test page (white background)",
+  "method": "simctl screenshots (1170x2532) + axe describe-ui hit rects + pixel scan (docs/reference/README.md)",
+  "units": "pt unless a key ends in _px; coordinates x from screen left, y relative to the keyboard top unless noted",
+  "status_legend": {
+   "measured": "read directly from pixels or the accessibility tree",
+   "estimated": "inferred (ratio, typical font metrics) and needs device verification"
+  },
+  "caveat": "Translucent fills were sampled over a WHITE host page. The system keyboard backdrop is a blurred glass and changes with the host content (see docs/spikes/M0-04.md). Tile fills in dark mode are therefore only exact over a white host."
+ },
+ "size_classes": {
+  "iPhone12_portrait_390x844": {
+   "status": "measured"
+  },
+  "iPhone12_landscape": "NOT TESTED: simulator rotation cannot be scripted here (no Simulator.app; Device Hub rotation not scriptable)",
+  "iPhone12mini_portrait_375x812": "NOT TESTED",
+  "iPhone12ProMax_portrait_428x926": "NOT TESTED",
+  "iPhoneDuo": "NOT TESTED"
+ },
+ "keyboard_iPhone12_portrait": {
+  "frame": {
+   "x": 0,
+   "y_screen": 516.0,
+   "w": 390,
+   "h": 328,
+   "status": "measured",
+   "note": "AX group 0,516,390,328; includes prediction bar and the emoji/dictation row; bottom edge is the screen edge (no home-indicator inset applied by us)"
+  },
+  "prediction_bar": {
+   "y": 0,
+   "h": 44,
+   "status": "measured",
+   "note": "AX \"Typing Predictions\" group x 44..342 (3 equal cells 99.33 wide), leading button 0..44 (the keyboard-mode switcher chevrons), trailing button 342..390 (script switch \"A\"); empty cells when there are no predictions (email/URL/search fields)"
+  },
+  "rows": {
+   "row1_tile_top": 52,
+   "row2_tile_top": 106,
+   "row3_tile_top": 160,
+   "row4_tile_top": 214,
+   "row_pitch": 54,
+   "tile_height": 43,
+   "vertical_gap_between_rows": 11,
+   "status": "measured",
+   "note": "AX hit rects are 54 tall and start 1pt above tile tops (hit rect y 567 vs tile y 568); tile bottoms leave an 11pt hit-padding band"
+  },
+  "bottom_accessory_row": {
+   "y": 257,
+   "h": 71,
+   "status": "measured",
+   "content": "emoji button left (AX 8.5,775.7 68x68.7), dictation mic right (313.4,775.4 68x68.7); glyphs without tiles",
+   "note": "In a third-party keyboard the globe/mic bar is the system accessory (see M0-04); here the row is part of the system keyboard"
+  },
+  "letters": {
+   "tile_w": 32.33,
+   "key_pitch": 38.33,
+   "horizontal_gap": 6.0,
+   "status": "measured",
+   "row1_first_tile_x": 6.67,
+   "row2_first_tile_x": 25.67,
+   "row3_letters_first_tile_x": 64.0,
+   "shift_tile": {
+    "x": 6.67,
+    "w": 43.67
+   },
+   "delete_tile": {
+    "x": 339.67,
+    "w": 44.0
+   },
+   "gap_shift_to_z": 13.67,
+   "gap_m_to_delete": 13.67,
+   "bottom_row": {
+    "numbers_tile": {
+     "x": 6.67,
+     "w": 89.67
+    },
+    "space_tile": {
+     "x": 102.33,
+     "w": 185.33
+    },
+    "return_tile": {
+     "x": 293.67,
+     "w": 90.0
+    },
+    "gaps": 6.0
+   },
+   "ax_hit_rect_pitch_note": "letter hit rect 38.33 x 54, abutting (edge keys extend to the screen edge: Q rect x 4.67)"
+  },
+  "numbers_symbols": {
+   "status": "measured",
+   "row3_keys": "toggle (#+= / 123) 43.67 wide at x 6.67; five punctuation tiles 47.67 wide at pitch 53.67 starting x 64.0; delete 44 at x 339.67",
+   "row1_row2": "ten tiles, same frames as letters row 1 (32.33 wide, pitch 38.33); ninth key in row 2 labelled \"ampersand\" (AX)"
+  },
+  "numeric_pad": {
+   "status": "measured",
+   "tile_w": 122.33,
+   "tile_h": 48,
+   "tile_pitch_x": 128.33,
+   "tile_pitch_y": 54,
+   "row_tops": [
+    50,
+    104,
+    158,
+    212
+   ],
+   "first_x": 4.67,
+   "radius": 10.6,
+   "row4": "decimal/phone-pad bottom row has an untiled \".\" (or \"+*#\" tile on tel) left, zero tile centre, untiled delete right; globe at bottom left of the accessory row replaces emoji",
+   "note": "digit tiles carry ABC/DEF sub-labels in small caps (~9-10pt, estimated)"
+  },
+  "corner_radius": {
+   "key_tile": 8.47,
+   "status": "measured",
+   "return_blue_tile": 9.07,
+   "numeric_pad_tile": 10.6,
+   "keyboard_top_corners": 25.3,
+   "keyboard_bottom_corners": 43.1,
+   "note": "keyboard container radii fitted from the per-row inset profile, bottom corners follow the display corner (approximate, circle fit); tile radii also circle fit (actual iOS uses continuous corners)"
+  },
+  "shadow": {
+   "status": "NOT MEASURED",
+   "note": "no visible hard shadow under tiles in the 3x captures; iOS keys normally carry a ~1pt dark under-edge"
+  }
+ },
+ "fonts": {
+  "status": "estimated",
+  "letter_lowercase": {
+   "size_pt": 25,
+   "weight": "regular",
+   "family": "SF Pro (system)",
+   "basis": "x-height 13pt measured; SF x-height ratio ~0.52 gives about 25"
+  },
+  "letter_uppercase": {
+   "size_pt": 22,
+   "weight": "regular",
+   "basis": "cap height 15.33pt measured; ratio 0.705"
+  },
+  "special_key_labels_123_ABC": {
+   "size_pt": 16,
+   "weight": "regular",
+   "basis": "estimated from the capture; not measured"
+  },
+  "prediction_text": {
+   "size_pt": 17,
+   "weight": "regular",
+   "basis": "first glyph height 12.0pt; ratio 0.705"
+  },
+  "space_bar_language_label": {
+   "text": "EN HI",
+   "size_pt": 9,
+   "color": "secondary label",
+   "status": "estimated"
+  },
+  "glyph_measurements": {
+   "L": {
+    "glyph_x": {
+     "h_pt": 13.0,
+     "w_pt": 11.33,
+     "top_below_tile_top_pt": 15.0,
+     "bottom_above_tile_bottom_pt": 15.0
+    },
+    "glyph_h": {
+     "h_pt": 17.67,
+     "w_pt": 10.67,
+     "top_below_tile_top_pt": 10.33,
+     "bottom_above_tile_bottom_pt": 15.0
+    },
+    "glyph_q": {
+     "h_pt": 17.33,
+     "w_pt": 11.0,
+     "top_below_tile_top_pt": 15.0,
+     "bottom_above_tile_bottom_pt": 10.67
+    },
+    "upper_H_h_pt": 15.33,
+    "upper_E_h_pt": 15.33,
+    "pred_text_bbox_pt": [
+     176.33,
+     535.0,
+     209.67,
+     550.0
+    ],
+    "pred_first_glyph_h_pt": 12.0
+   }
+  }
+ },
+ "colors": {
+  "status": "measured (over white host)",
+  "light": {
+   "backdrop_between_rows": "#E2E3E8",
+   "backdrop_below_row4": "#E2E3E8",
+   "backdrop_prediction_bar": "#E2E3E8",
+   "tile_fill": {
+    "q": "#FFFFFF",
+    "a": "#FFFFFF",
+    "z": "#FFFFFF",
+    "shift": "#FFFFFF",
+    "delete": "#FFFFFF",
+    "numbers": "#FFFFFF",
+    "space": "#FFFFFF",
+    "return": "#FFFFFF"
+   },
+   "letter_color": "#000000",
+   "pred_text_color": "#4A4A4C",
+   "divider_samples": [
+    [
+     142.33,
+     "#D3D4D9"
+    ],
+    [
+     142.67,
+     "#D3D4D9"
+    ],
+    [
+     143.0,
+     "#D3D4D9"
+    ]
+   ],
+   "shift_active_tile_fill": "#FFFFFF",
+   "shift_active_glyph_color": "#000000",
+   "emoji_glyph_color": "#000000",
+   "return_go_fill": "#007AFF",
+   "return_go_glyph_color": "#FFFFFF",
+   "return_done_fill": "#007AFF",
+   "return_send_fill": "#007AFF",
+   "return_next_fill": "#FFFFFF",
+   "numpad_key_fill": "#FFFFFF",
+   "numpad_backdrop": "#E2E3E8"
+  },
+  "dark": {
+   "backdrop_between_rows": "#373737",
+   "backdrop_below_row4": "#373737",
+   "backdrop_prediction_bar": "#373737",
+   "tile_fill": {
+    "q": "#575757",
+    "a": "#575757",
+    "z": "#575757",
+    "shift": "#575757",
+    "delete": "#575757",
+    "numbers": "#575757",
+    "space": "#575757",
+    "return": "#575757"
+   },
+   "letter_color": "#FFFFFF",
+   "pred_text_color": "#ACACAC",
+   "divider_samples": [
+    [
+     142.33,
+     "#404042"
+    ],
+    [
+     142.67,
+     "#404042"
+    ],
+    [
+     143.0,
+     "#404042"
+    ]
+   ],
+   "shift_active_tile_fill": "#575757",
+   "shift_active_glyph_color": "#FFFFFF",
+   "emoji_glyph_color": "#FFFFFF",
+   "return_go_fill": "#007AFF",
+   "return_go_glyph_color": "#FFFFFF",
+   "return_done_fill": "#007AFF",
+   "return_send_fill": "#007AFF",
+   "return_next_fill": "#575757",
+   "numpad_key_fill": "#575757",
+   "numpad_backdrop": "#373737"
+  },
+  "observations": [
+   "Light: every tile (letters, shift, delete, 123, space, return) is the same #FFFFFF; no darker \"function key\" fill in iOS 27.0 light mode",
+   "Dark: every tile is #575757 over a #373737 backdrop (white host); function keys are not distinguished",
+   "Blue action return (go/send/done/join-style) = #007AFF with white glyph in both appearances; \"next\" (>) and default return stay tile colour",
+   "Shift active = the same tile colour with a filled arrow glyph (not an inverted tile)"
+  ]
+ },
+ "trait_variants": "see layouts.traits; return-key variants: default (arrow-return glyph), go/send/done = blue tile with arrow/up-arrow/check glyph, next = chevron on a normal tile",
+ "layouts": {
+  "layers": {
+   "letters-shift-auto": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "letters-lower": {
+    "light": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "letters-shift": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "numbers": {
+    "light": {
+     "1": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "2": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "3": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "4": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "5": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "6": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "7": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "8": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "9": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "0": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "-": {
+      "x": 6.67,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "/": {
+      "x": 44.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ":": {
+      "x": 83.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ";": {
+      "x": 121.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "(": {
+      "x": 159.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ")": {
+      "x": 198.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\u20b9": {
+      "x": 236.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "ampersand": {
+      "x": 274.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "@": {
+      "x": 313.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\"": {
+      "x": 351.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "symbols": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ".": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ",": {
+      "x": 117.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "?": {
+      "x": 171.33,
+      "y": 160.0,
+      "w": 47.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "!": {
+      "x": 224.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "'": {
+      "x": 278.33,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "letters": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "1": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "2": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "3": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "4": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "5": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "6": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "7": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "8": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "9": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "0": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "-": {
+      "x": 6.67,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "/": {
+      "x": 44.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ":": {
+      "x": 83.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ";": {
+      "x": 121.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "(": {
+      "x": 159.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ")": {
+      "x": 198.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\u20b9": {
+      "x": 236.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "ampersand": {
+      "x": 274.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "@": {
+      "x": 313.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\"": {
+      "x": 351.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "symbols": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ".": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ",": {
+      "x": 117.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "?": {
+      "x": 171.33,
+      "y": 160.0,
+      "w": 47.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "!": {
+      "x": 224.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "'": {
+      "x": 278.33,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "letters": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "symbols": {
+    "light": {
+     "[": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "]": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "{": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "}": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "#": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "%": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "^": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "*": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "+": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "=": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "_": {
+      "x": 6.67,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\\": {
+      "x": 44.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "|": {
+      "x": 83.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "~": {
+      "x": 121.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "<": {
+      "x": 159.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ">": {
+      "x": 198.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "$": {
+      "x": 236.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\u00a3": {
+      "x": 274.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\u20ac": {
+      "x": 313.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "\u2022": {
+      "x": 351.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ".": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ",": {
+      "x": 117.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "?": {
+      "x": 171.33,
+      "y": 160.0,
+      "w": 47.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "!": {
+      "x": 224.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "'": {
+      "x": 278.33,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "letters": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "[": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "]": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "{": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "}": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "#": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "%": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "^": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "*": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "+": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "=": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "_": {
+      "x": 6.67,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\\": {
+      "x": 44.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "|": {
+      "x": 83.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "~": {
+      "x": 121.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "<": {
+      "x": 159.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ">": {
+      "x": 198.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "$": {
+      "x": 236.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\u00a3": {
+      "x": 274.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\u20ac": {
+      "x": 313.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "\u2022": {
+      "x": 351.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ".": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ",": {
+      "x": 117.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "?": {
+      "x": 171.33,
+      "y": 160.0,
+      "w": 47.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "!": {
+      "x": 224.67,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "'": {
+      "x": 278.33,
+      "y": 160.0,
+      "w": 47.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "letters": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   }
+  },
+  "traits": {
+   "email": {
+    "light": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "@": {
+      "x": 198.0,
+      "y": 214.0,
+      "w": 42.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ".": {
+      "x": 246.0,
+      "y": 214.0,
+      "w": 41.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "@": {
+      "x": 198.0,
+      "y": 214.0,
+      "w": 42.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ".": {
+      "x": 246.0,
+      "y": 214.0,
+      "w": 41.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "url": {
+    "light": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ".": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 57.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "/": {
+      "x": 166.0,
+      "y": 214.0,
+      "w": 58.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     ".com": {
+      "x": 230.0,
+      "y": 214.0,
+      "w": 57.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ".": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 57.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "/": {
+      "x": 166.0,
+      "y": 214.0,
+      "w": 58.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     ".com": {
+      "x": 230.0,
+      "y": 214.0,
+      "w": 57.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "num": {
+    "light": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#E2E3E8",
+      "radius": 3.33
+     }
+    },
+    "dark": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#373737",
+      "radius": 3.33
+     }
+    }
+   },
+   "dec": {
+    "light": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#E2E3E8",
+      "radius": 3.33
+     }
+    },
+    "dark": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#373737",
+      "radius": 3.33
+     }
+    }
+   },
+   "tel": {
+    "light": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#FFFFFF",
+      "radius": 10.6
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#E2E3E8",
+      "radius": 3.33
+     }
+    },
+    "dark": {
+     "1": {
+      "x": 4.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "2": {
+      "x": 133.0,
+      "y": 50.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "3": {
+      "x": 261.67,
+      "y": 50.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "4": {
+      "x": 4.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "5": {
+      "x": 133.0,
+      "y": 104.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "6": {
+      "x": 261.67,
+      "y": 104.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "7": {
+      "x": 4.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "8": {
+      "x": 133.0,
+      "y": 158.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "9": {
+      "x": 261.67,
+      "y": 158.0,
+      "w": 122.33,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "0": {
+      "x": 133.0,
+      "y": 212.0,
+      "w": 122.67,
+      "h": 48.0,
+      "fill": "#575757",
+      "radius": 10.67
+     },
+     "Delete": {
+      "x": 251.67,
+      "y": 202.0,
+      "w": 138.33,
+      "h": 74.0,
+      "fill": "#373737",
+      "radius": 3.33
+     }
+    }
+   },
+   "search": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "search2": {
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "search": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    }
+   },
+   "go": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "go": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "go": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    }
+   },
+   "send": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "send": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "send": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    }
+   },
+   "next": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "next": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "next": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   },
+   "done": {
+    "light": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "done": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    },
+    "dark": {
+     "Q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "W": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "E": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "R": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "T": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "U": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "I": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "O": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "P": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "A": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "S": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "D": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "F": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "G": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "H": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "J": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "K": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "L": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "Z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "X": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "C": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "V": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "B": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "N": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "M": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "done": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#007AFF",
+      "radius": 9.07
+     }
+    }
+   },
+   "nocap": {
+    "light": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#FFFFFF",
+      "radius": 8.47
+     }
+    },
+    "dark": {
+     "q": {
+      "x": 6.67,
+      "y": 52.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "w": {
+      "x": 44.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "e": {
+      "x": 83.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "r": {
+      "x": 121.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "t": {
+      "x": 159.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "y": {
+      "x": 198.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "u": {
+      "x": 236.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "i": {
+      "x": 274.67,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "o": {
+      "x": 313.0,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "p": {
+      "x": 351.33,
+      "y": 52.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "a": {
+      "x": 25.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "s": {
+      "x": 64.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "d": {
+      "x": 102.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "f": {
+      "x": 140.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "g": {
+      "x": 179.0,
+      "y": 106.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "h": {
+      "x": 217.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "j": {
+      "x": 255.33,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "k": {
+      "x": 293.67,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "l": {
+      "x": 332.0,
+      "y": 106.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "shift": {
+      "x": 6.67,
+      "y": 160.0,
+      "w": 43.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "z": {
+      "x": 64.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "x": {
+      "x": 102.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "c": {
+      "x": 140.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "v": {
+      "x": 179.0,
+      "y": 160.0,
+      "w": 32.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "b": {
+      "x": 217.0,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "n": {
+      "x": 255.33,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "m": {
+      "x": 293.67,
+      "y": 160.0,
+      "w": 32.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "delete": {
+      "x": 339.67,
+      "y": 160.0,
+      "w": 44.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "numbers": {
+      "x": 6.67,
+      "y": 214.0,
+      "w": 89.67,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "space": {
+      "x": 102.33,
+      "y": 214.0,
+      "w": 185.33,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     },
+     "return": {
+      "x": 293.67,
+      "y": 214.0,
+      "w": 90.0,
+      "h": 43.0,
+      "fill": "#575757",
+      "radius": 8.6
+     }
+    }
+   }
+  }
+ },
+ "observations_ios27": [
+  "The keyboard has a persistent 44pt prediction bar even for plain fields; email, URL and search-type fields show it empty (three empty cells and dividers); text fields show 3 predictions with the first quoted (\"Ve\")",
+  "No globe key on letters in this capture (probably because only one keyboard is enabled; not verified); the emoji button sits bottom-left and the mic bottom-right on the accessory row below the 4th key row, 71pt tall",
+  "Return key label is a glyph, not text. Currency key on the numbers layer is the locale currency (rupee here)",
+  "Auto-capitalisation: opening a text field shows the shifted layer; autocapitalize=none starts lowercase",
+  "Caps lock (double tap shift) could not be triggered through axe synthetic taps: NOT CAPTURED",
+  "Hinglish: the system \"English + Hindi\" keyboard shows \"EN HI\" on the space bar and an \"A\" script-switch key at the right end of the prediction bar; iBoard should mirror this affordance for F4/Hinglish"
+ ],
+ "iboardlayout_token_suggestions": {
+  "note": "derived values for IBoardLayout (iPhone 12 portrait, scale with screen width 390 for other widths until measured)",
+  "keyboardHeight": 328,
+  "predictionBarHeight": 44,
+  "rowPitch": 54,
+  "keyHeight": 43,
+  "keyWidthLetters": 32.33,
+  "keyPitchLetters": 38.33,
+  "horizontalGap": 6,
+  "verticalGap": 11,
+  "edgeMargin": 6.67,
+  "cornerRadiusKey": 8.5,
+  "rowInsets": [
+   6.67,
+   25.67,
+   64.0
+  ],
+  "bottomAccessoryHeight": 71,
+  "status": "estimated"
+ }
+}
