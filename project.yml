@@ -21,6 +21,7 @@ packages:
   IBoardEmoji: { path: Packages/IBoardEmoji }
   IBoardTheme: { path: Packages/IBoardTheme }
   IBoardUI: { path: Packages/IBoardUI }
+  IBoardSync: { path: Packages/IBoardSync }
 targets:
   iBoard:
     type: application
@@ -32,6 +33,7 @@ targets:
       - package: IBoardEngine
       - package: IBoardTheme
       - package: IBoardOTP
+      - package: IBoardSync
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX)
