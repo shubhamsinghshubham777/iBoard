@@ -186,6 +186,9 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
     /// Extra strip height (pt) while the emoji search shows its results row between the field and the keys. Transient:
     /// never stored; the keys keep their size, the keyboard just grows by this much.
     public var searchRowHeight: CGFloat = 0
+    /// F13: on a phone in landscape the letters layer gets a column of punctuation keys on each side (the main
+    /// block narrows). Phones only, wide containers only; ignored everywhere else.
+    public var landscapeSideKeys: Bool = true
 
     public init(
         numberRow: Bool = false,
@@ -197,7 +200,8 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         splitLandscape: Bool = false,
         fillToFold: Bool = false,
         emojiKey: Bool = false,
-        compact: Bool = false
+        compact: Bool = false,
+        landscapeSideKeys: Bool = true
     ) {
         self.numberRow = numberRow
         self.heightScale = heightScale
@@ -209,10 +213,11 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         self.fillToFold = fillToFold
         self.emojiKey = emojiKey
         self.compact = compact
+        self.landscapeSideKeys = landscapeSideKeys
     }
 
     private enum CodingKeys: String, CodingKey {
-        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold, emojiKey, compact
+        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold, emojiKey, compact, landscapeSideKeys
     }
 
     // Tolerant decoding: settings stored before the Duo fields existed still load.
@@ -228,6 +233,7 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         fillToFold = try c.decodeIfPresent(Bool.self, forKey: .fillToFold) ?? false
         emojiKey = try c.decodeIfPresent(Bool.self, forKey: .emojiKey) ?? false
         compact = try c.decodeIfPresent(Bool.self, forKey: .compact) ?? false
+        landscapeSideKeys = try c.decodeIfPresent(Bool.self, forKey: .landscapeSideKeys) ?? true
     }
 
     public func isSplit(for orientation: LayoutOrientation) -> Bool {
