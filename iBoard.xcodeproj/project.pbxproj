@@ -21,6 +21,7 @@
 		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
 		5AB898199F29A6EA29F1905B /* IBoardEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 8AAAAC9AA464BAE807625340 /* IBoardEngine */; };
 		5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9ECAB65BC0422F84297743E /* iBoardTests.swift */; };
+		655B634540E2A4679B078509 /* SwipeTraceRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E1F2D268FCC7B22891602F /* SwipeTraceRecorderView.swift */; };
 		68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */; };
 		69D508E38E6A569FDEF72281 /* OTPSetupGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC18F2697DA0784F0B0EA8E /* OTPSetupGuide.swift */; };
 		710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */; };
@@ -119,6 +120,7 @@
 
 /* Begin PBXFileReference section */
 		11294C7D29525F83ADFFDDDB /* iBoard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoard.entitlements; sourceTree = "<group>"; };
+		11E1F2D268FCC7B22891602F /* SwipeTraceRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTraceRecorderView.swift; sourceTree = "<group>"; };
 		1203E236665B6D0499F27E15 /* IBoardUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardUI; path = Packages/IBoardUI; sourceTree = SOURCE_ROOT; };
 		12DDC771F6CEAAF72D0841AF /* IBoardCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardCore; path = Packages/IBoardCore; sourceTree = SOURCE_ROOT; };
 		13743E00E9C0E53BCC14BE8D /* IBoardEmoji */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardEmoji; path = Packages/IBoardEmoji; sourceTree = SOURCE_ROOT; };
@@ -233,6 +235,7 @@
 				CA1844700032908B476959FE /* ThemePreviewView.swift */,
 				CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */,
 				546572152E5925D9E25ACC19 /* Intents */,
+				A5973276CAD7B711256E925C /* TraceRecorder */,
 			);
 			path = iBoard;
 			sourceTree = "<group>";
@@ -302,6 +305,14 @@
 				AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A5973276CAD7B711256E925C /* TraceRecorder */ = {
+			isa = PBXGroup;
+			children = (
+				11E1F2D268FCC7B22891602F /* SwipeTraceRecorderView.swift */,
+			);
+			path = TraceRecorder;
 			sourceTree = "<group>";
 		};
 		BEB699DF9E939523A20ED08C /* iBoardKeyboard */ = {
@@ -535,6 +546,7 @@
 				BD557D3D0C47D09755682163 /* OTPSetupView.swift in Sources */,
 				796C736BDA07FBDA04E645E1 /* OnboardingView.swift in Sources */,
 				E5FE00EF799D37EFBA988634 /* SettingsView.swift in Sources */,
+				655B634540E2A4679B078509 /* SwipeTraceRecorderView.swift in Sources */,
 				E9F818B243DDD80AE2DEA346 /* SyncSettingsView.swift in Sources */,
 				E45E532A680D35E2B3E680BB /* ThemePreviewView.swift in Sources */,
 				A74AF87C028F5092E6F6FAE9 /* ThemeStudioView.swift in Sources */,

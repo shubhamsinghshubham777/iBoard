@@ -92,6 +92,9 @@ struct SettingsView: View {
             Section {
                 NavigationLink("Theme studio") { ThemeStudioView() }
                 NavigationLink("iCloud sync") { SyncSettingsView() }
+                #if DEBUG
+                NavigationLink("Swipe trace recorder") { SwipeTraceRecorderView() }
+                #endif
             }
             Section {
                 Button("Reset to defaults", role: .destructive) { settings = .defaults }

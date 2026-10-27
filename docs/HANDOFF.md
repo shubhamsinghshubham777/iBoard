@@ -139,3 +139,8 @@ perf gate, M4-04/M2-07 real eval sets.
 - **Needs the owner:** device perf run (docs/perf/README.md → `scripts/device-perf.sh pull`; unblocks M1-09/M13-02), device pass over all `[~]`
   keyboard features, App Store Connect (privacy URL = https://shubhamsinghshubham777.github.io/iBoard/privacy.html, support URL `/support.html`,
   review-notes contact, screenshots), TestFlight (M13-05), submission + public launch (M13-06): see `docs/RELEASE_CHECKLIST.md`.
+
+## 10. Round 7 (2026-10-27, late)
+- Merged sync3/swipe3/a11y3/appduo3 (reports in `docs/agent-reports/`). Verified on simulator and packages only; nothing from this round has been checked on the phone yet.
+- Do not run two `xcodebuild test` at once on the same simulator (hangs at 0% CPU); `xcrun simctl shutdown all` clears it.
+- Owner steps: record swipe traces (Settings > Swipe trace recorder, Debug build) and share the file; two-device sync test (sync3.md steps); device VoiceOver/Voice Control/Switch Control pass (a11y3.md checklist).
