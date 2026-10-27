@@ -77,6 +77,9 @@ public struct KeyboardInputMachine: Sendable {
         var isAlternates = false
         /// This touch is on the shift key (see `isShiftHeld`).
         var isShiftKey = false
+        /// The layer this touch left when it pressed 123 / ABC / #+=: lifting on another key types it and returns
+        /// there (the system keyboard's slide-from-123 gesture).
+        var slideFrom: LayoutKind?
     }
 
     public private(set) var layout: KeyboardLayout
@@ -182,6 +185,17 @@ public struct KeyboardInputMachine: Sendable {
             release(slot: i, emit: emit)
             return
         }
+        if let from = slots[i].slideFrom, let point, let hit = layout.hit(at: point), kind != from {
+            let identity = layout.keys[hit.keyIndex].identity
+            switch identity {
+            case .letter, .symbol:
+                slots[i].slideFrom = nil
+                if let text = identity.insertionText { emit(.insert(text)) }
+                kind = from
+                emit(.layerChanged(from))
+            default: break
+            }
+        }
         if !slots[i].isCommitted, slots[i].keyIndex >= 0 {
             slots[i].isCommitted = true
             let identity = layout.keys[slots[i].keyIndex].identity
@@ -245,6 +259,7 @@ public struct KeyboardInputMachine: Sendable {
         slots[i].isActive = false
         slots[i].isAlternates = false
         slots[i].isShiftKey = false
+        slots[i].slideFrom = nil
         slots[i].longPressAt = .infinity
         slots[i].keyIndex = -1
     }
@@ -297,6 +312,7 @@ public struct KeyboardInputMachine: Sendable {
                 slots[i].keyIndex = -1
                 slots[i].isCommitted = true
             }
+            slots[slot].slideFrom = kind
             kind = target
             emit(.layerChanged(target))
         }

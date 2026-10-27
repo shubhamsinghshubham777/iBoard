@@ -358,3 +358,27 @@ private struct Driver {
     #expect(wordDeleteCount(before: "   ") == 3)
     #expect(wordDeleteCount(before: "hi 👍🏽 ") == 2) // a grapheme cluster counts once
 }
+
+@Test func slidingFromThe123KeyTypesTheKeyAndReturnsToLetters() {
+    var d = Driver()
+    let sink = d.sink
+    d.down(1, .layerSwitch(.numbers))
+    #expect(d.m.kind == .numbers)
+    // The host swaps in the numbers layout; the finger slides to the "5" key and lifts.
+    d.m.setLayout(makeLayout(.numbers))
+    let five = d.point(.symbol("5"))
+    d.m.touchUp(id: 1, at: five, time: 0.4) { sink($0) }
+    #expect(d.sink.inserts == ["5"])
+    #expect(d.m.kind == .letters)
+    #expect(d.sink.events.contains(.layerChanged(.letters)))
+}
+
+@Test func liftingOnTheLayerKeyItselfStaysOnNumbers() {
+    var d = Driver()
+    let sink = d.sink
+    d.down(1, .layerSwitch(.numbers))
+    d.m.setLayout(makeLayout(.numbers))
+    d.m.touchUp(id: 1, at: d.point(.layerSwitch(.letters)), time: 0.4) { sink($0) }
+    #expect(d.m.kind == .numbers)
+    #expect(d.sink.inserts.isEmpty)
+}
