@@ -29,6 +29,7 @@ import IBoardLayout
             case "endpointWeight": p.endpointWeight = v
             case "endpointTolerance": p.endpointTolerance = v
             case "endpointSigma": p.endpointSigma = v
+            case "contractionPenalty": p.contractionPenalty = v
             case "resampleCount": p.resampleCount = Int(v)
             default: print("unknown param \(a[0])")
             }
@@ -51,7 +52,7 @@ import IBoardLayout
             let ctx = CodeSwitch.context(previousWords: t.previousWords, primary: en, secondary: sec, parameters: CodeSwitchParameters())
             let pts = t.swipePoints(scaledTo: testLayout.bounds.size)
             let r = dec.decode(points: pts, context: ctx.primary, contextWords: t.previousWords, secondaryContext: ctx.secondary)
-            if i % 2 == 0 { train.add(truth: t.word, result: r) } else { held.add(truth: t.word, result: r) }
+            if i % 2 == 0 { train.add(truth: SwipeScore.canonicalTruth(t.word, in: en), result: r) } else { held.add(truth: SwipeScore.canonicalTruth(t.word, in: en), result: r) }
             guard let first = testLayout.firstKey(.letter(String(t.word.first!))),
                   let last = testLayout.firstKey(.letter(String(t.word.last!))) else { continue }
             let s0 = pts[0], s1 = pts[pts.count - 1]

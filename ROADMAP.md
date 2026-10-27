@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — M4-04 contraction traces (402 real swipes)
+Owner recorded 201 more swipes (56 contractions; recorder validator had rejected apostrophes, fixed). Scoring now counts the contraction as truth when the prompt is an apostrophe-less spelling that is not a lexicon word (dont -> don't), since the keyboard typing don't is the desired result. Real, all 402: top-1 89.1 / top-3 97.8 (first 201 unchanged at 95.0/98.0; contraction half lower on top-1), train 88.1/97.0, held-out 90.0/98.5, 6 confident-wrong. `contractionPenalty` swept 0/0.25/0.5/1.0 on real data: 0.5 is best, unchanged. Remaining top-3 misses: dhanyavaad x3 (lexicon variant), thanks, whats/what's (rank 34-39, poor swipes), id vs i'd/is (ambiguous). Next: add dhanyavaad variant; consider i'd/id prior. Stays `[~]`.
+
 ### 2026-10-27 — M4-03/04 swipe contractions
 Owner: glide typing feels much better on device; contractions (i'll, didn't, shouldn't) could not be swiped. Cause: trie search walked letter keys only, apostrophe words unreachable. Fix: apostrophes in lexicon words are zero-width/zero-cost in the trie and skipped in path vertices; `contractionPenalty` 0.5 (smallest value keeping real top-1 at 95.0 after "want" -> "wasn't"). Synthetic: all 19 test contractions top-3 on clean swipes, 190 noisy swipes top-1 88.9 / top-3 100; owner trace set unchanged (95.0/98.0) but has no contractions, so real contraction accuracy is unmeasured. Recorder now prompts 44 contraction/ambiguous-pair words first (swipe5.md); owner offered to record them. Tasks stay `[~]`.
 

@@ -84,7 +84,7 @@ import IBoardLayout
             let ctx = CodeSwitch.context(previousWords: t.previousWords, primary: en, secondary: sec, parameters: CodeSwitchParameters())
             let r = dec.decode(points: t.swipePoints(scaledTo: testLayout.bounds.size), context: ctx.primary,
                                contextWords: t.previousWords, secondaryContext: ctx.secondary)
-            s.add(truth: t.word, result: r)
+            s.add(truth: SwipeScore.canonicalTruth(t.word, in: en), result: r)
         }
         print(s.line("REAL TRACES> \(traces.count) owner traces").replacingOccurrences(of: "SYNTHETIC ", with: ""))
     }

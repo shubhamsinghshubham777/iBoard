@@ -141,6 +141,18 @@ struct SwipeScore {
     var top1Rate: Double { total == 0 ? 0 : Double(top1) / Double(total) }
     var top3Rate: Double { total == 0 ? 0 : Double(top3) / Double(total) }
 
+    /// Prompts such as "dont" or "thats" mean the contraction: when the plain spelling is not a lexicon word but exactly
+    /// one apostrophe insertion is, the contraction is the intended truth (the keyboard should type it).
+    static func canonicalTruth(_ word: String, in lexicon: Lexicon) -> String {
+        guard !word.contains("'"), lexicon.lookup(word) == nil else { return word }
+        let chars = Array(word)
+        for i in 1..<max(1, chars.count) {
+            let cand = String(chars[..<i]) + "'" + String(chars[i...])
+            if lexicon.lookup(cand) != nil { return cand }
+        }
+        return word
+    }
+
     mutating func add(truth: String, result: SwipeDecodeResult) {
         total += 1
         let words = result.candidates.map(\.word)
