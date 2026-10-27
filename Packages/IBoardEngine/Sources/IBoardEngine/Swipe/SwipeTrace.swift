@@ -12,7 +12,7 @@ public struct SwipeTrace: Codable, Sendable, Equatable {
     public static let currentVersion = 1
 
     public var version: Int
-    /// The intended word, lowercase ASCII letters (a-z).
+    /// The intended word, lowercase ASCII letters (a-z) and straight apostrophes.
     public var word: String
     /// Up to two words typed before it (oldest first), for the language / n-gram context. Optional.
     public var previousWords: [String]
@@ -50,7 +50,7 @@ public struct SwipeTrace: Codable, Sendable, Equatable {
         public var description: String {
             switch self {
             case .unsupportedVersion(let v): return "unsupported trace version \(v)"
-            case .badWord: return "word must be 2+ lowercase ASCII letters"
+            case .badWord: return "word must be 2+ lowercase ASCII letters or apostrophes"
             case .badContainer: return "container size must be positive and finite"
             case .tooFewPoints(let n): return "needs at least 2 points, has \(n)"
             case .badPoint(let i): return "point \(i) must be 3 finite numbers [x, y, t]"
@@ -63,7 +63,7 @@ public struct SwipeTrace: Codable, Sendable, Equatable {
     public func validate() throws {
         guard version == Self.currentVersion else { throw ValidationError.unsupportedVersion(version) }
         func ok(_ w: String) -> Bool {
-            w.count >= 2 && w.unicodeScalars.allSatisfy { $0.value >= 97 && $0.value <= 122 }
+            w.count >= 2 && w.unicodeScalars.allSatisfy { ($0.value >= 97 && $0.value <= 122) || $0.value == 39 }
         }
         guard ok(word), previousWords.count <= 2, previousWords.allSatisfy(ok) else { throw ValidationError.badWord(word) }
         guard containerWidth.isFinite, containerHeight.isFinite, containerWidth > 0, containerHeight > 0 else {

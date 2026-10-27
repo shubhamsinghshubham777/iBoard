@@ -12,6 +12,16 @@ import IBoardLayout
                           containerHeight: Double(testLayout.bounds.size.height), samples: pts, source: "synthetic")
     }
 
+    @Test func validationAcceptsApostrophesRejectsOtherSymbols() throws {
+        try sample("didn't").validate()
+        try sample("i'll").validate()
+        for bad in ["Didn't", "don\u{2019}t"] {
+            var t = try sample("didnt")
+            t.word = bad
+            #expect(throws: SwipeTrace.ValidationError.self) { try t.validate() }
+        }
+    }
+
     @Test func roundTrip() throws {
         let a = try sample("hello"), b = try sample("world")
         let data = try SwipeTraceFile.encode([a, b])
