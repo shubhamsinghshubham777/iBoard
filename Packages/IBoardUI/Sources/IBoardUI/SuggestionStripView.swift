@@ -86,6 +86,10 @@ public final class SuggestionStripView: UIView {
     private let highlightLayer = CALayer()
     private let emphasisLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
     private var altLabels: [UILabel] = []
+    /// SF Symbol images for action options (settings, clipboard); parallel to `altLabels`.
+    private var altIcons: [UIImageView] = []
+    /// Rounded plate under the alternates row (a native-looking popup tile strip).
+    private let altPlate = CALayer()
     private let bannerLabel = UILabel()
     /// Emoji search field (rounded pill with a magnifier and, once there is a query, a clear button). It takes slot 0
     /// (or the whole strip when `wide`); the other slots still show their texts when not wide.
@@ -171,6 +175,12 @@ public final class SuggestionStripView: UIView {
         highlightLayer.cornerCurve = .continuous
         highlightLayer.isHidden = true
         layer.insertSublayer(highlightLayer, at: 0)
+        altPlate.cornerCurve = .continuous
+        altPlate.isHidden = true
+        altPlate.shadowOpacity = 0.18
+        altPlate.shadowRadius = 5
+        altPlate.shadowOffset = CGSize(width: 0, height: 1)
+        layer.insertSublayer(altPlate, at: 0) // below the highlight
         accessibilityIdentifier = "suggestion-strip"
         applyColors()
         // M13-01: Dynamic Type (capped, the strip has a fixed height) and Reduce Motion changes apply live.
@@ -301,10 +311,23 @@ public final class SuggestionStripView: UIView {
             l.font = scaledFont(22)
             addSubview(l)
             altLabels.append(l)
+            let v = UIImageView()
+            v.contentMode = .center // the symbol keeps its configured size
+            v.isHidden = true
+            v.tintColor = UIColor(cgColor: skin.stripLabel.cgColor)
+            addSubview(v)
+            altIcons.append(v)
         }
+        let cfg = UIImage.SymbolConfiguration(pointSize: scaledFont(20).pointSize, weight: .regular)
         for (i, l) in altLabels.enumerated() {
-            l.isHidden = i >= new.options.count
-            if i < new.options.count { l.text = new.options[i] }
+            let option = i < new.options.count ? new.options[i] : nil
+            let symbol = option.flatMap { KeyAlternates.symbolName(for: $0) }
+            l.isHidden = option == nil || symbol != nil
+            if let option, symbol == nil { l.text = option }
+            let icon = altIcons[i]
+            icon.isHidden = symbol == nil || option == nil
+            icon.image = symbol.flatMap { UIImage(systemName: $0, withConfiguration: cfg) }
+            icon.accessibilityLabel = option.flatMap { KeyAlternates.accessibilityLabel(for: $0) }
         }
         relayout()
     }
@@ -327,6 +350,8 @@ public final class SuggestionStripView: UIView {
     public func cancelAlternates() {
         selection = nil
         for l in altLabels { l.isHidden = true }
+        for v in altIcons { v.isHidden = true }
+        altPlate.isHidden = true
         relayout()
     }
 
@@ -337,6 +362,7 @@ public final class SuggestionStripView: UIView {
         let label = UIColor(cgColor: skin.stripLabel.cgColor)
         for l in slotLabels { l.textColor = label }
         for l in altLabels { l.textColor = label }
+        for v in altIcons { v.tintColor = label }
         magnifier.tintColor = label.withAlphaComponent(0.55)
         clearIcon.tintColor = label.withAlphaComponent(0.45)
         backgroundColor = skin.stripKind == .filled ? UIColor(cgColor: skin.stripBackground.cgColor) : .clear
@@ -344,7 +370,9 @@ public final class SuggestionStripView: UIView {
         CATransaction.setDisableActions(true)
         for d in dividers { d.backgroundColor = skin.stripSeparator.cgColor }
         for c in chipLayers { c.backgroundColor = tokens.keyFill.cgColor }
-        highlightLayer.backgroundColor = tokens.actionKeyFill.cgColor
+        highlightLayer.backgroundColor = label.withAlphaComponent(0.14).cgColor
+        altPlate.backgroundColor = tokens.keyFill.cgColor
+        altPlate.shadowColor = UIColor.black.cgColor
         for e in emphasisLayers { e.backgroundColor = tokens.actionKeyFill.cgColor }
         pillLayer.backgroundColor = skin.stripLabel.cgColor.copy(alpha: 0.12)
         CATransaction.commit()
@@ -485,17 +513,26 @@ public final class SuggestionStripView: UIView {
             let filled = i + 1 < slotTexts.count && !slotTexts[i].isEmpty && !slotTexts[i + 1].isEmpty
             d.isHidden = alt != nil || overlay || (segments.count == 2 && i == 1) || !filled
         }
-        guard let alt else { highlightLayer.isHidden = true; return }
+        guard let alt else { highlightLayer.isHidden = true; altPlate.isHidden = true; return }
+        // Popup plate: the key colour with a soft shadow, rounded like the key popups; the chosen tile is a subtle tint.
+        let row = alt.rowFrame.offsetBy(dx: -frame.minX, dy: -frame.minY)
+        let plateH = min(h - 2 * Self.upwardBias, max(34, h - 14))
+        altPlate.isHidden = false
+        altPlate.frame = CGRect(x: row.minX - 3, y: (h - plateH) / 2 - Self.upwardBias / 2, width: row.width + 6, height: plateH)
+        altPlate.cornerRadius = min(12, plateH / 3)
+        altPlate.shadowPath = UIBezierPath(roundedRect: altPlate.bounds, cornerRadius: altPlate.cornerRadius).cgPath
         for (i, l) in altLabels.enumerated() where i < alt.options.count {
-            l.frame = alt.cellFrame(i).offsetBy(dx: -frame.minX, dy: -frame.minY)
-            let on = alt.highlighted == i
-            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
+            let cell = alt.cellFrame(i).offsetBy(dx: -frame.minX, dy: -frame.minY)
+            l.frame = cell.with(altPlate.frame.height).offsetBy(dx: 0, dy: altPlate.frame.minY)
+            altIcons[i].frame = l.frame
+            altIcons[i].tintColor = UIColor(cgColor: skin.stripLabel.cgColor)
+            l.textColor = UIColor(cgColor: skin.stripLabel.cgColor)
         }
         if let hi = alt.highlighted {
             highlightLayer.isHidden = false
-            let cell = alt.cellFrame(hi).offsetBy(dx: -frame.minX, dy: -frame.minY).insetBy(dx: 2, dy: 4)
+            let cell = altLabels[hi].frame.insetBy(dx: 2, dy: 3)
             highlightLayer.frame = cell
-            highlightLayer.cornerRadius = min(cell.height, cell.width) / 4
+            highlightLayer.cornerRadius = min(8, min(cell.height, cell.width) / 3)
         } else {
             highlightLayer.isHidden = true
         }

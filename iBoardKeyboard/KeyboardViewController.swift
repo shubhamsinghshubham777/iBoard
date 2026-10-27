@@ -99,6 +99,10 @@ final class KeyboardViewController: UIInputViewController {
     private var chipTimer: Timer?
     /// M9-03: the full clipboard history panel (opened from the clipboard chip; Full Access only).
     private let clipboardPanel = ClipboardHost()
+    private let quickSettings = QuickSettingsHost()
+    /// App settings with the keyboard-local overrides on top (the Quick Settings layer, `QuickSettingsStore`).
+    private let quickStore = QuickSettingsStore()
+    private var panelOpen: Bool { clipboardPanel.isOpen || quickSettings.isOpen }
     /// M3-05: system lexicon (Text Replacements + contact names) from `requestSupplementaryLexicon`. Entries and the
     /// derived snapshot live in memory only; only an integer fingerprint is persisted (extension-local defaults).
     private var lexiconEntries: [SystemLexiconEntry]?
@@ -142,7 +146,7 @@ final class KeyboardViewController: UIInputViewController {
         #if DEBUG || IBOARD_PERF
         PerfMetricsHook.noteAppear()
         #endif
-        settings = SettingsStore().load()
+        settings = quickStore.effective()
         applySettings()
         theme = themeStore.loadSelected() // Native on any problem (D-07); works without Full Access (P-23)
         appliedSkin = nil
@@ -201,6 +205,15 @@ final class KeyboardViewController: UIInputViewController {
         }
         emoji.onChange = { [weak self] in self?.emojiChanged() }
         wireClipboardPanel()
+        wireQuickSettings()
+        grid.onEmojiKeyAction = { [weak self] index in
+            guard let self else { return }
+            // Same choices as the key's long press, for VoiceOver users: [Clipboard history,] Quick settings.
+            let names = self.emojiKeyActionNames
+            guard index < names.count else { return }
+            self.feedback(.action)
+            if names[index] == "Clipboard history" { self.openClipboardPanel() } else { self.openQuickSettings() }
+        }
         strip.onAccessibilityAction = { [weak self] slot, index in self?.performStripAccessibilityAction(slot: slot, index: index) }
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
         coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
@@ -324,8 +337,13 @@ final class KeyboardViewController: UIInputViewController {
         let policy = SettingsPolicy.autocorrect(for: settings.autocorrect)
         coordinator.autocorrectionEnabled = policy.enabled
         coordinator.autocorrectSettings.aggressiveness = policy.aggressiveness
+        grid.emojiKeyActions = emojiKeyActionNames
         // Haptic generator is rebuilt lazily when the strength changed.
         hapticGenerators = [:]
+    }
+
+    private var emojiKeyActionNames: [String] {
+        (hasFullAccess && settings.clipboardHistory ? ["Clipboard history"] : []) + ["Quick settings"]
     }
 
     private var incognitoEnabled: Bool {
@@ -557,7 +575,7 @@ final class KeyboardViewController: UIInputViewController {
             strip.actionEnabled = []
             return
         }
-        if clipboardPanel.isOpen {
+        if panelOpen {
             strip.emphasizedSlots = []
             strip.boldSlots = []
             strip.bannerText = nil
@@ -684,7 +702,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func openClipboardPanel() {
-        guard hasFullAccess, settings.clipboardHistory, !clipboardPanel.isOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
+        guard hasFullAccess, settings.clipboardHistory, !panelOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
         loadClipboardIfNeeded()
         machine?.cancelAll { _ in }
         swipeCapture.cancel()
@@ -698,6 +716,63 @@ final class KeyboardViewController: UIInputViewController {
         grid.keysHidden = true
         view.bringSubviewToFront(strip)
         renderStrip()
+    }
+
+    // MARK: Quick Settings panel
+
+    private var quickSettingsState: QuickSettingsState {
+        QuickSettingsState(settings: settings, incognito: incognitoEnabled, hasFullAccess: hasFullAccess)
+    }
+
+    private func wireQuickSettings() {
+        quickSettings.onEdit = { [weak self] edit in self?.applyQuickEdit(edit) }
+        quickSettings.onIncognito = { [weak self] on in
+            guard let self else { return }
+            UserDefaults.standard.set(on, forKey: Self.incognitoKey) // keyboard-local only; never written to the app
+            self.coordinator.setIncognito(on)
+            self.feedback(.action)
+        }
+        quickSettings.onOpenSettings = { [weak self] in self?.openSettingsPage() }
+        quickSettings.onClose = { [weak self] in self?.closeQuickSettings() }
+    }
+
+    private func openQuickSettings() {
+        guard !panelOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
+        machine?.cancelAll { _ in }
+        swipeCapture.cancel()
+        resetArbiter()
+        grid.trail.clear()
+        clearSelection()
+        grid.clearHighlights()
+        suggestionMenu = nil
+        settings = quickStore.effective()
+        quickSettings.open(in: view, frame: emojiFrame, state: quickSettingsState,
+                           skin: appliedSkin ?? .native(.light), style: grid.appearance == .dark ? .dark : .light)
+        grid.keysHidden = true
+        view.bringSubviewToFront(strip)
+        renderStrip()
+    }
+
+    private func closeQuickSettings() {
+        guard quickSettings.isOpen else { return }
+        quickSettings.close()
+        grid.keysHidden = emoji.keysHidden
+        renderStrip()
+        UIAccessibility.post(notification: .screenChanged, argument: nil)
+    }
+
+    /// One edit from the panel: saved (extension-local, plus the App Group with Full Access) and applied at once.
+    private func applyQuickEdit(_ edit: QuickSettingsEdit) {
+        settings = quickStore.apply(edit, hasFullAccess: hasFullAccess)
+        applySettings()
+        switch edit {
+        case .numberRow, .landscapeSideKeys:
+            lastLayoutKey = nil
+            relayoutIfNeeded()
+        default: break
+        }
+        quickSettings.update(state: quickSettingsState)
+        feedback(.action)
     }
 
     private func closeClipboardPanel() {
@@ -749,7 +824,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Space after a Text Replacement shortcut ("omw") inserts the expansion instead. Returns true when it did.
     /// Never in secure fields, emoji search, or with autocorrection turned off in settings.
     private func expandTextReplacementIfAny() -> Bool {
-        guard !lexiconSnapshot.replacements.isEmpty, emoji.mode != .search, !clipboardPanel.isOpen else { return false }
+        guard !lexiconSnapshot.replacements.isEmpty, emoji.mode != .search, !panelOpen else { return false }
         let token = coordinator.typedToken
         guard TextReplacementPolicy.shouldExpand(token: token, secure: textDocumentProxy.isSecureTextEntry ?? false,
                                                  enabled: coordinator.autocorrectionEnabled),
@@ -850,7 +925,7 @@ final class KeyboardViewController: UIInputViewController {
         super.didReceiveMemoryWarning()
         emoji.didReceiveMemoryWarning()
         // Clipboard history is reloaded from disk on demand; drop the in-memory copy unless the panel shows it.
-        if !clipboardPanel.isOpen, !clipboardReading { clipboard = ClipboardHistory(); clipboardLoaded = false }
+        if !panelOpen, !clipboardReading { clipboard = ClipboardHistory(); clipboardLoaded = false }
         grid.trail.clear()
     }
 
@@ -908,6 +983,7 @@ final class KeyboardViewController: UIInputViewController {
         grid.skin = skin
         strip.skin = skin
         clipboardPanel.updateSkin(skin)
+        quickSettings.updateSkin(skin)
         backdropView.apply(skin.backdrop, photoURL: photo, displayScale: traitCollection.displayScale > 0 ? traitCollection.displayScale : 3)
     }
 
@@ -921,6 +997,7 @@ final class KeyboardViewController: UIInputViewController {
         selectionUI = .none
         emoji.close()
         closeClipboardPanel()
+        closeQuickSettings()
         settleOnDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
@@ -961,6 +1038,7 @@ final class KeyboardViewController: UIInputViewController {
         ls.emojiKey = true
         ls.compact = true
         ls.punctuationKeys = settings.punctuationKeys
+        ls.landscapeSideKeys = settings.landscapeSideKeys
         ls.searchRowHeight = emoji.stripExtraHeight
         // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
         ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
@@ -1022,6 +1100,7 @@ final class KeyboardViewController: UIInputViewController {
             ? layout.stripSegments.map { $0.offsetBy(dx: -layout.stripFrame.minX, dy: 0) } : []
         emoji.updateFrame(emojiFrame)
         clipboardPanel.updateFrame(emojiFrame)
+        quickSettings.updateFrame(emojiFrame)
         coordinator.setLayout(layout)
         startEngineLoad(layout: layout)
         if machine == nil {
@@ -1065,7 +1144,7 @@ final class KeyboardViewController: UIInputViewController {
                 if stripTouchIgnored { stripTouchIgnored = false; return }
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
-                    if clipboardPanel.isOpen { return } // the panel has its own Done button
+                    if panelOpen { return } // the panels have their own Done button
                     if emoji.isOpen {
                         let localX = point.x - strip.frame.minX
                         let field = emoji.stripField
@@ -1531,7 +1610,7 @@ final class KeyboardViewController: UIInputViewController {
             strip.move(to: p)
         case .alternatesEnded(let p):
             if let text = strip.end(at: p) {
-                if text == KeyAlternates.settingsGlyph { openSettingsPage(); feedback(); break }
+                if text == KeyAlternates.settingsGlyph { feedback(.action); openQuickSettings(); break }
                 if text == KeyAlternates.clipboardGlyph { openClipboardPanel(); feedback(); break }
                 if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)

@@ -327,6 +327,13 @@ public final class KeyGridView: UIView {
 
     private var a11yElements: [UIAccessibilityElement]?
 
+    /// VoiceOver custom actions on the emoji key (the long-press choices a touch user gets): names, and the handler gets
+    /// the index. Empty: none.
+    public var emojiKeyActions: [String] = [] {
+        didSet { if emojiKeyActions != oldValue { invalidateAccessibility() } }
+    }
+    public var onEmojiKeyAction: ((Int) -> Void)?
+
     /// Drops the cached elements (layout, shift or return-key state changed). Cheap; rebuilt on demand by VoiceOver only.
     private func invalidateAccessibility() {
         guard a11yElements != nil else { return }
@@ -351,6 +358,11 @@ public final class KeyGridView: UIView {
                 e.accessibilityLabel = info.label
                 e.accessibilityValue = info.value
                 e.accessibilityTraits = [.keyboardKey]
+                if case .emoji = key.identity, !emojiKeyActions.isEmpty {
+                    e.accessibilityCustomActions = emojiKeyActions.enumerated().map { idx, name in
+                        UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onEmojiKeyAction?(idx); return true }
+                    }
+                }
                 e.accessibilityFrameInContainerSpace = key.frame
                 let center = CGPoint(x: key.frame.midX, y: key.frame.midY)
                 e.onActivate = { [weak self] in self?.activateKey(at: center) }

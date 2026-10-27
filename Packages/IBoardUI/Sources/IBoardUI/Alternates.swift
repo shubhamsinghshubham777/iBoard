@@ -6,11 +6,29 @@ import IBoardLayout
 
 /// Static alternate tables (English/Latin plus URL suffixes). Hinglish / other languages come with M7.
 public enum KeyAlternates {
-    /// The long-press choice on the emoji key: not text, it opens the iOS Settings page of iBoard (launching Settings is
-    /// the one launch Guideline 4.4.1 allows; D-01).
+    /// The long-press choice on the emoji key: not text, it opens the in-keyboard Quick Settings panel (which in turn has
+    /// a row for the iOS Settings page; launching Settings is the one launch Guideline 4.4.1 allows, D-01).
     public static let settingsGlyph = "\u{2699}\u{FE0E}"
     /// Also on the emoji key (Full Access + clipboard history on): opens the clipboard history panel. Not text.
     public static let clipboardGlyph = "\u{1F4CB}"
+    /// SF Symbol drawn for an action option (the glyph strings above are only identifiers, never inserted). nil: plain text.
+    public static func symbolName(for option: String) -> String? {
+        switch option {
+        case settingsGlyph: "gearshape"
+        case clipboardGlyph: "doc.on.clipboard"
+        default: nil
+        }
+    }
+
+    /// Spoken name of an action option, nil for plain text.
+    public static func accessibilityLabel(for option: String) -> String? {
+        switch option {
+        case settingsGlyph: "Quick settings"
+        case clipboardGlyph: "Clipboard history"
+        default: nil
+        }
+    }
+
     private static let letters: [String: [String]] = [
         "a": ["à", "á", "â", "ä", "æ", "ã", "å", "ā"],
         "c": ["ç", "ć", "č"],
