@@ -71,6 +71,7 @@ struct SettingsView: View {
             }
             Section {
                 NavigationLink("Theme studio") { ThemeStudioView() }
+                NavigationLink("iCloud sync") { SyncSettingsView() }
             }
             Section {
                 Button("Reset to defaults", role: .destructive) { settings = .defaults }
