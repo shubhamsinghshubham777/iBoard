@@ -5,6 +5,7 @@ import Foundation
 public final class EmojiStore: @unchecked Sendable {
     private let lock = NSLock()
     private var cached: EmojiCatalog?
+    private var index: EmojiSearchIndex?
     private let loader: @Sendable () throws -> EmojiCatalog
 
     public init(loader: @escaping @Sendable () throws -> EmojiCatalog = { try EmojiCatalog.loadBundled() }) {
@@ -21,7 +22,17 @@ public final class EmojiStore: @unchecked Sendable {
         }
     }
 
+    /// Search/prediction index, built on first use from the catalog (about a millisecond-scale one-off).
+    public func searchIndex() -> EmojiSearchIndex? {
+        lock.withLock {
+            if cached == nil { cached = try? loader() }
+            guard let c = cached else { return nil }
+            if index == nil { index = EmojiSearchIndex(catalog: c) }
+            return index
+        }
+    }
+
     public func dropCaches() {
-        lock.withLock { cached = nil }
+        lock.withLock { cached = nil; index = nil }
     }
 }

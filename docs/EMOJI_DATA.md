@@ -81,3 +81,17 @@ Character-based deletion (ENGINE.md).
 Measured on macOS (this machine), data layer only, `swift test --filter dataLayerMemory` run alone:
 catalog load footprint delta **3.81 MB** (includes transient JSON parse allocations). NOT TESTED: the UIKit grid and
 glyph rendering memory on iOS (the +10 MB panel budget is unverified for the UI part).
+
+## 5. Search and prediction (M9-02)
+
+`EmojiSearchIndex` (built lazily by `EmojiStore.searchIndex()`, dropped by `dropCaches()`): inverted index over normalised
+tokens (lowercase, NFC, Latin accents folded; Devanagari nukta forms match composed or decomposed). Sources: emoji name,
+CLDR en and hi keywords, and the project-authored Hinglish overlay (about 200 common emoji). Every query token must match;
+only the last token matches as a prefix. Ranking: exact beats prefix; name > Hinglish > keyword; ties by catalogue order.
+`predict(afterWord:)` is deliberately conservative: single exact word, not a stopword, at least 3 Latin letters (2 for other
+scripts), and only if the emoji name equals the word or the word is carried by at most 4 emoji ("pizza" -> pizza). Nothing is
+stored or logged; queries are never persisted.
+
+Measured on macOS (this machine), 1000 queries over 40 mixed en/hi/Hinglish queries, `swift test -c release`:
+search p50 0.002 ms, **p95 0.011 ms**, max 0.045 ms (debug build: p95 0.40 ms). Index build 32 ms release (86 ms debug),
+one-off. Budget is p95 < 30 ms. NOT TESTED: iPhone 12 hardware and the UIKit search field.
