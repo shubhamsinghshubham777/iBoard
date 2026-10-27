@@ -51,6 +51,10 @@ enum PerfMetricsHook {
         guard let data = try? JSONSerialization.data(withJSONObject: obj),
               let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
         try? data.write(to: dir.appendingPathComponent("perf-metrics.json"), options: .atomic)
+        // One file per keyboard process (iOS restarts the extension), so a restart never overwrites earlier data.
+        let per = dir.appendingPathComponent("perf", isDirectory: true)
+        try? FileManager.default.createDirectory(at: per, withIntermediateDirectories: true)
+        try? data.write(to: per.appendingPathComponent("p\(Int(firstSample.timeIntervalSince1970)).json"), options: .atomic)
     }
 }
 #endif
