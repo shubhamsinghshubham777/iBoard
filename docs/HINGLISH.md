@@ -1,7 +1,8 @@
 # Hinglish data and code-switching (M7-01, M7-02, M7-03)
 
-Status: lexicon + LM built from real data and tested on macOS (2026-10-27); not yet wired into the keyboard
-extension (EngineHost loads only the English fixture lexicon); no device run.
+Status (2026-10-27): lexicon + LM built from real data; engine code-switch scoring and the protection rule implemented and
+tested on macOS (Packages/IBoardEngine); not yet wired into the keyboard extension (EngineHost loads only the English
+fixture lexicon); no device run, no accuracy measurement (M7-04).
 
 ## 1. Artifacts
 
@@ -77,6 +78,7 @@ Consequences:
 Tools/HinglishData/fetch.sh && Tools/HinglishData/build.sh
 ```
 
-## 6. Code-switch scoring (M7-02)
+## 6. Code-switch scoring (M7-02, M7-03)
 
-See `docs/ENGINE.md` section "Code-switching".
+See `docs/ENGINE.md` section "Code-switching: English + Hinglish" (dual-lexicon search, language-context prior, personal
+lean, the never-auto-correct-Hinglish-into-English rule, latency).

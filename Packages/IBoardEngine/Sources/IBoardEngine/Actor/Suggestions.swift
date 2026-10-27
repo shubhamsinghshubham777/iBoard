@@ -19,14 +19,17 @@ public struct SuggestionSlot: Sendable, Equatable {
     public var wordID: Lexicon.WordID?
     /// True for a prediction longer than what was typed.
     public var isCompletion: Bool
+    /// Lexicon `wordID` belongs to (`.secondary` = Hinglish when a second language is configured).
+    public var side: LexiconSide
 
     public init(text: String, role: Role, showsQuotes: Bool = false, wordID: Lexicon.WordID? = nil,
-                isCompletion: Bool = false) {
+                isCompletion: Bool = false, side: LexiconSide = .primary) {
         self.text = text
         self.role = role
         self.showsQuotes = showsQuotes
         self.wordID = wordID
         self.isCompletion = isCompletion
+        self.side = side
     }
 }
 

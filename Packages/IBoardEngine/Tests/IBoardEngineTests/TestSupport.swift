@@ -3,9 +3,15 @@ import IBoardEngine
 
 /// Test fixtures built with Tools/LexiconBuilder (see Fixtures/README.md for how they were generated).
 enum Fixture {
-    case small, bench
+    case small, bench, hinglish
 
-    var name: String { self == .small ? "small" : "bench" }
+    var name: String {
+        switch self {
+        case .small: return "small"
+        case .bench: return "bench"
+        case .hinglish: return "hinglish-small"
+        }
+    }
 
     func url(_ file: String, _ ext: String) -> URL {
         Bundle.module.url(forResource: file, withExtension: ext, subdirectory: "Fixtures/\(name)")!

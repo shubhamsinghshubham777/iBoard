@@ -20,6 +20,9 @@ public struct SwipeDecoder: Sendable {
     public let model: NGramModel?
     public let personal: (any PersonalScoreProvider)?
     public let parameters: SwipeParameters
+    /// Second lexicon searched together with the first (code-switching, M7-02); nil = single language.
+    public let secondary: SecondaryLanguage?
+    public let codeSwitch: CodeSwitchParameters
 
     private struct Letter: Sendable {
         var scalar: UInt32
@@ -35,7 +38,8 @@ public struct SwipeDecoder: Sendable {
     private static let personalShortlist = 64
 
     public init(layout: KeyboardLayout, lexicon: Lexicon, model: NGramModel? = nil,
-                personal: (any PersonalScoreProvider)? = nil, parameters: SwipeParameters = SwipeParameters()) {
+                personal: (any PersonalScoreProvider)? = nil, parameters: SwipeParameters = SwipeParameters(),
+                secondary: SecondaryLanguage? = nil, codeSwitch: CodeSwitchParameters = CodeSwitchParameters()) {
         var raw: [(UInt32, CGRect)] = []
         var seen = Set<UInt32>()
         for key in layout.keys {
@@ -57,6 +61,8 @@ public struct SwipeDecoder: Sendable {
         self.model = model
         self.personal = personal
         self.parameters = parameters
+        self.secondary = secondary
+        self.codeSwitch = codeSwitch
     }
 
     // MARK: Decode
@@ -65,7 +71,10 @@ public struct SwipeDecoder: Sendable {
     ///   - points: the touch samples from touch-down to lift, in the container coordinates of the layout.
     ///   - context: up to two previous words as lexicon ids for the n-gram model.
     ///   - contextWords: the same previous words as text for the personal model (not stored or logged).
-    public func decode(points: [SwipePoint], context: LMContext = .none, contextWords: [String] = []) -> SwipeDecodeResult {
+    ///   - secondaryContext: n-gram context in the secondary lexicon's ids and the language log-odds (ignored
+    ///     without a secondary language).
+    public func decode(points: [SwipePoint], context: LMContext = .none, contextWords: [String] = [],
+                       secondaryContext: SecondaryContext = .neutral) -> SwipeDecodeResult {
         let p = parameters
         guard !letters.isEmpty, points.count >= 2 else { return .notASwipe }
 
@@ -106,12 +115,7 @@ public struct SwipeDecoder: Sendable {
             if !h.isEmpty { allowed.append(i) }
         }
 
-        // 4. Trie walk.
-        var search = Search(lexicon: lexicon, letters: letters, hits: hits, startOK: startOK, endOK: endOK,
-                            allowed: allowed, maxVisits: p.maxNodeVisits, maxLength: p.maxWordLength)
-        search.visit(cursor: lexicon.root, pos: 0, depth: 0)
-
-        // 5. Template scoring of lexicon candidates.
+        // 4. Trie walk per language, 5. template scoring of lexicon candidates.
         struct Scored {
             var id: Lexicon.WordID?
             var word: String?
@@ -119,18 +123,60 @@ public struct SwipeDecoder: Sendable {
             var spatial: Double
             var base: Double
             var score: Double
+            var side: LexiconSide = .primary
+            var prior: Double = 0
         }
+        struct LangSide {
+            var side: LexiconSide
+            var lexicon: Lexicon
+            var model: NGramModel?
+            var context: LMContext
+            var prior: Double
+        }
+        var langs = [LangSide(side: .primary, lexicon: lexicon, model: model, context: context, prior: 0)]
+        if let secondary {
+            langs[0].prior = codeSwitch.priorWeight * secondaryContext.logPrior(.primary)
+            langs.append(LangSide(side: .secondary, lexicon: secondary.lexicon, model: secondary.model,
+                                  context: secondaryContext.lm,
+                                  prior: codeSwitch.priorWeight * secondaryContext.logPrior(.secondary)))
+        }
+        let dual = langs.count > 1
         var scored: [Scored] = []
-        scored.reserveCapacity(search.cands.count)
+        var nodesVisited = 0
+        var truncated = false
         var template: [KP] = []
         var poly: [KP] = []
-        for c in search.cands {
-            let verts = Array(search.pool[c.offset..<(c.offset + c.count)].map { Int($0) })
-            let sp = spatialLogLikelihood(vertices: verts, gesture: gesture, gShape: gShape, anchors: anchors,
-                                          poly: &poly, template: &template)
-            let base = baseLog(c.id, context)
-            scored.append(Scored(id: c.id, word: nil, vertices: verts, spatial: sp, base: base,
-                                 score: sp + p.lmWeight * base))
+        for lang in langs {
+            var search = Search(lexicon: lang.lexicon, letters: letters, hits: hits, startOK: startOK, endOK: endOK,
+                                allowed: allowed, maxVisits: p.maxNodeVisits, maxLength: p.maxWordLength)
+            search.visit(cursor: lang.lexicon.root, pos: 0, depth: 0)
+            nodesVisited += search.visits
+            truncated = truncated || search.truncated
+            scored.reserveCapacity(scored.count + search.cands.count)
+            for c in search.cands {
+                let verts = Array(search.pool[c.offset..<(c.offset + c.count)].map { Int($0) })
+                let sp = spatialLogLikelihood(vertices: verts, gesture: gesture, gShape: gShape, anchors: anchors,
+                                              poly: &poly, template: &template)
+                let base = baseLog(c.id, lang.lexicon, lang.model, lang.context)
+                scored.append(Scored(id: c.id, word: nil, vertices: verts, spatial: sp, base: base,
+                                     score: sp + p.lmWeight * (base + lang.prior), side: lang.side, prior: lang.prior))
+            }
+        }
+        if dual {
+            // A word in both lexicons was scored twice (same template): keep the better reading.
+            var best: [String: Int] = [:]
+            var drop = Set<Int>()
+            for i in scored.indices {
+                let word = langs[Int(scored[i].side.rawValue)].lexicon.word(of: scored[i].id!)
+                if let j = best[word] {
+                    if scored[i].score > scored[j].score { drop.insert(j); best[word] = i } else { drop.insert(i) }
+                } else {
+                    best[word] = i
+                }
+            }
+            if !drop.isEmpty {
+                scored = scored.indices.filter { !drop.contains($0) }.map { scored[$0] }
+            }
         }
 
         // 6. Personal model: shortlist, forgotten words out, mixed LM, and personal-only words.
@@ -141,12 +187,12 @@ public struct SwipeDecoder: Sendable {
             var keep: [Scored] = []
             for (i, var s) in scored.enumerated() {
                 if i >= Self.personalShortlist { keep.append(s); continue }
-                let word = lexicon.word(of: s.id!)
+                let word = langs[Int(s.side.rawValue)].lexicon.word(of: s.id!)
                 if personal.isForgotten(word) { continue }
                 s.word = word
                 if let ps = personal.score(word: word, context: contextWords) {
                     let m = PersonalInterpolation.mix(baseLogProb: s.base, personal: ps)
-                    s.score = s.spatial + p.lmWeight * m
+                    s.score = s.spatial + p.lmWeight * (m + s.prior)
                     keep.append(s)
                     usedPersonal.insert(keep.count - 1)
                     mixed[keep.count - 1] = m
@@ -161,7 +207,8 @@ public struct SwipeDecoder: Sendable {
                     let prefix = String(Unicode.Scalar(letters[i].scalar) ?? "?")
                     for pc in personal.completions(prefix: prefix, limit: p.personalOOVPerLetter) {
                         let word = pc.word.lowercased()
-                        guard lexicon.lookup(word) == nil, !personal.isForgotten(word),
+                        guard lexicon.lookup(word) == nil, secondary?.lexicon.lookup(word) == nil,
+                              !personal.isForgotten(word),
                               seenWords.insert(word).inserted,
                               let verts = vertices(for: word, hits: hits, startOK: startOK, endOK: endOK)
                         else { continue }
@@ -169,8 +216,9 @@ public struct SwipeDecoder: Sendable {
                         let sp = spatialLogLikelihood(vertices: verts, gesture: gesture, gShape: gShape,
                                                       anchors: anchors, poly: &poly, template: &template)
                         let m = PersonalInterpolation.mix(baseLogProb: p.oovLogProbability, personal: ps)
+                        let prior = langs.map(\.prior).max() ?? 0
                         scored.append(Scored(id: nil, word: word, vertices: verts, spatial: sp, base: p.oovLogProbability,
-                                             score: sp + p.lmWeight * m))
+                                             score: sp + p.lmWeight * (m + prior), prior: prior))
                         usedPersonal.insert(scored.count - 1)
                         mixed[scored.count - 1] = m
                     }
@@ -180,7 +228,7 @@ public struct SwipeDecoder: Sendable {
 
         guard !scored.isEmpty else {
             return SwipeDecodeResult(candidates: [], confidence: 0, margin: 0, scoredCount: 0,
-                                     nodesVisited: search.visits, truncated: search.truncated,
+                                     nodesVisited: nodesVisited, truncated: truncated,
                                      anchorCount: anchors.count, isSwipe: true)
         }
 
@@ -190,6 +238,7 @@ public struct SwipeDecoder: Sendable {
             let a = scored[$0], b = scored[$1]
             if a.score != b.score { return a.score > b.score }
             if (a.id ?? .max) != (b.id ?? .max) { return (a.id ?? .max) < (b.id ?? .max) }
+            if a.side != b.side { return a.side < b.side }
             return ($0) < ($1)
         }
         let maxScore = scored[order[0]].score
@@ -200,18 +249,18 @@ public struct SwipeDecoder: Sendable {
         var out: [SwipeCandidate] = []
         for i in order.prefix(p.maxCandidates) {
             let s = scored[i]
-            let word = s.word ?? lexicon.word(of: s.id!)
+            let word = s.word ?? langs[Int(s.side.rawValue)].lexicon.word(of: s.id!)
             out.append(SwipeCandidate(word: word, wordID: s.id, score: s.score, spatial: s.spatial,
-                                      language: mixed[i] ?? s.base, usedPersonal: usedPersonal.contains(i)))
+                                      language: mixed[i] ?? s.base, usedPersonal: usedPersonal.contains(i), side: s.side))
         }
         return SwipeDecodeResult(candidates: out, confidence: confidence, margin: confidence - second,
-                                 scoredCount: scored.count, nodesVisited: search.visits, truncated: search.truncated,
+                                 scoredCount: scored.count, nodesVisited: nodesVisited, truncated: truncated,
                                  anchorCount: anchors.count, isSwipe: true)
     }
 
     // MARK: Scoring
 
-    private func baseLog(_ id: Lexicon.WordID, _ ctx: LMContext) -> Double {
+    private func baseLog(_ id: Lexicon.WordID, _ lexicon: Lexicon, _ model: NGramModel?, _ ctx: LMContext) -> Double {
         if let model { return model.logProbability(id, context: ctx) }
         return lexicon.logProbability(of: id)
     }

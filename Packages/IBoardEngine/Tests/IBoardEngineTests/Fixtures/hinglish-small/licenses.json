@@ -1,0 +1,20 @@
+{
+  "formatVersion" : 1,
+  "shareAlike" : false,
+  "sources" : [
+    {
+      "attribution" : "iBoard test fixture (synthetic Hinglish phrases, authored for this repo)",
+      "id" : "synthetic-hinglish-ng",
+      "kind" : "ngram",
+      "sha256" : "9f1b0a5360a011d0ba1ee87d66c17933f0b23e5073f83e317cd367487c78ac20",
+      "spdx" : "CC0-1.0"
+    },
+    {
+      "attribution" : "iBoard test fixture (synthetic Hinglish counts, authored for this repo)",
+      "id" : "synthetic-hinglish-uni",
+      "kind" : "unigram",
+      "sha256" : "20c18a2497f5c7c510c077b32c14ed438329165005f92008d409e10a2109bedc",
+      "spdx" : "CC0-1.0"
+    }
+  ]
+}
