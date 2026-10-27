@@ -2,6 +2,7 @@ import XCTest
 
 /// UI smoke tests for the companion app. Navigation works on compact (stack) and regular (sidebar, e.g. iPhone Duo
 /// inner display) layouts: `open(_:)` taps whichever list/sidebar row carries the title.
+@MainActor
 final class iBoardUITests: XCTestCase {
 
     override func setUpWithError() throws { continueAfterFailure = false }
