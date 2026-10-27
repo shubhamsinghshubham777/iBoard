@@ -59,7 +59,10 @@ public struct SwipeParameters: Sendable, Equatable {
 
     // Scoring
     /// Weight of the language-model log-probability against the spatial log-likelihood.
-    public var lmWeight = 1.0
+    public var lmWeight = 0.5
+    /// Share of the unigram probability mixed into the contextual (bigram / trigram) probability before it is scored,
+    /// so an unseen continuation is not charged the full backoff penalty (0 = off). DATA2: 0.3, tuned on the even Hinglish eval sentences with `lmWeight`.
+    public var lmUnigramMix = 0.3
     /// Log-probability charged to a personal word that is not in the base lexicon.
     public var oovLogProbability = -16.0
     /// Personal-model words considered per allowed first letter that are not in the base lexicon (0 disables).

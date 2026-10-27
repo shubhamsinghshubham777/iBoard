@@ -261,8 +261,13 @@ public struct SwipeDecoder: Sendable {
     // MARK: Scoring
 
     private func baseLog(_ id: Lexicon.WordID, _ lexicon: Lexicon, _ model: NGramModel?, _ ctx: LMContext) -> Double {
-        if let model { return model.logProbability(id, context: ctx) }
-        return lexicon.logProbability(of: id)
+        guard let model else { return lexicon.logProbability(of: id) }
+        let m = parameters.lmUnigramMix
+        guard m > 0, ctx.recent != nil else { return model.logProbability(id, context: ctx) }
+        // Interpolate with the unigram so a rarely seen continuation of a seen context (sharp trigram backoff in
+        // the small Hinglish corpus: -20 nats for a common word) cannot veto a clean swipe.
+        let p = (1 - m) * model.probability(id, context: ctx) + m * model.unigramProbability(id)
+        return log(max(p, 1e-30))
     }
 
     /// Centroid-centred, scale-normalized copy (scale = larger bounding-box side, floored at 0.25 key).

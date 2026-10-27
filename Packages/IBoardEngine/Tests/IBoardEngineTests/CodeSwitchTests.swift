@@ -450,7 +450,8 @@ struct StubPersonal: PersonalScoreProvider {
         #expect(h.candidates.first?.word == "kaam")
         let hScore = h.candidates.first { $0.word == "kaam" }!.score
         let eScore = e.candidates.first { $0.word == "kaam" }?.score ?? -.infinity
-        #expect(hScore > eScore + 1.5, "\(hScore) vs \(eScore)")
+        // Threshold is 1.5 nats at lmWeight 1.0; DATA2 halved the default lmWeight, which halves the prior effect.
+        #expect(hScore > eScore + 1.5 * SwipeParameters().lmWeight, "\(hScore) vs \(eScore)")
     }
 
     @Test func wordsInBothLexiconsAreNotDuplicated() {
