@@ -1,0 +1,27 @@
+{
+  "bigrams" : 300000,
+  "bytesPerWord" : 65.7130274412541,
+  "droppedOutOfVocabularyNgrams" : 0,
+  "languageModel" : {
+    "bytes" : 7943288,
+    "sections" : {
+      "bigrams" : 3600000,
+      "meta" : 8,
+      "trigrams" : 3840000,
+      "unigramBackoff" : 503184
+    }
+  },
+  "lexicon" : {
+    "bytes" : 8266436,
+    "sections" : {
+      "edges" : 2466088,
+      "nodes" : 3699144,
+      "strings" : 1094740,
+      "words" : 1006368
+    }
+  },
+  "totalBytes" : 16209724,
+  "trieNodes" : 308262,
+  "trigrams" : 240000,
+  "words" : 125796
+}
