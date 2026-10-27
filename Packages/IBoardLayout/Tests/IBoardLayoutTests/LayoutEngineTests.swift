@@ -169,13 +169,13 @@ struct LayoutInvariantTests {
         #expect(plain == gap)
     }
 
-    @Test("preferred height: 390 portrait is exactly 260 and heightScale scales the body")
+    @Test("preferred height: 390 portrait is the 295 default and heightScale scales the body")
     func preferredHeight() {
         let t = LayoutTraits()
-        #expect(LayoutEngine.preferredHeight(width: 390, traits: t, kind: .letters) == 260)
-        #expect(LayoutEngine.preferredHeight(width: 390, traits: t, kind: .numberPad) == 260)
+        #expect(LayoutEngine.preferredHeight(width: 390, traits: t, kind: .letters) == 295)
+        #expect(LayoutEngine.preferredHeight(width: 390, traits: t, kind: .numberPad) == 295)
         let big = LayoutEngine.preferredHeight(width: 390, traits: t, kind: .letters, settings: LayoutSettings(heightScale: 1.4))
-        #expect(abs(big - (44 + 216 * 1.4)) < 1e-9)
+        #expect(abs(big - (44 + 251 * 1.4)) < 1e-9)
         let withNumberRow = LayoutEngine.preferredHeight(width: 390, traits: t, kind: .letters, settings: LayoutSettings(numberRow: true))
         #expect(abs(withNumberRow - 314) < 1e-9)
     }

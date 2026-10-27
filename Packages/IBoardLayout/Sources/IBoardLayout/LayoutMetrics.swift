@@ -11,6 +11,11 @@ public struct LayoutMetrics: Sendable, Equatable {
     public var keyHeight: CGFloat
     public var rowGap: CGFloat
     public var bottomInset: CGFloat
+    /// Default total keyboard height (strip + rows) for phones in portrait, at `heightScale` 1. Owner choice: 295 pt.
+    public static let phonePortraitDefaultHeight: CGFloat = 295
+    /// The part of it below the 44 pt suggestion strip (rows); the strip height itself is unchanged.
+    public static let phonePortraitDefaultBody: CGFloat = phonePortraitDefaultHeight - 44
+
     /// Scale applied to the reference vertical tokens (1 at 390x260 portrait).
     public var verticalScale: CGFloat
 

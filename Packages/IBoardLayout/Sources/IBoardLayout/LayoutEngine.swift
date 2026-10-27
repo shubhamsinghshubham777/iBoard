@@ -138,12 +138,16 @@ public enum LayoutEngine {
         let body = ref.body(rows: LayoutMetrics.rowCount(
             kind: kind, settings: LayoutMetrics.effectiveSettings(settings, mode: mode)
         ))
+        // Owner preference (2026-10-27): the phone portrait default is `phonePortraitDefaultHeight` (taller than the 260 pt
+        // native measurement); the layout scales key heights to the view, so rows grow with it. A number row already exceeds it.
+        let isPhonePortrait = traits.displayClass == .phone && traits.orientation == .portrait
+        let sizedBody = isPhonePortrait ? max(body, LayoutMetrics.phonePortraitDefaultBody) : body
         let growth: CGFloat = traits.displayClass == .phone
             ? 1 + 0.25 * (min(max(width, 390), 440) / 390 - 1)
             : 1
         let factor: CGFloat = traits.displayClass == .duoOuter && traits.orientation == .portrait
             ? LayoutMetrics.duoOuterHeightFactorPortrait : 1
-        return ref.stripHeight + body * growth * factor * settings.heightScale + safeArea.bottom
+        return ref.stripHeight + sizedBody * growth * factor * settings.heightScale + safeArea.bottom
     }
 }
 
