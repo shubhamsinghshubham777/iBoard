@@ -64,6 +64,8 @@ struct SettingsView: View {
             Section("Layout") {
                 Toggle("Number row", isOn: $settings.numberRow)
                 Toggle("Comma and period keys", isOn: $settings.punctuationKeys)
+                Toggle("Landscape side keys", isOn: $settings.landscapeSideKeys)
+                Text("In landscape, adds a column of punctuation keys on each side of the letters.").font(.footnote).foregroundStyle(.secondary)
                 Toggle("Show hint symbols on keys", isOn: $settings.flickHints)
                 Text("The small symbol on a key is what a long press or a flick up types.").font(.footnote).foregroundStyle(.secondary)
             }

@@ -41,6 +41,7 @@
 		B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 29D74A64C1D3FB7BA0CD5D3D /* lm.iblm */; };
 		B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDB32790B189574630A5B54 /* EngineHost.swift */; };
 		B933EA4FA5CE9C357E9ACBD6 /* OTPSelfTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FF3BA00AC5909C9ABD28E5 /* OTPSelfTest.swift */; };
+		BD4101E512ED4935ED489078 /* QuickSettingsHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */; };
 		BD557D3D0C47D09755682163 /* OTPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8842ADAFC09F10311FD66887 /* OTPSetupView.swift */; };
 		C8B8398093194ACC3867C058 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */; };
 		CA048403036AD09EBB58189E /* EmojiHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */; };
@@ -95,22 +96,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,6 +151,7 @@
 		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
+		BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSettingsHost.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
 		BF350BABED64EE056983837C /* ClipboardHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHost.swift; sourceTree = "<group>"; };
 		C5CF122CB70C1309F378CC9B /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
 				38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */,
 				ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */,
+				BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */,
 			);
 			path = iBoardKeyboard;
 			sourceTree = "<group>";
@@ -567,6 +570,7 @@
 				B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */,
 				E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */,
 				D179194A9D0E16249D644D4F /* PerfMetricsHook.swift in Sources */,
+				BD4101E512ED4935ED489078 /* QuickSettingsHost.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

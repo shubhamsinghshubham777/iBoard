@@ -278,7 +278,7 @@ public final class QuickSettingsPanelView: UIView {
         doneButton.titleLabel?.font = scaled(17, weight: .semibold)
         for l in rowLabels { l.font = scaled(16) }
         footer.font = scaled(12)
-        let seg = scaled(13)
+        let seg = UIFont.systemFont(ofSize: min(scaled(13).pointSize, 16)) // four segments share the width
         for s in segmented { s.setTitleTextAttributes([.font: seg], for: .normal); s.setTitleTextAttributes([.font: seg], for: .selected) }
         settingsRow.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [font = scaled(15)] in
             var a = $0; a.font = font; return a

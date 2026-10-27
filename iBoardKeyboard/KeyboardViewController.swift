@@ -792,7 +792,13 @@ final class KeyboardViewController: UIInputViewController {
         // goes over XPC), and a closure formed here would otherwise inherit @MainActor and trap in
         // `_dispatch_assert_queue_fail` (same crash class as the earlier `lexicon()` / `pasteTest()` probes).
         requestSupplementaryLexicon { @Sendable [weak self] lexicon in
-            let entries = lexicon.entries.map { SystemLexiconEntry(userInput: $0.userInput, documentText: $0.documentText) }
+            // UIKit marks `UILexicon` main-actor isolated although it calls back on a background queue; reading it through
+            // key-value coding (plain NSObject API) copies the strings without claiming the main actor.
+            let raw = ((lexicon as NSObject).value(forKey: "entries") as? [NSObject]) ?? []
+            let entries = raw.compactMap { e -> SystemLexiconEntry? in
+                guard let input = e.value(forKey: "userInput") as? String, let doc = e.value(forKey: "documentText") as? String else { return nil }
+                return SystemLexiconEntry(userInput: input, documentText: doc)
+            }
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     self?.lexiconEntries = entries
@@ -1759,7 +1765,8 @@ final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
 }
 
 /// Adapts the text document proxy to the UIKit-free `TextProxy` used by `InputController`.
-final class ProxyAdapter: TextProxy {
+@MainActor
+final class ProxyAdapter: @preconcurrency TextProxy {
     private unowned let controller: UIInputViewController
     init(controller: UIInputViewController) { self.controller = controller }
     var contextBefore: String? { controller.textDocumentProxy.documentContextBeforeInput }

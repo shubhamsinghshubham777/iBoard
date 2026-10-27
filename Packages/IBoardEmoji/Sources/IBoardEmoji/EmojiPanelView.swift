@@ -409,7 +409,7 @@ private final class EmojiCell: UICollectionViewCell {
         label.adjustsFontSizeToFitWidth = small
         label.minimumScaleFactor = small ? 0.6 : 1
         label.font = .systemFont(ofSize: small ? 15 : Self.emojiPointSize)
-        label.contentScaleFactor = small ? UIScreen.main.scale : Self.emojiRasterScale
+        label.contentScaleFactor = small ? (traitCollection.displayScale > 0 ? traitCollection.displayScale : 3) : Self.emojiRasterScale
         accessibilityLabel = l
     }
 }
