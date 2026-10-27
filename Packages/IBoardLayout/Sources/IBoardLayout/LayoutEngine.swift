@@ -233,14 +233,12 @@ private struct Placer {
         let sideW = m.sideKeyWidth
         let toggleTarget: LayoutKind = kind == .letters ? .numbers : .letters
 
-        // Left group: 123/ABC, plus the globe splitting the same width when the system asks for it.
-        if traits.needsInputModeSwitchKey {
-            let half = (sideW - g) / 2
-            add(.layerSwitch(toggleTarget), x: m.contentLeft, w: half, row: row)
-            add(.globe, x: m.contentLeft + half + g, w: half, row: row)
-        } else {
-            add(.layerSwitch(toggleTarget), x: m.contentLeft, w: sideW, row: row)
-        }
+        // Left group: 123/ABC, plus the globe (when the system asks for it) and the emoji key, splitting the same width.
+        var leftKeys: [KeyIdentity] = [.layerSwitch(toggleTarget)]
+        if traits.needsInputModeSwitchKey { leftKeys.append(.globe) }
+        if settings.emojiKey { leftKeys.append(.emoji) }
+        let each = (sideW - g * CGFloat(leftKeys.count - 1)) / CGFloat(leftKeys.count)
+        for (i, id) in leftKeys.enumerated() { add(id, x: m.contentLeft + CGFloat(i) * (each + g), w: each, row: row) }
         let midLeft = m.contentLeft + sideW + g
         let returnX = right - sideW
         let midRight = returnX - g
@@ -353,6 +351,7 @@ private struct Placer {
         let fw = m.functionKeyWidth
         var left = [SItem(id: .layerSwitch(toggleTarget), width: fw)]
         if traits.needsInputModeSwitchKey { left.append(SItem(id: .globe, width: fw)) }
+        if settings.emojiKey { left.append(SItem(id: .emoji, width: fw)) }
         var right: [SItem] = []
         let ret = SItem(id: .returnKey(traits.returnKey), width: nil)
         let isLetters = kind == .letters

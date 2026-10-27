@@ -222,6 +222,26 @@ struct TraitVariantTests {
         #expect(layout(.numberPad, traits: LayoutTraits(needsInputModeSwitchKey: true)).firstKey(.globe) == nil)
     }
 
+    @Test func emojiKeySitsNextTo123AndSharesItsWidth() {
+        let plain = layout()
+        #expect(plain.firstKey(.emoji) == nil)
+        let on = layout(settings: LayoutSettings(emojiKey: true))
+        let toggle = on.firstKey(.layerSwitch(.numbers))!, emoji = on.firstKey(.emoji)!
+        #expect(emoji.frame.minX > toggle.frame.maxX)
+        #expect(emoji.frame.maxX <= on.firstKey(.space)!.frame.minX)
+        let full = plain.firstKey(.layerSwitch(.numbers))!.frame.width
+        #expect(abs((toggle.frame.width + emoji.frame.width) - full) < 8) // the pair takes the old 123 key's room
+        #expect(abs(on.firstKey(.space)!.frame.width - plain.firstKey(.space)!.frame.width) < 1e-9)
+        // With the system globe too: three keys share the same room, in order 123, globe, emoji.
+        let three = layout(traits: LayoutTraits(needsInputModeSwitchKey: true), settings: LayoutSettings(emojiKey: true))
+        let xs = [three.firstKey(.layerSwitch(.numbers))!, three.firstKey(.globe)!, three.firstKey(.emoji)!].map(\.frame.minX)
+        #expect(xs == xs.sorted())
+        for kind in [LayoutKind.numbers, .symbols] {
+            #expect(layout(kind, settings: LayoutSettings(emojiKey: true)).firstKey(.emoji) != nil)
+        }
+        #expect(layout(.numberPad, settings: LayoutSettings(emojiKey: true)).firstKey(.emoji) == nil)
+    }
+
     @Test func email() {
         let l = layout(traits: LayoutTraits(keyboardKind: .emailAddress))
         let bottom = l.keys.filter { $0.row == 3 }.map(\.identity)

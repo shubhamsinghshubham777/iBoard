@@ -7,8 +7,9 @@ import IBoardUI
 ///
 /// Modes: `panel` (categories grid replaces the keys), `search` (the normal keys type into a query that is shown in
 /// the strip together with the top two hits; the query lives in memory only), `results` (the panel shows the hits).
-/// Memory (F8, P-21): the panel, the catalog and the search index exist only while open; `close()` and a memory
-/// warning drop everything. Preferences (recents, skin tones) are only emoji the user tapped; they are kept in the
+/// Memory (F8, P-21, owner request 2026-10-27): the panel stays built and hidden after its first use (or after
+/// `prewarm`), so opening and closing it is instant. That costs memory the old drop-on-close design did not (about +6 MB
+/// measured on the Debug simulator; re-measure on the device); a memory warning still drops the catalog and the search index. Preferences (recents, skin tones) are only emoji the user tapped; they are kept in the
 /// extension's own defaults, never in the App Group (P-23: works without Full Access).
 @MainActor
 final class EmojiHost {
@@ -52,7 +53,15 @@ final class EmojiHost {
         peakDeltaMB = 0
         buffer.clear()
         hits = []
-        makePanel()
+        if let p = panel {
+            // Resident panel: just show it again (recents rebuilt, scroll position restored by `open()`).
+            p.frame = frame
+            p.overrideUserInterfaceStyle = interfaceStyle
+            p.isHidden = false
+            p.open()
+        } else {
+            makePanel()
+        }
         mode = .panel
         onChange?()
         sampleFootprint(after: 0.5)
@@ -60,12 +69,21 @@ final class EmojiHost {
 
     func close() {
         guard mode != .closed else { return }
-        dropPanel()
-        store.dropCaches()
+        panel?.isHidden = true // stays resident
         hits = []
         buffer.clear()
         mode = .closed
         onChange?()
+    }
+
+    /// Builds the panel hidden ahead of its first use so the first open is as fast as every later one.
+    func prewarm(in view: UIView, frame: CGRect, interfaceStyle: UIUserInterfaceStyle) {
+        guard mode == .closed, panel == nil else { return }
+        parent = view
+        panelFrame = frame
+        self.interfaceStyle = interfaceStyle
+        makePanel()
+        panel?.isHidden = true
     }
 
     func updateFrame(_ frame: CGRect) {

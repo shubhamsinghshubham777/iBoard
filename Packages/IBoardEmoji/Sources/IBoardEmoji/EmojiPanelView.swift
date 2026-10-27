@@ -38,6 +38,8 @@ public final class EmojiPanelView: UIView {
     private var catalog: EmojiCatalog?
     private var sections: [[Item]] = []
     private var sectionInfo = EmojiSections(flat: 0)
+    /// Header tops per section, computed once per layout (a scroll callback must not query layout attributes).
+    private var sectionTops: [Double] = []
     private var mode: Mode = .browse
     /// The chip that matches what is on screen (browse mode) or the active list.
     public private(set) var tab: Tab = .recents
@@ -141,13 +143,24 @@ public final class EmojiPanelView: UIView {
         grid.reloadData()
     }
 
-    /// Call from the keyboard view controller's didReceiveMemoryWarning.
-    public func didReceiveMemoryWarning() { releaseCaches() }
+    /// Call from the keyboard view controller's didReceiveMemoryWarning. The list itself (about 1,900 short strings)
+    /// stays: dropping it left a blank panel until it was reopened. Only the rebuildable data behind it goes.
+    public func didReceiveMemoryWarning() {
+        store.dropCaches()
+        catalog = nil
+    }
+
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        // Never show an empty list: rebuild when the data was released while the panel stayed on screen.
+        if window != nil, sections.isEmpty, mode == .browse { open() }
+    }
 
     // MARK: Content
 
     /// Builds the section arrays for the current mode (browse: recents + every group; kaomoji: one flat list).
     private func rebuild() {
+        sectionTops = []
         if catalog == nil { catalog = store.catalog() }
         switch mode {
         case .browse:
@@ -230,15 +243,19 @@ public final class EmojiPanelView: UIView {
     /// Browse mode: the chip of the category at the top of the screen follows the scroll.
     private func updateCurrentChip() {
         guard mode == .browse, !sections.isEmpty else { return }
-        let layout = grid.collectionViewLayout
-        let tops = sections.indices.map { i -> Double in
-            Double(layout.layoutAttributesForSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader,
-                                                                at: IndexPath(item: 0, section: i))?.frame.minY ?? 0)
-        }
-        let i = EmojiSections.currentSection(offsetY: Double(grid.contentOffset.y), sectionTops: tops)
+        if sectionTops.count != sections.count { refreshSectionTops() }
+        let i = EmojiSections.currentSection(offsetY: Double(grid.contentOffset.y), sectionTops: sectionTops)
         let g = sectionInfo.sections[min(i, sectionInfo.sections.count - 1)].group
         let t: Tab = g.map { .group($0) } ?? .recents
         if t != tab { tab = t; highlight(t) }
+    }
+
+    private func refreshSectionTops() {
+        let layout = grid.collectionViewLayout
+        sectionTops = sections.indices.map { i -> Double in
+            Double(layout.layoutAttributesForSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader,
+                                                                at: IndexPath(item: 0, section: i))?.frame.minY ?? 0)
+        }
     }
 
     /// Shows search results (entry indices into the catalog, ranked) in the grid.
@@ -375,8 +392,6 @@ private final class EmojiCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         label.textAlignment = .center
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.6
         label.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(label)
         NSLayoutConstraint.activate([
@@ -388,9 +403,20 @@ private final class EmojiCell: UICollectionViewCell {
     }
     @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
 
+    /// The color-emoji glyph bitmaps CoreText decodes are cached per size for the life of the process and are never
+    /// released (measured: ~43 KB per distinct emoji at 30 pt @3x, ~83 MB after scrolling the whole list). A smaller
+    /// point size and a 2x raster keep the worst case (every emoji seen) well under the extension's ceiling.
+    static let emojiPointSize: CGFloat = 26
+    static let emojiRasterScale: CGFloat = 2
+
     func configure(text: String, label l: String, small: Bool) {
         label.text = text
-        label.font = .systemFont(ofSize: small ? 15 : 30)
+        // Shrink-to-fit only for the long kaomoji; a single emoji at 30 pt always fits its 44 pt cell, and the
+        // fit-to-width measurement made fast scrolling stall on device.
+        label.adjustsFontSizeToFitWidth = small
+        label.minimumScaleFactor = small ? 0.6 : 1
+        label.font = .systemFont(ofSize: small ? 15 : Self.emojiPointSize)
+        label.contentScaleFactor = small ? UIScreen.main.scale : Self.emojiRasterScale
         accessibilityLabel = l
     }
 }

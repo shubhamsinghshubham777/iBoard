@@ -78,7 +78,6 @@ final class KeyboardViewController: UIInputViewController {
     private var chipTimer: Timer?
     /// Emoji panel + search (M9-01/M9-02 wired): opened by the emoji button at the trailing end of the strip.
     private let emoji = EmojiHost()
-    private let emojiButton = UIButton(type: .system)
     /// Shift + space selection (M5-05): virtual selection while dragging, then the action row; or a real host selection.
     private enum SelectionUI { case none, dragging(VirtualSelection), actions(VirtualSelection), host(HostSelection) }
     private var selectionUI = SelectionUI.none
@@ -145,12 +144,6 @@ final class KeyboardViewController: UIInputViewController {
         grid.accessibilityIdentifier = "key-grid"
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
-        emojiButton.setImage(UIImage(systemName: "face.smiling"), for: .normal)
-        emojiButton.tintColor = .secondaryLabel
-        emojiButton.accessibilityLabel = "Emoji"
-        emojiButton.accessibilityIdentifier = "emoji-button"
-        emojiButton.addAction(UIAction { [weak self] _ in self?.openEmoji(); self?.feedback() }, for: .touchUpInside)
-        view.addSubview(emojiButton)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
         // F12: pinch toggles the Duo split for the current orientation. Must not steal or delay key touches.
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
@@ -308,6 +301,12 @@ final class KeyboardViewController: UIInputViewController {
                 self.coordinator.setLearner(loaded.learner)
                 self.coordinator.setTouchModel(loaded.touchModel, store: loaded.touchStore)
                 self.applyAppCommands()
+                // Build the emoji panel hidden shortly after the keyboard is ready: opening it is then instant.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                    guard let self, !self.emoji.isOpen, self.strip.frame.height > 0 else { return }
+                    self.emoji.prewarm(in: self.view, frame: self.emojiFrame, interfaceStyle: self.grid.appearance == .dark ? .dark : .light)
+                    self.view.bringSubviewToFront(self.strip)
+                }
                 #if DEBUG
                 self.engineStatus = loaded.engine == nil
                     ? "engine: none (stub)" : "engine: bundled \(loaded.wordCount) words + hinglish \(loaded.hinglishWordCount)"
@@ -494,7 +493,6 @@ final class KeyboardViewController: UIInputViewController {
 
     private func emojiChanged() {
         grid.keysHidden = emoji.keysHidden
-        emojiButton.isHidden = emoji.isOpen
         renderStrip()
     }
 
@@ -605,6 +603,7 @@ final class KeyboardViewController: UIInputViewController {
         // Display-class defaults (Duo inner: number row in portrait, split in landscape), then the app's values.
         var ls = LayoutSettings.defaults(for: traits)
         ls.numberRow = settings.numberRow || ls.numberRow
+        ls.emojiKey = true
         // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
         ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {
@@ -666,9 +665,6 @@ final class KeyboardViewController: UIInputViewController {
         emoji.updateFrame(emojiFrame)
         coordinator.setLayout(layout)
         startEngineLoad(layout: layout)
-        let eb: CGFloat = 32
-        emojiButton.frame = CGRect(x: size.width - eb - 4, y: strip.frame.minY + max(0, (strip.frame.height - eb) / 2), width: eb, height: eb)
-        view.bringSubviewToFront(emojiButton)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
             updateAutoShift()
@@ -1078,6 +1074,10 @@ final class KeyboardViewController: UIInputViewController {
         case .returnKey:
             clearSelection()
             if coordinator.returnKey() { feedback(); scheduleAutoShift() }
+        case .openEmoji:
+            // Not inside the machine call that emitted this (openEmoji cancels the machine's touches): next turn.
+            feedback()
+            DispatchQueue.main.async { [weak self] in self?.openEmoji() }
         case .advanceKeyboard:
             advanceToNextInputMode()
         case .shiftChanged(let state):

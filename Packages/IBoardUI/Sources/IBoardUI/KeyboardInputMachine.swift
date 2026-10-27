@@ -28,6 +28,8 @@ public enum KeyEvent: Sendable, Equatable {
     case returnKey
     /// Globe tap: advance to the next keyboard.
     case advanceKeyboard
+    /// Emoji key tap: the host opens the emoji panel.
+    case openEmoji
     case shiftChanged(ShiftState)
     /// The active layer changed: the host must build a layout for it and call `setLayout`.
     case layerChanged(LayoutKind)
@@ -296,6 +298,8 @@ public struct KeyboardInputMachine: Sendable {
             emit(.returnKey)
         case .globe:
             emit(.advanceKeyboard)
+        case .emoji:
+            emit(.openEmoji)
         case .delete:
             emit(.deleteBackward)
             deleteTouchID = slots[slot].touchID

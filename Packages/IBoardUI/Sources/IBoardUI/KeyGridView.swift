@@ -259,6 +259,7 @@ public final class KeyGridView: UIView {
             }
             return .symbol("phone.fill", onAction: false)
         case .globe: return .symbol("globe", onAction: false)
+        case .emoji: return .symbol("face.smiling", onAction: false)
         }
     }
 

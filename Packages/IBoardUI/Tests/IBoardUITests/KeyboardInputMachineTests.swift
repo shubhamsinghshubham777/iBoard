@@ -382,3 +382,12 @@ private struct Driver {
     #expect(d.m.kind == .numbers)
     #expect(d.sink.inserts.isEmpty)
 }
+
+@Test func emojiKeyOpensTheEmojiPanelOnTouchUp() {
+    var d = Driver(LayoutEngine.layout(containerSize: CGSize(width: 390, height: 260), traits: LayoutTraits(), kind: .letters,
+                                       settings: LayoutSettings(emojiKey: true)))
+    d.down(1, .emoji)
+    #expect(d.sink.nonHighlight.isEmpty)
+    d.up(1)
+    #expect(d.sink.nonHighlight == [.openEmoji])
+}

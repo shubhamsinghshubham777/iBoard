@@ -166,6 +166,9 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
     /// Laptop pose "fill to fold" mode; the host sets it while the height is snapped. Duo inner landscape only;
     /// wins over split.
     public var fillToFold: Bool
+    /// An emoji key next to 123 (letters, numbers and symbols layers). Off in the Native metrics; the keyboard turns
+    /// it on. It takes half of the 123 key's width (a third each with the system globe key).
+    public var emojiKey: Bool
 
     public init(
         numberRow: Bool = false,
@@ -175,7 +178,8 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         centreGap: CentreGap? = nil,
         splitPortrait: Bool = false,
         splitLandscape: Bool = false,
-        fillToFold: Bool = false
+        fillToFold: Bool = false,
+        emojiKey: Bool = false
     ) {
         self.numberRow = numberRow
         self.heightScale = heightScale
@@ -185,10 +189,11 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         self.splitPortrait = splitPortrait
         self.splitLandscape = splitLandscape
         self.fillToFold = fillToFold
+        self.emojiKey = emojiKey
     }
 
     private enum CodingKeys: String, CodingKey {
-        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold
+        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold, emojiKey
     }
 
     // Tolerant decoding: settings stored before the Duo fields existed still load.
@@ -202,6 +207,7 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         splitPortrait = try c.decodeIfPresent(Bool.self, forKey: .splitPortrait) ?? false
         splitLandscape = try c.decodeIfPresent(Bool.self, forKey: .splitLandscape) ?? false
         fillToFold = try c.decodeIfPresent(Bool.self, forKey: .fillToFold) ?? false
+        emojiKey = try c.decodeIfPresent(Bool.self, forKey: .emojiKey) ?? false
     }
 
     public func isSplit(for orientation: LayoutOrientation) -> Bool {
@@ -235,6 +241,8 @@ public enum KeyIdentity: Hashable, Sendable, Codable {
     case space
     case returnKey(ReturnKeyKind)
     case globe
+    /// Opens the emoji panel (the host decides what that means).
+    case emoji
 
     /// Stable name used in snapshots and tests.
     public var snapshotName: String {
@@ -248,6 +256,7 @@ public enum KeyIdentity: Hashable, Sendable, Codable {
         case .space: "space"
         case .returnKey(let r): "return:\(r.rawValue)"
         case .globe: "globe"
+        case .emoji: "emoji"
         }
     }
 
