@@ -783,6 +783,8 @@ final class ProxyAdapter: TextProxy {
     var hasText: Bool { controller.textDocumentProxy.hasText }
     func insert(_ text: String) { controller.textDocumentProxy.insertText(text) }
     func deleteBackwardOnce() { controller.textDocumentProxy.deleteBackward() }
+    var contextAfter: String? { controller.textDocumentProxy.documentContextAfterInput }
+    func adjustPosition(byUTF16 offset: Int) { controller.textDocumentProxy.adjustTextPosition(byCharacterOffset: offset) }
 }
 
 extension AutoCapMode {
