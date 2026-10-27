@@ -53,7 +53,7 @@ PY
     rm -rf "$OUT/auto.xcresult" "$OUT/attachments"
     TEST_RUNNER_IBOARD_SOAK_SECONDS="$SOAK" xcodebuild -project iBoard.xcodeproj -scheme iBoard -configuration Release \
       -destination "id=$DEVICE" -derivedDataPath "$DD" -allowProvisioningUpdates -resultBundlePath "$OUT/auto.xcresult" \
-      OTHER_SWIFT_FLAGS='$(inherited) -DIBOARD_PERF' -only-testing:iBoardUITests/DevicePerfAutoTests/testAuto test \
+      ENABLE_TESTABILITY=YES OTHER_SWIFT_FLAGS='$(inherited) -DIBOARD_PERF' -only-testing:iBoardUITests/DevicePerfAutoTests/testAuto test \
       > "$OUT/auto.log" 2>&1 || { echo "xcodebuild test failed, see $OUT/auto.log"; tail -15 "$OUT/auto.log"; exit 1; }
     xcrun xcresulttool export attachments --path "$OUT/auto.xcresult" --output-path "$OUT/attachments" >/dev/null 2>&1 || true
     "$0" pull | tee "$OUT/verdict.txt"
@@ -83,7 +83,7 @@ GUIDE
   crashes)
     mkdir -p "$OUT/crash"
     xcrun devicectl device copy from --device "$DEVICE" --domain-type systemCrashLogs --source / --destination "$OUT/crash"
-    ls -t "$OUT"/crash/iBoardKeyboard-*.ips 2>/dev/null | head -5 ;;
+    ls "$OUT"/crash/iBoardKeyboard-*.ips 2>/dev/null | xargs -n1 basename 2>/dev/null || true ;;
   soak)
     IBOARD_SOAK_SECONDS="${2:-1800}" xcodebuild -project iBoard.xcodeproj -scheme iBoard -configuration Debug \
       -destination "id=$DEVICE" -derivedDataPath "$DD" -allowProvisioningUpdates OTHER_SWIFT_FLAGS='$(inherited) -DIBOARD_PERF' \
