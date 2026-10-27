@@ -85,6 +85,48 @@ public struct NGramModel: Sendable {
         return nil
     }
 
+    /// The words most likely to follow `a` (and, when `older` is given, `older a`), by the stored bigram / trigram
+    /// probabilities only (no backoff mass), best first. Used to seed next-word prediction with words that really
+    /// follow the context instead of only globally frequent ones. Bigram and trigram records are sorted by key, so
+    /// this is a binary search plus a scan of that word's records.
+    public func successors(after a: Lexicon.WordID, older: Lexicon.WordID? = nil, limit: Int) -> [Lexicon.WordID] {
+        var scored: [(id: Lexicon.WordID, p: Double)] = []
+        let key = UInt32(a)
+        var lo = 0, hi = bigramCount
+        while lo < hi { // first record with k1 >= a
+            let mid = (lo + hi) >> 1
+            if file.u32(bigrams + mid * 12) < key { lo = mid + 1 } else { hi = mid }
+        }
+        var i = lo
+        while i < bigramCount, file.u32(bigrams + i * 12) == key {
+            let o = bigrams + i * 12
+            let q = file.u16(o + 8)
+            if q != .max { scored.append((Lexicon.WordID(file.u32(o + 4)), prob(q))) }
+            i += 1
+        }
+        if let older {
+            let k1 = UInt32(older), k2 = key
+            var tl = 0, th = trigramCount
+            while tl < th { // first record with (k1, k2) >= (older, a)
+                let mid = (tl + th) >> 1
+                let o = trigrams + mid * 16
+                let a1 = file.u32(o), a2 = file.u32(o + 4)
+                if a1 < k1 || (a1 == k1 && a2 < k2) { tl = mid + 1 } else { th = mid }
+            }
+            var j = tl
+            while j < trigramCount {
+                let o = trigrams + j * 16
+                guard file.u32(o) == k1, file.u32(o + 4) == k2 else { break }
+                let q = file.u16(o + 12)
+                if q != .max { scored.append((Lexicon.WordID(file.u32(o + 8)), prob(q) * 4)) } // trigram evidence first
+                j += 1
+            }
+        }
+        var best: [Lexicon.WordID: Double] = [:]
+        for e in scored { best[e.id] = max(best[e.id] ?? 0, e.p) }
+        return best.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.prefix(limit).map(\.key)
+    }
+
     /// P1(w), from the lexicon.
     public func unigramProbability(_ w: Lexicon.WordID) -> Double {
         prob(lexicon.quantizedScore(of: w))

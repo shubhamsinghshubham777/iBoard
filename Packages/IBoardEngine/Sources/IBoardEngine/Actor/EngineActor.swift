@@ -334,12 +334,19 @@ public actor EngineActor {
             seen[text] = ranked.count
             ranked.append((text, id, side, lp))
         }
-        var sources: [(LexiconSide, Lexicon)] = [(.primary, lexicon)]
-        if let secondary { sources.append((.secondary, secondary.lexicon)) }
-        for (side, lex) in sources {
-            for id in lex.completions(prefix: "", limit: 64) {
+        var sources: [(LexiconSide, Lexicon, NGramModel?, LMContext)] = [(.primary, lexicon, model, ctx.primary)]
+        if let secondary { sources.append((.secondary, secondary.lexicon, secondary.model, ctx.secondary.lm)) }
+        for (side, lex, lm, lmCtx) in sources {
+            // Words that actually follow the context come first; globally frequent words fill the rest.
+            var ids: [Lexicon.WordID] = []
+            if let lm, let recent = lmCtx.recent { ids = lm.successors(after: recent, older: lmCtx.older, limit: 24) }
+            ids += lex.completions(prefix: "", limit: 64)
+            for id in ids {
                 let w = lex.word(of: id)
                 var lp = baseLog(id, side, ctx) + prior(side, ctx)
+                // With no Hinglish evidence in the context, the secondary language's (separately normalised, smaller
+                // vocabulary) unigram mass must not outrank English continuations.
+                if side == .secondary { lp -= codeSwitch.predictionSecondaryHurdle * (1 - min(max(ctx.secondary.logOdds / codeSwitch.maxLogOdds, 0), 1)) }
                 if let p = personal {
                     if p.isForgotten(w) { continue }
                     lp = PersonalInterpolation.mix(baseLogProb: lp, personal: p.score(word: w, context: r.previousWords))

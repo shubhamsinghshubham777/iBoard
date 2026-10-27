@@ -44,6 +44,9 @@ public struct CodeSwitchParameters: Sendable, Equatable {
     public var maxPersonalBias = 1.5
     /// Weight of the language log-prior in a candidate's score (multiplied with the decoder's `lmWeight`).
     public var priorWeight = 1.0
+    /// Next-word prediction only: nats subtracted from secondary-language candidates when the context has no Hinglish
+    /// evidence, shrinking linearly to 0 as the context log-odds reach `maxLogOdds`.
+    public var predictionSecondaryHurdle = 6.0
     /// Never auto-correct a typed word that is valid in the secondary lexicon into a word that exists only in the
     /// primary lexicon (M7-03). The suggestion strip still offers the English word.
     public var protectSecondaryWords = true
