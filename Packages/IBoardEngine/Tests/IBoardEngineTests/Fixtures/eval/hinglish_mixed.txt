@@ -1,0 +1,144 @@
+# M7-04 held-out Hinglish / code-switched eval sentences. Authored for iBoard, CC0-1.0. One sentence per line,
+# lowercase, no punctuation. NOT used to build Data/hinglish (checked by a test: no exact-sentence overlap).
+# Written by the project author, so this is a small clean set, not a sample of real users' typing.
+kal office ke baad milte hain
+mujhe woh report abhi tak nahi mili
+bhai tu ghar kab pahunchega
+aaj ka lunch kahan karna hai
+meeting ko thoda aage push kar do
+mera phone charge nahi ho raha
+tum log kab free ho
+yaar ye assignment bahut mushkil hai
+kya tumne email check kiya
+main thodi der mein call karta hoon
+please mujhe address bhej do
+usne mujhse kaha ki wo late aayega
+isko kal tak complete karna hai
+dinner ke liye kya plan hai
+wifi ka password kya hai
+tera message mujhe abhi mila
+sab log time pe aa gaye
+mujhe laga tha ki tu nahi aayega
+is weekend kuch plan banate hain
+kitne baje nikalna hai
+sorry yaar main busy tha
+mujhe ye idea pasand aaya
+tumhara birthday kab hai
+bank ka kaam kal karenge
+mausam aaj bahut accha hai
+kya main tumhe baad mein call kar sakta hoon
+uska number mere paas nahi hai
+traffic bahut zyada tha isliye der ho gayi
+mujhe ye baat samajh nahi aayi
+ye file kaise open karte hain
+tum sahi keh rahe ho
+chalo phir kal baat karte hain
+maine apna password change kar diya
+movie ka time kya hai
+presentation ke slides bhej do
+yahan se station kitna door hai
+usne project submit kar diya
+mere paas abhi time nahi hai
+tum kahan ho abhi
+kal subah jaldi uthna hai
+mujhe thoda paisa chahiye
+yeh sab kuch bahut fast hua
+call me when you reach
+mujhe ek favour chahiye yaar
+the meeting is at ten bhai
+did you eat kuch
+kal ka plan cancel ho gaya
+i will send the file shaam tak
+tum mujhe wo link send karo
+abhi busy hoon baad mein baat karte hain
+this is really accha idea
+bhai ye sab check kar le please
+let me know agar koi problem ho
+kya tum tomorrow free ho
+mujhe lagta hai we should leave now
+office mein aaj bahut kaam tha
+wo log kal party kar rahe hain
+mera laptop kharab ho gaya hai
+ye jagah bahut sundar hai
+tum kya soch rahe ho
+usko batana mat please
+kya kar raha hai tu
+sab theek hai na
+mujhe bahut neend aa rahi hai
+aaj raat dus baje milte hain
+kal exam hai aur maine kuch padha nahi
+bhai paise kab wapas karega
+good morning sab log
+maine dekha tha wo kal yahan tha
+tu itna late kyun aaya
+mujhe nahi pata ki kya karna hai
+usne bola ki wo aayegi
+bahut dino baad mile ho
+kya khana banaya hai aaj
+ye kaam tum kar lo
+wo mere saath school mein tha
+mujhe thoda time do
+ghar pe sab kaise hain
+tumne mera message dekha kya
+kal meri flight hai subah
+please ye document check kar do
+mera internet kaam nahi kar raha
+kya main aaj leave le sakta hoon
+chalo ab chalte hain
+usne mujhe bahut madad ki
+mujhe bahut bhookh lagi hai
+bus kab aayegi
+ye kitne ka hai
+kal tak ka deadline hai
+tum meri baat suno
+bahut accha kaam kiya tumne
+main abhi aata hoon
+phone uthao yaar
+tumhe aur kya chahiye
+yeh gaana mujhe bahut pasand hai
+kal hum kahan milenge
+baarish ho rahi hai aaj
+mere dost ne mujhe bataya
+sab kuch ek saath mat karo
+kya aap mujhe help kar sakte hain
+main kal se gym join karunga
+wo bahut hoshiyar ladka hai
+ek minute ruko main aata hoon
+tumhari photo bahut achi aayi hai
+chai peene chalein
+mujhe ye pasand nahi aaya
+raat ko movie dekhne chalte hain
+teri help ke bina ye nahi hota
+aaj ka din bahut lamba tha
+mujhe apna bag nahi mil raha
+kya tum mere saath chaloge
+yeh sab meri galti thi
+usne apna kaam khatam kar liya
+ab main kya karoon
+chhutti ke din kya karte ho
+kal subah meeting hai na
+mujhe ek glass paani do
+dukaan kitne baje khulti hai
+maine tumhe kal call kiya tha
+thank you bhai tune bahut help ki
+kal ka match dekha kya
+bhai wo scene bahut funny tha
+tum log kya kar rahe ho
+mujhe phone pe baat karni hai
+wo apne ghar ja chuka hai
+aaj mera mood theek nahi hai
+main kuch din ke liye bahar ja raha hoon
+yeh bag kiska hai
+kya hum kal milein
+battery low hai charger do
+kitni der lagegi
+meri baat dhyan se suno
+mujhe wahan jaana hai
+isme koi dikkat nahi hai
+kal shaam ko free ho kya
+usne ye sab pehle bhi kiya hai
+chalo koi baat nahi
+bhai tu sahi hai
+mere liye ek coffee mangwa do
+kuch nahi bas aise hi
+wo abhi abhi nikla hai
