@@ -555,6 +555,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
   deterministic output; size report. Depends: M0-11.
   **Result (2026-10-26):** `Tools/LexiconBuilder` (Swift 6 package, 7 tests green): deterministic `.iblex` trie + `.iblm` 3-gram + `licenses.json` + size report; format in `docs/LEXICON_FORMAT.md`. Not tested: CLI end to end, real-scale data/size, build time. Plain trie (no suffix sharing yet).
+  **English data (2026-10-27):** real English lexicon + LM built by `Tools/EnglishData` into `Data/english/` (125,796 words, 8.3 MB; 300k bigrams + 240k trigrams, 7.9 MB; byte-identical rebuilds; SCOWL 2020 vocabulary + Leipzig news 2023/2024 counts (CC BY 4.0), attribution only, no share-alike; top-10k coverage 98.2%). Together with Hinglish ≈23.2 MB of the 25 MB asset budget. NOT yet bundled into the keyboard (it still ships the 219-word fixture), so suggestions/swipe still fail for most words until it is; casual-chat register under-weighted (news corpora). `docs/ENGLISH_DATA.md`.
 - [x] **M2-02 Runtime readers** — mmap loaders, prefix lookup, LM scoring; macOS benchmarks. Depends: M2-01.
   **Result (2026-10-27):** mmap `Lexicon`/`NGramModel` readers cross-checked against LexiconBuilder (219 words, 16k n-gram probabilities identical); macOS release p95: exact lookup 140 ns, trigram 218 ns, top-8 completions 1.7 µs; fixtures synthetic. Not measured on iPhone 12.
 - [x] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
@@ -791,6 +792,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · English lexicon data merged ·** `Data/english/` (see M2-01 note). Verification: agent's hash check (rebuild twice, identical SHA-256) re-checked after merge; engine/UI tests and `scripts/build.sh` still green; NOTICE conflict (two appenders) resolved by keeping both. Next: bundle it into the keyboard (lazy mmap, watch the 30/40 MB footprint — now ~16 MB more mapped data), then the owner's bug-fix round.
 
 - **2026-10-27 · round 7 merged (keyboard settings/Hinglish/Duo/theme skin, onboarding + OTP guide, quality pass) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 35, Layout 40, Engine 227, OTP 11, Theme 18, UI 206, Sync 8, Emoji 21, LexiconBuilder 7; `scripts/build.sh` green; new `scripts/audit-privacy.sh` passes after two reviewed allowlist entries for Duo split booleans. Quality pass also: release-only benchmark budgets (R-11 fixed), CI with 4 jobs (not run on GitHub yet), README/CONTRIBUTING/`docs/ARCHITECTURE.md`, accessibility review (`docs/ACCESSIBILITY_REVIEW.md`, code reading only). Still in flight: English-lexicon data agent (worktree `agent-a8fc6ff6bd3c02bb4`). Next: bundle the real English lexicon, then the owner's bug-fix round (docs/HANDOFF.md §2).
 

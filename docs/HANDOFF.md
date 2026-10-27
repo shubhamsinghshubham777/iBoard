@@ -10,14 +10,14 @@ does not: what is in flight, how work is run and merged, tool quirks, and the ow
 - All package tests were green at the last merge (Core 35, Layout 40, Engine 227, OTP 11, Theme 18, UI 185, Sync 8, Emoji 21,
   LexiconBuilder 7) and `scripts/build.sh` succeeds. Known flaky: macOS debug timing tests (`ReaderBenchmarks`) fail under
   load, pass alone (R-11; round-7 QUALITY agent is fixing).
-- **Round 7 (KBD7, ONBOARD, QUALITY) was MERGED on 2026-10-27**; only the English-data agent below is still in flight (its table row is the only live one).
+- **Round 7 (KBD7, ONBOARD, QUALITY) and the English-data agent are all MERGED (2026-10-27); no agents are in flight.** Bundling `Data/english/*` into the keyboard is still TODO (bug 4).
 - **In-flight agents, each in its own worktree** (branch = worktree name):
   | Agent | Worktree / branch | Scope |
   |---|---|---|
   | KBD7 | `.claude/worktrees/wf_b8b92d0f-b8b-1` / `worktree-wf_b8b92d0f-b8b-1` | keyboard reads settings v3, bundles Hinglish, Duo split + pinch, theme rendering; owns simulators `kbd7` and `duo7` |
   | ONBOARD | `…-2` | OTP guided setup, self-test, M10-01 onboarding, investigates signed `.shortcut` |
   | QUALITY | `…-3` | flaky-test fix, `scripts/audit-privacy.sh`, CI, README/CONTRIBUTING/ARCHITECTURE docs, accessibility review (docs only) |
-  | ENGLISH-DATA | `.claude/worktrees/agent-a8fc6ff6bd3c02bb4` / `worktree-agent-a8fc6ff6bd3c02bb4` | real English lexicon + LM into `Data/english/` + `Tools/EnglishData/` |
+  | ENGLISH-DATA (MERGED 2026-10-27, `Data/english/` is on main) | `.claude/worktrees/agent-a8fc6ff6bd3c02bb4` / `worktree-agent-a8fc6ff6bd3c02bb4` | real English lexicon + LM into `Data/english/` + `Tools/EnglishData/` |
   When each finishes you get a task notification; read its result in
   `~/.claude/projects/-Volumes-SSD-Projects-Personal-iBoard/<session>/subagents/workflows/<run>/journal.jsonl`.
   If an agent died on a usage limit, its worktree still holds uncommitted work: `git -C <worktree> status`, then start a
