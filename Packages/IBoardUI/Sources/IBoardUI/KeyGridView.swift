@@ -280,6 +280,13 @@ public final class KeyGridView: UIView {
         return ReturnKeyStyle.isProminent(kind)
     }
 
+    /// The layout made the return key icon-width (narrower than a side key): draw its icon instead of the text label.
+    private var narrowReturn: Bool {
+        guard let layout, let ret = layout.keys.first(where: { if case .returnKey = $0.identity { return true } else { return false } })
+        else { return false }
+        return ret.frame.width < layout.metrics.sideKeyWidth * 0.8
+    }
+
     func glyphSpec(for identity: KeyIdentity) -> GlyphSpec? {
         switch identity {
         case .letter(let s):
@@ -300,6 +307,9 @@ public final class KeyGridView: UIView {
             }
         case .space: return nil
         case .returnKey(let kind):
+            if let symbol = kind.iconSymbol, narrowReturn {
+                return .symbol(symbol, onAction: Self.isActionKey(identity))
+            }
             if let label = ReturnKeyStyle.label(for: kind) {
                 return .text(label, .function, onAction: Self.isActionKey(identity))
             }

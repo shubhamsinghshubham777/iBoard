@@ -17,7 +17,8 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     /// Keyboard height multiplier (F11, D-18) per display class x orientation, keyed by `HeightKey.make`.
     /// Missing key means 1.0. Values are clamped to `HeightScale.range` on read.
     public var heightScales: [String: Double]
-    /// Show the secondary-symbol hints on keys that have a flick (F5). Off mirrors the iPhone system keyboard (D-07).
+    /// Show the faint hint symbol on each letter key: what a long press (first choice) or an up flick types (F5). On by
+    /// default (owner request 2026-10-27); the stored key is "keyHints", so an earlier saved "off" does not hide it.
     public var flickHints: Bool
     /// Autocorrect strength (D-12: conservative by default).
     public var autocorrect: AutocorrectLevel
@@ -38,14 +39,17 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     /// Comma and period keys beside the space bar (hold either for quick punctuation). `(agent)` default on; the
     /// Native iPhone keyboard has none, so it can be switched off in the app.
     public var punctuationKeys: Bool
+    /// How long a still touch must last before it counts as a long press (alternates, punctuation row).
+    public var longPressDelay: LongPressDelay
 
     public init(
         version: Int = IBoardSettings.currentVersion, haptics: Bool = true, keyClickSound: Bool = false,
         numberRow: Bool = false, heightScales: [String: Double] = [:], hapticIntensity: HapticIntensity = .medium,
-        flickHints: Bool = false, autocorrect: AutocorrectLevel = .conservative, doubleSpacePeriod: Bool = true,
+        flickHints: Bool = true, autocorrect: AutocorrectLevel = .conservative, doubleSpacePeriod: Bool = true,
         smartPunctuation: Bool = true, swipeTyping: Bool = true, incognitoByDefault: Bool = false,
         spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
-        duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true
+        duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true,
+        longPressDelay: LongPressDelay = .standard
     ) {
         self.version = version
         self.haptics = haptics
@@ -64,6 +68,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.duoSplitLandscape = duoSplitLandscape
         self.emojiSuggestions = emojiSuggestions
         self.punctuationKeys = punctuationKeys
+        self.longPressDelay = longPressDelay
     }
 
     /// Stored height multiplier for a key, clamped; 1 when none.
@@ -77,9 +82,10 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case version, haptics, keyClickSound, numberRow, heightScales, hapticIntensity, flickHints, autocorrect
+        case version, haptics, keyClickSound, numberRow, heightScales, hapticIntensity, autocorrect
         case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
-        case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys
+        case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys, longPressDelay
+        case flickHints = "keyHints"
     }
 
     /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
@@ -109,6 +115,20 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.duoSplitLandscape = try c.decodeIfPresent(Bool.self, forKey: .duoSplitLandscape) ?? d.duoSplitLandscape
         self.emojiSuggestions = try c.decodeIfPresent(Bool.self, forKey: .emojiSuggestions) ?? d.emojiSuggestions
         self.punctuationKeys = try c.decodeIfPresent(Bool.self, forKey: .punctuationKeys) ?? d.punctuationKeys
+        self.longPressDelay = (try? c.decodeIfPresent(LongPressDelay.self, forKey: .longPressDelay)) ?? d.longPressDelay
+    }
+}
+
+/// Long-press hold time presets. Standard is a little shorter than the system keyboard (about 0.5 s).
+public enum LongPressDelay: String, Codable, Sendable, CaseIterable {
+    case short, standard, long
+
+    public var seconds: Double {
+        switch self {
+        case .short: 0.3
+        case .standard: 0.45
+        case .long: 0.6
+        }
     }
 }
 

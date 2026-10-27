@@ -129,7 +129,8 @@ public enum LayoutEngine {
         kind: LayoutKind,
         settings: LayoutSettings = LayoutSettings()
     ) -> CGFloat {
-        let ref = LayoutMetrics.reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
+        var ref = LayoutMetrics.reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
+        ref.stripHeight += settings.searchRowHeight
         let mode = LayoutMetrics.duoMode(
             containerSize: CGSize(width: width, height: 0), traits: traits, kind: kind, settings: settings
         )
@@ -240,7 +241,11 @@ private struct Placer {
         let each = (sideW - g * CGFloat(leftKeys.count - 1)) / CGFloat(leftKeys.count)
         for (i, id) in leftKeys.enumerated() { add(id, x: m.contentLeft + CGFloat(i) * (each + g), w: each, row: row) }
         let midLeft = m.contentLeft + sideW + g
-        let returnX = right - sideW
+        // Long return labels become a narrower icon key when the comma/period keys are on (see LayoutSettings.punctuationKeys).
+        let iconReturn = kind == .letters && settings.punctuationKeys && traits.returnKey.iconSymbol != nil
+            && traits.keyboardKind != .url && traits.keyboardKind != .emailAddress
+        let returnW = iconReturn ? m.functionKeyWidth * 1.15 : sideW
+        let returnX = right - returnW
         let midRight = returnX - g
         let tail = m.tailKeyWidth
 
@@ -263,7 +268,7 @@ private struct Placer {
         } else {
             add(.space, x: midLeft, w: midRight - midLeft, row: row)
         }
-        add(.returnKey(traits.returnKey), x: returnX, w: sideW, row: row)
+        add(.returnKey(traits.returnKey), x: returnX, w: returnW, row: row)
     }
 
     // MARK: Split (Duo inner)

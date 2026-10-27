@@ -4,7 +4,9 @@ import Testing
 
 @Test func nativePresetIsTokenIdentical() {
     for a in ThemeAppearance.allCases {
-        let t = NativeThemeTokens.tokens(for: a)
+        // Identical to the measured tokens except that the key tile is slightly translucent (ThemePresets.nativeKeyAlpha).
+        var t = NativeThemeTokens.tokens(for: a)
+        t.keyFill = t.keyFill.withAlpha(a == .light ? ThemePresets.nativeKeyAlpha.light : ThemePresets.nativeKeyAlpha.dark)
         var back = ThemePresets.native.variant(for: a).nativeTokens
         back.appearance = a
         #expect(back == t)

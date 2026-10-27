@@ -12,7 +12,8 @@ extension ThemeVariant {
                             symbolSize: t.symbolFontSize, functionLabelSize: t.functionLabelFontSize),
             labels: LabelColors(key: t.keyLabel, actionKey: t.actionKeyLabel, strip: t.keyLabel,
                                 stripSecondary: t.keyLabel.withAlpha(0.6)),
-            swipeTrail: SwipeTrailStyle(color: t.actionKeyFill),
+            // Neutral ink from the label colour: the system-blue accent looked out of place on grey keys.
+            swipeTrail: SwipeTrailStyle(color: t.keyLabel.withAlpha(0.8)),
             strip: strip ?? StripStyle(kind: .plain, separator: separator)
         )
     }
@@ -32,7 +33,12 @@ extension ThemeVariant {
 public enum ThemePresets {
     /// Native: token-identical to `NativeThemeTokens`; system backdrop (P-22).
     public static let native = Theme(id: "native", name: "Native",
-                                     light: ThemeVariant(native: .light), dark: ThemeVariant(native: .dark))
+                                     light: ThemeVariant(native: .light, keyFillAlpha: nativeKeyAlpha.light),
+                                     dark: ThemeVariant(native: .dark, keyFillAlpha: nativeKeyAlpha.dark))
+
+    /// The system keyboard's tiles let the glass backdrop show through a little (owner request 2026-10-27, from a
+    /// screenshot of the Apple keyboard); the colours stay the measured ones. Reduce Transparency makes them opaque.
+    public static let nativeKeyAlpha = (light: 0.62, dark: 0.5)
 
     /// Native Glass: still the system backdrop (P-22: no full-sheet effect). Only key fill/tint varies: translucent
     /// tiles with a hairline edge so the glass shows through.

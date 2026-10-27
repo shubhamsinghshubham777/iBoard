@@ -8,14 +8,16 @@ struct KeyboardSkinTests {
     @Test func nativeSkinIsTokenIdentical() {
         for appearance in ThemeAppearance.allCases {
             let s = KeyboardSkin.native(appearance)
-            #expect(s.tokens == NativeThemeTokens.tokens(for: appearance))
+            var expected = NativeThemeTokens.tokens(for: appearance)
+            expected.keyFill = expected.keyFill.withAlpha(appearance == .light ? ThemePresets.nativeKeyAlpha.light : ThemePresets.nativeKeyAlpha.dark)
+            #expect(s.tokens == expected)
             #expect(s.cornerRadiusScale == 1)
             #expect(s.fontWeight == .regular)
             #expect(s.fontFamily == nil)
             #expect(!s.keysNeedDecoration)
             #expect(s.backdrop == .system)
             #expect(!s.backdrop.drawsAnything)
-            #expect(s.trail == SwipeTrailStyle(color: NativeThemeTokens.tokens(for: appearance).actionKeyFill))
+            #expect(s.trail == SwipeTrailStyle(color: NativeThemeTokens.tokens(for: appearance).keyLabel.withAlpha(0.8)))
             #expect(s.stripLabel == NativeThemeTokens.tokens(for: appearance).keyLabel)
             #expect(s.stripSeparator == NativeThemeTokens.tokens(for: appearance).keyLabel.withAlpha(0.18))
             #expect(s.stripKind == .plain)

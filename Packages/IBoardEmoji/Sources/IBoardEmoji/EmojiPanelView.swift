@@ -44,12 +44,10 @@ public final class EmojiPanelView: UIView {
     /// The chip that matches what is on screen (browse mode) or the active list.
     public private(set) var tab: Tab = .recents
     private let grid: UICollectionView
-    private let bar = UIStackView()
-    private var tabButtons: [(Tab, UIButton)] = []
+    private let bar = EmojiCategoryBar()
 
     private static let cellID = "emoji.cell"
     private static let headerID = "emoji.header"
-    private static let groupGlyphs = ["😀", "🧑", "🐻", "🍔", "🚗", "⚽", "💡", "🔣", "🏳️"]
 
     public init(store: EmojiStore = EmojiStore(), preferences: EmojiPreferences = EmojiPreferences()) {
         self.store = store
@@ -58,7 +56,9 @@ public final class EmojiPanelView: UIView {
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 4
         layout.sectionInset = UIEdgeInsets(top: 2, left: 6, bottom: 8, right: 6)
-        layout.sectionHeadersPinToVisibleBounds = true // the category name stays visible while scrolling
+        // Inline headings that scroll away with the content: the category bar already shows the current section, and a
+        // pinned band was distracting during fast scrolls.
+        layout.sectionHeadersPinToVisibleBounds = false
         grid = UICollectionView(frame: .zero, collectionViewLayout: layout)
         super.init(frame: .zero)
         configure()
@@ -66,8 +66,13 @@ public final class EmojiPanelView: UIView {
 
     @available(*, unavailable) public required init?(coder: NSCoder) { fatalError("init(coder:) is unavailable") }
 
+    /// A background that is invisible but not fully transparent. Fully transparent areas of the keyboard did not start a
+    /// scroll (a swipe only scrolled when it began on an emoji); a near-zero alpha makes them real touch surfaces.
+    static let touchSurface = UIColor(white: 0, alpha: 0.012)
+
     private func configure() {
-        grid.backgroundColor = .clear
+        backgroundColor = Self.touchSurface
+        grid.backgroundColor = Self.touchSurface
         grid.register(EmojiCell.self, forCellWithReuseIdentifier: Self.cellID)
         grid.register(EmojiHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
                       withReuseIdentifier: Self.headerID)
@@ -77,29 +82,8 @@ public final class EmojiPanelView: UIView {
         grid.addInteraction(UIContextMenuInteraction(delegate: self))
         grid.translatesAutoresizingMaskIntoConstraints = false
 
-        bar.axis = .horizontal
-        bar.distribution = .fillEqually
-        bar.layoutMargins = UIEdgeInsets(top: 3, left: 4, bottom: 3, right: 4)
-        bar.isLayoutMarginsRelativeArrangement = true
-        let close = UIButton(type: .system)
-        close.setTitle("ABC", for: .normal)
-        close.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-        close.accessibilityLabel = "Back to keyboard"
-        close.addAction(UIAction { [weak self] _ in self?.onClose?() }, for: .touchUpInside)
-        bar.addArrangedSubview(close)
-        func addTab(_ t: Tab, _ glyph: String, _ label: String) {
-            let b = UIButton(type: .system)
-            b.setTitle(glyph, for: .normal)
-            b.titleLabel?.font = .systemFont(ofSize: 19)
-            b.titleLabel?.adjustsFontSizeToFitWidth = true
-            b.accessibilityLabel = label
-            b.addAction(UIAction { [weak self] _ in self?.select(t) }, for: .touchUpInside)
-            bar.addArrangedSubview(b)
-            tabButtons.append((t, b))
-        }
-        addTab(.recents, "🕘", "Recents")
-        for (i, g) in Self.groupGlyphs.enumerated() { addTab(.group(i), g, "Jump to category \(i + 1)") }
-        addTab(.kaomoji, "^_^", "Kaomoji")
+        bar.onClose = { [weak self] in self?.onClose?() }
+        bar.onSelect = { [weak self] t in self?.select(t) }
 
         addSubview(grid)
         addSubview(bar)
@@ -111,7 +95,7 @@ public final class EmojiPanelView: UIView {
             bar.leadingAnchor.constraint(equalTo: leadingAnchor),
             bar.trailingAnchor.constraint(equalTo: trailingAnchor),
             bar.bottomAnchor.constraint(equalTo: bottomAnchor),
-            bar.heightAnchor.constraint(equalToConstant: 36),
+            bar.heightAnchor.constraint(equalToConstant: EmojiCategoryBar.height),
         ])
         let hairline = UIView()
         hairline.backgroundColor = UIColor.separator
@@ -243,14 +227,7 @@ public final class EmojiPanelView: UIView {
         grid.setContentOffset(CGPoint(x: 0, y: y), animated: animated)
     }
 
-    private func highlight(_ t: Tab?) {
-        for (tt, b) in tabButtons {
-            // No `isSelected`: the system button style paints a solid accent block over the glyph.
-            b.alpha = tt == t ? 1 : 0.5
-            b.backgroundColor = tt == t ? UIColor.label.withAlphaComponent(0.14) : .clear
-            b.layer.cornerRadius = 10
-        }
-    }
+    private func highlight(_ t: Tab?) { bar.setSelected(t) }
 
     /// Browse mode: the chip of the category at the top of the screen follows the scroll.
     private func updateCurrentChip() {
@@ -323,15 +300,15 @@ extension EmojiPanelView: UICollectionViewDataSource, UICollectionViewDelegateFl
     }
 
     public func collectionView(_ cv: UICollectionView, layout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        mode == .browse ? CGSize(width: cv.bounds.width, height: 26) : .zero
+        mode == .browse ? CGSize(width: cv.bounds.width, height: section == 0 ? 22 : 30) : .zero
     }
 
     public func collectionView(_ cv: UICollectionView, layout: UICollectionViewLayout, sizeForItemAt ip: IndexPath) -> CGSize {
         if mode == .kaomoji { return CGSize(width: max(80, (cv.bounds.width - 24) / 3), height: 40) }
-        // Equal columns that use the full width (no ragged right edge): as many 40+ pt cells as fit.
+        // Equal columns that use the full width (no ragged right edge): 7 across a phone, roomy cells for big emoji.
         let usable = cv.bounds.width - 12
-        let columns = max(6, Int(usable / 40))
-        return CGSize(width: floor(usable / CGFloat(columns)), height: 42)
+        let columns = max(6, Int(usable / 52))
+        return CGSize(width: floor(usable / CGFloat(columns)), height: 48)
     }
 
     public func collectionView(_ cv: UICollectionView, didSelectItemAt ip: IndexPath) {
@@ -389,8 +366,6 @@ private final class EmojiHeader: UICollectionReusableView {
     let label = UILabel()
     override init(frame: CGRect) {
         super.init(frame: frame)
-        // Pinned over scrolling emoji: a soft opaque band keeps the name readable.
-        backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.17, alpha: 0.96) : UIColor(white: 0.90, alpha: 0.96) }
         label.font = .systemFont(ofSize: 12, weight: .bold)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -398,7 +373,7 @@ private final class EmojiHeader: UICollectionReusableView {
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
             label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 2),
+            label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4), // hugs the emoji below, not the header's centre
         ])
         isAccessibilityElement = false
     }
@@ -424,7 +399,7 @@ private final class EmojiCell: UICollectionViewCell {
     /// The color-emoji glyph bitmaps CoreText decodes are cached per size for the life of the process and are never
     /// released (measured: ~43 KB per distinct emoji at 30 pt @3x, ~83 MB after scrolling the whole list). A smaller
     /// point size and a 2x raster keep the worst case (every emoji seen) well under the extension's ceiling.
-    static let emojiPointSize: CGFloat = 26
+    static let emojiPointSize: CGFloat = 32
     static let emojiRasterScale: CGFloat = 2
 
     func configure(text: String, label l: String, small: Bool) {

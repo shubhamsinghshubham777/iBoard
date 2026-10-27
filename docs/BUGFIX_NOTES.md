@@ -159,3 +159,15 @@ Owner asked for all proposals except 5 (live swipe word preview) and 8 (one-hand
 | 12 | In-keyboard coach marks | Four short tips in the strip with Next and Skip (also Done on the last); skipping or finishing is remembered (`iBoard.coach.step`, extension-local) and never shown again. The app's guided setup already has a Skip button (top right). Seen: tips advance, Skip ends them. |
 
 Notes: tapping the strip's rightmost few points (x ≥ ~360 pt) in the simulator missed the Skip cell once; Skip worked at x = 345. Not investigated further. To replay the tips: delete `iBoard.coach.step` from the keyboard's defaults (reinstall).
+
+---
+# Round 4: owner device feedback (2026-10-27)
+Fixed from the owner's iPhone 12 testing (builds installed on the device, checked by the owner in screenshots unless marked NOT TESTED).
+
+- **Keyboard crashed on open in some hosts (most of ~20 crash logs).** `proxy.documentIdentifier` is nil in e.g. App Library search and the typed Swift property traps. Read via KVC + `as? UUID` (P-29). Another crash: backspace in an empty emoji search relaid the keyboard inside the input machine's callback (exclusivity); relayout is now deferred one turn.
+- **Empty suggestion strip.** `resync()` returned early whenever the left context was nil (an empty field), so a stale word survived a cleared field and `requestPrediction` never ran. Now a nil context is re-checked after 250 ms and stale state is dropped (test `resyncDropsTheWordWhenTheHostEmptiesTheField`, fails without the fix). Also: engine load retries 3x, resync on appear. The exact trigger of the owner's last occurrence (a 👋 in the field) was NOT reproduced.
+- **Emoji search rebuilt:** pill with caret and emoji icon, Cancel, scrolling results row (keyboard +44 pt while searching), exact/short names rank first, recents shown while empty, gesture typing and swipe-delete work in the field, search key dims until there is a query.
+- **Emoji panel:** 32 pt emoji / 7 columns (memory: ~1.5x glyph cache per emoji vs 26 pt, recheck the footprint), new category bar (collection view, ABC and kaomoji fixed), inline headings, unrenderable Emoji 18 entries dropped (the "?" box, P-30).
+- **Scroll dead zones (P-28, suspected):** scrolling only began on drawn content; near-zero-alpha background added to those surfaces. Owner confirmation pending. The first attempt (a mask on the scroll view itself) hid cells once scrolled.
+- **Keys / strip / defaults (D-31):** translucent Native keys, trail colour from the theme, strip content and field centred under the system glass, taller dividers, icon return key, long-press delay setting, hint symbols + long-press hint, long-press emoji key opens iOS Settings (NOT TESTED).
+- **Declined:** opening the iBoard app from the keyboard (locked D-01 / R-09); an app without UI constrained to Settings (see ROADMAP progress log).

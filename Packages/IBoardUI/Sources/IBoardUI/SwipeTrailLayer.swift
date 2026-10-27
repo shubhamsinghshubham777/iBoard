@@ -8,11 +8,12 @@ public enum SwipeTrailGradient {
         public var width: Double
     }
 
-    /// The tail drifts toward a cooler, lighter hue so the trail reads as a gradient even on a plain keyboard;
+    /// The tail drifts toward a lighter tint of the head colour itself, so the trail reads as a gradient without
+    /// importing a hue the theme does not have;
     /// alpha and width grow with an ease-out curve toward the head (t = 0 tail, t = 1 head).
     public static func stops(count: Int, head: (red: Double, green: Double, blue: Double), width: Double) -> [Stop] {
         guard count > 0 else { return [] }
-        let tail = (red: head.red * 0.45 + 0.55 * 0.62, green: head.green * 0.45 + 0.55 * 0.45, blue: head.blue * 0.45 + 0.55 * 1.0)
+        let tail = (red: head.red * 0.6 + 0.4 * 0.75, green: head.green * 0.6 + 0.4 * 0.75, blue: head.blue * 0.6 + 0.4 * 0.75)
         return (0..<count).map { i in
             let t = count == 1 ? 1 : Double(i) / Double(count - 1)
             let e = t * t * (3 - 2 * t) // smoothstep

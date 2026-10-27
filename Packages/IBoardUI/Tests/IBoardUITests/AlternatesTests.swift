@@ -27,15 +27,15 @@ private final class Sink {
     #expect(KeyAlternates.options(for: .space) == nil)
 }
 
-@Test func longPressFiresAfter350msAndTapStillInserts() {
+@Test func longPressFiresAfter450msAndTapStillInserts() {
     var m = KeyboardInputMachine(layout: layout)
     let s = Sink()
     let e = layout.firstKey(.letter("e"))!
     m.touchDown(id: 1, at: center(.letter("e")), time: 0) { s($0) }
-    #expect(m.nextDeadline == 0.35)
-    m.tick(now: 0.3) { s($0) }
+    #expect(m.nextDeadline == 0.45)
+    m.tick(now: 0.4) { s($0) }
     #expect(s.nonHighlight.isEmpty)
-    m.tick(now: 0.36) { s($0) }
+    m.tick(now: 0.46) { s($0) }
     #expect(s.nonHighlight == [.alternatesBegan(keyIndex: e.id)])
     m.touchMoved(id: 1, to: CGPoint(x: 100, y: 20)) { s($0) }
     m.touchUp(id: 1, at: CGPoint(x: 100, y: 20), time: 0.5) { s($0) }
@@ -53,7 +53,7 @@ private final class Sink {
 
 @Test func keysWithoutAlternatesHaveNoDeadline() {
     var m = KeyboardInputMachine(layout: layout)
-    m.touchDown(id: 1, at: center(.letter("q")), time: 0) { _ in }
+    m.touchDown(id: 1, at: center(.space), time: 0) { _ in }
     #expect(m.nextDeadline == nil)
 }
 
@@ -61,7 +61,7 @@ private final class Sink {
     var m = KeyboardInputMachine(layout: layout)
     let s = Sink()
     m.touchDown(id: 1, at: center(.letter("a")), time: 0) { s($0) }
-    m.tick(now: 0.4) { s($0) }
+    m.tick(now: 0.5) { s($0) }
     m.touchCancelled(id: 1) { s($0) }
     #expect(s.nonHighlight.last == .alternatesCancelled)
 }
@@ -116,4 +116,18 @@ private final class Sink {
     let s = ResizeMath.scale(forHeight: h(1.25), height0: h(0), height1: h(1))
     #expect(abs(s - 1.25) < 1e-6)
     #expect(h(1.4) > h(1) && h(0.8) < h(1))
+}
+
+@Test func everyLetterOffersItsHintSymbolFirstOnALongPress() {
+    #expect(KeyAlternates.longPressOptions(for: .letter("q")) == ["1"])
+    #expect(KeyAlternates.longPressOptions(for: .letter("e")) == ["3", "è", "é", "ê", "ë", "ē", "ė", "ę"])
+    #expect(KeyAlternates.longPressOptions(for: .letter("e"), uppercase: true)?.first == "3")
+    #expect(KeyAlternates.longPressOptions(for: .space) == nil)
+    // Flick down still types the first accent, not the symbol.
+    #expect(KeyFlick.text(for: .letter("e"), direction: .down, uppercase: false) == "è")
+}
+
+@Test func theEmojiKeyOffersTheSettingsShortcutOnALongPress() {
+    #expect(KeyAlternates.longPressOptions(for: .emoji) == [KeyAlternates.settingsGlyph])
+    #expect(KeyFlick.text(for: .emoji, direction: .down, uppercase: false) == nil)
 }

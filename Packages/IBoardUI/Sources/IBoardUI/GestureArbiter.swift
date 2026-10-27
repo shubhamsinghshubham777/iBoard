@@ -46,7 +46,7 @@ public struct GestureThresholds: Sendable, Equatable {
     /// Largest movement (pt) of a tap / long press.
     public var tapMovement: CGFloat = 10
     /// Hold time (s) that turns a still touch on a letter key into a long press.
-    public var longPressDelay: TimeInterval = 0.35
+    public var longPressDelay: TimeInterval = 0.45
     /// Flick: `|dy| > flickVerticalRatio * |dx|`.
     public var flickVerticalRatio: CGFloat = 1.5
     /// Flick: longest touch (s).

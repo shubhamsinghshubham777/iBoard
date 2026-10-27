@@ -34,6 +34,7 @@ final class KeyboardViewController: UIInputViewController {
     private var autoShiftPending = false
     private lazy var coordinator = TypingCoordinator(input: input)
     private var engineLoadStarted = false
+    private var engineLoadAttempts = 0
     /// The loaded engine / personal store / command applier, nil until the background load finished.
     private var host: EngineHost.Loaded?
     /// Typing insight counters (F16): aggregate counts only, kept extension-locally; shared with the app only with
@@ -46,6 +47,7 @@ final class KeyboardViewController: UIInputViewController {
     private var sharedSnapshotDirty = false
     private var lastDocumentID: UUID?
     private var stripTouchID: Int?
+    private var stripTouchIgnored = false
     /// Swipe typing capture (M4-01): one finger at a time; trail drawn by `grid.trail`.
     private var swipeCapture = SwipeCapture()
     /// Gesture arbiter for the first finger (M5-01): rules out swipes for vertical flicks, starts the spacebar cursor
@@ -124,6 +126,7 @@ final class KeyboardViewController: UIInputViewController {
         appliedSkin = nil
         refreshAppearanceAndTraits()
         applyFieldConfig(forceFieldChange: true)
+        DispatchQueue.main.async { [weak self] in self?.coordinator.resync() } // never come back to an empty strip
         applyAppCommands()
         personalInfo = PersonalInfoReader().load() // F7: saved by the app, read-only here (works without Full Access)
         reloadCodes()
@@ -260,7 +263,10 @@ final class KeyboardViewController: UIInputViewController {
                                            spellChecking: sw(proxy.spellCheckingType?.rawValue)),
             punctuation: punct
         )
-        let doc = proxy.documentIdentifier
+        // The Swift overlay types `documentIdentifier` as a non-optional UUID, but some hosts hand back nil and the
+        // bridge then traps (EXC_BREAKPOINT in UUID._unconditionallyBridgeFromObjectiveC). Read it through KVC and a
+        // conditional cast instead; no id simply means "same document".
+        let doc = (proxy as? NSObject)?.value(forKey: "documentIdentifier") as? UUID
         if forceFieldChange || doc != lastDocumentID {
             lastDocumentID = doc
             coordinator.fieldDidChange(config)
@@ -272,6 +278,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Pushes the app-written settings (IBoardSettings v3) into the pieces that honour them. Cheap; runs on every
     /// appearance. Haptics are additionally gated on Full Access in `feedback()` (P-23).
     private func applySettings() {
+        machine?.longPressDelay = settings.longPressDelay.seconds
         // F5: hints are the app setting; the keyboard-local key stays as an extra way to turn them on.
         grid.showsFlickHints = settings.flickHints || UserDefaults.standard.bool(forKey: KeyFlick.hintsDefaultsKey)
         // F6: an explicit keyboard-local choice wins, otherwise the app's "start in incognito" default.
@@ -303,6 +310,18 @@ final class KeyboardViewController: UIInputViewController {
             let loaded = await EngineHost.load(layout: layout, hasFullAccess: fullAccess)
             await MainActor.run { [weak self] in
                 guard let self else { return }
+                // A failed load (lexicon unreadable under memory pressure, ...) used to leave the keyboard without
+                // suggestions for the rest of its life: try again a few times, a little later each time.
+                if loaded.engine == nil, self.engineLoadAttempts < 3 {
+                    self.engineLoadAttempts += 1
+                    self.engineLoadStarted = false
+                    let delay = Double(self.engineLoadAttempts) * 2
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                        guard let self, let layout = self.grid.layout else { return }
+                        self.startEngineLoad(layout: layout)
+                    }
+                    return
+                }
                 self.host = loaded
                 self.coordinator.setEngine(loaded.engine)
                 self.coordinator.setSwipeDecoder(loaded.swipe)
@@ -449,9 +468,11 @@ final class KeyboardViewController: UIInputViewController {
             strip.emphasizedSlots = []
             strip.bannerText = nil
             strip.actionTitles = []
+            strip.searchField = emoji.stripField
             strip.slotTexts = texts
             return
         }
+        strip.searchField = nil
         switch selectionUI {
         case .dragging(let sel):
             strip.actionTitles = []
@@ -517,7 +538,18 @@ final class KeyboardViewController: UIInputViewController {
 
     private func emojiChanged() {
         grid.keysHidden = emoji.keysHidden
+        // The search key reads as disabled until there is something to search for.
+        grid.setReturnKeyEnabled(emoji.mode == .search ? emoji.hasQuery : input.isReturnKeyEnabled)
         renderStrip()
+        // The search results row makes the strip (and the keyboard) taller. Deferred a turn: this can run inside the
+        // input machine's own callback (backspace in an empty search field), where touching `machine` would be an
+        // exclusivity violation.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.relayoutIfNeeded()
+            self.strip.searchRowExtra = self.emoji.searchRowHeight
+            self.renderStrip()
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -630,6 +662,7 @@ final class KeyboardViewController: UIInputViewController {
         ls.emojiKey = true
         ls.compact = true
         ls.punctuationKeys = settings.punctuationKeys
+        ls.searchRowHeight = emoji.stripExtraHeight
         // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
         ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {
@@ -693,6 +726,7 @@ final class KeyboardViewController: UIInputViewController {
         startEngineLoad(layout: layout)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
+            machine!.longPressDelay = settings.longPressDelay.seconds
             updateAutoShift()
         } else {
             machine!.setLayout(layout)
@@ -707,15 +741,26 @@ final class KeyboardViewController: UIInputViewController {
         // A touch that starts on the suggestion strip is a slot tap, not a key press.
         if phase == .began, strip.frame.contains(point), !strip.isShowingAlternates, stripTouchID == nil {
             stripTouchID = id
+            // A second finger on the strip while a backspace swipe is deleting words must not insert a suggestion.
+            if case .deleteWords = dragMode { stripTouchIgnored = true } else { stripTouchIgnored = false }
             return
         }
         if stripTouchID == id {
             if phase == .ended || phase == .cancelled {
                 stripTouchID = nil
+                if stripTouchIgnored { stripTouchIgnored = false; return }
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
                     if emoji.isOpen {
-                        emoji.tapStrip(slot: slot)
+                        let localX = point.x - strip.frame.minX
+                        let field = emoji.stripField
+                        let actionW = field?.trailingAction == nil ? 0 : SuggestionStripView.searchActionWidth
+                        let wide = field?.wide ?? false
+                        let pillRight = strip.bounds.width - actionW
+                        let onCancel = actionW > 0 && localX > pillRight
+                        let onClear = wide ? (!onCancel && localX > pillRight - SuggestionStripView.searchClearZone && localX <= pillRight)
+                                           : (slot == 0 && localX > strip.bounds.width / 3 - SuggestionStripView.searchClearZone)
+                        emoji.tapStrip(slot: wide ? 0 : slot, onClear: onClear, onCancel: onCancel)
                         feedback()
                         return
                     }
@@ -752,7 +797,7 @@ final class KeyboardViewController: UIInputViewController {
             perfDown = Perf.begin(.touchDownToHighlight)
             coordinator.trackTouch(id: id, at: point)
             machine!.touchDown(id: id, at: point, time: time, emit: sink)
-            if let layout = grid.layout, !emoji.isOpen {
+            if let layout = grid.layout, !emoji.isOpen || emoji.mode == .search {
                 swipeCapture.begin(id: id, at: point, time: time, layout: layout)
                 beginArbiter(id: id, at: point, time: time, layout: layout)
             }
@@ -816,9 +861,12 @@ final class KeyboardViewController: UIInputViewController {
         case .delete: start = .delete
         default: return
         }
+        var thresholds = GestureThresholds()
+        thresholds.longPressDelay = settings.longPressDelay.seconds
         arbiter = GestureArbiter(start: start, origin: point, time: time, keyHeight: layout.metrics.keyHeight,
-                                 hasAlternates: KeyAlternates.options(for: identity) != nil,
-                                 shiftArmed: identity == .space && shiftManual && grid.shift == .once)
+                                 hasAlternates: KeyAlternates.longPressOptions(for: identity) != nil,
+                                 shiftArmed: identity == .space && shiftManual && grid.shift == .once,
+                                 thresholds: thresholds)
         arbiterTouchID = id
         gestureOrigin = point
         gestureKeyIndex = hit.keyIndex
@@ -962,6 +1010,16 @@ final class KeyboardViewController: UIInputViewController {
 
     private func updateDeletePreview(at point: CGPoint) {
         let extra = max(0, gestureOrigin.x - point.x - GestureThresholds().backspaceDragStart)
+        if emoji.mode == .search {
+            // Emoji search field: the words go away live in the field (a keyboard cannot select there either).
+            if deleteBaseContext == nil { deleteBaseContext = emoji.queryText }
+            let base = deleteBaseContext ?? ""
+            let plan = BackspaceSwipePlan.plan(before: base, extraDistance: extra)
+            if case .deleteWords(let old) = dragMode, old == plan { return }
+            dragMode = .deleteWords(plan)
+            emoji.setQuery(String(base.dropLast(plan.graphemes)))
+            return
+        }
         if deleteBaseContext == nil { deleteBaseContext = coordinator.contextBeforeForPreview }
         let plan = BackspaceSwipePlan.plan(before: deleteBaseContext ?? "", extraDistance: extra)
         if case .deleteWords(let old) = dragMode, old == plan { return }
@@ -1024,12 +1082,14 @@ final class KeyboardViewController: UIInputViewController {
         let mode = dragMode
         let startIndex = gestureKeyIndex
         let origin = gestureOrigin
+        let searchDeleteBase = emoji.mode == .search ? deleteBaseContext : nil
         resetArbiter()
         switch g {
         case .spacebarCursor, .spacebarSelection:
             _ = mode // cursor already moved live; the space key was cancelled
             return true
         case .backspaceSwipeDelete:
+            if emoji.mode == .search { feedback(); return true } // already applied live to the query
             if case .deleteWords(let plan) = mode {
                 if deletedViaMarks { coordinator.finishPreviewedDelete() } else { coordinator.deleteRun(graphemes: plan.graphemes) }
                 feedback()
@@ -1037,6 +1097,7 @@ final class KeyboardViewController: UIInputViewController {
             }
             return true
         case .backspaceSwipeCancel:
+            if let base = searchDeleteBase { emoji.setQuery(base) } // dragged back onto the keys: nothing deleted
             return true
         case .flickUp, .flickDown:
             guard startIndex >= 0, startIndex < layout.keys.count else { return false }
@@ -1070,6 +1131,16 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.releaseTouch(id: id)
         grid.trail.finish()
         guard let points else { return }
+        if emoji.mode == .search {
+            // Gesture typing into the emoji search field: the decoded word becomes the query.
+            Task { @MainActor [weak self] in
+                guard let self, self.emoji.mode == .search,
+                      let word = await self.coordinator.decodeSwipeWords(points: points).first else { return }
+                self.emoji.setQuery(word)
+                self.feedback()
+            }
+            return
+        }
         let shift = grid.shift
         coordinator.swipeEnded(points: points, shift: shift)
         if shift == .once {
@@ -1131,12 +1202,13 @@ final class KeyboardViewController: UIInputViewController {
             // Not `machine`: this runs inside a machine call. The grid holds the current layout.
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]
-            let options = KeyAlternates.options(for: key.identity, uppercase: grid.shift != .off) ?? []
+            let options = KeyAlternates.longPressOptions(for: key.identity, uppercase: grid.shift != .off) ?? []
             strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
             if let text = strip.end(at: p) {
+                if text == KeyAlternates.settingsGlyph { openSettingsPage(); feedback(); break }
                 if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)
                 feedback()
@@ -1151,6 +1223,24 @@ final class KeyboardViewController: UIInputViewController {
             coordinator.endWordLiterally()
         }
         if let p = perfUp, !isHighlight(event) { Perf.end(p); perfUp = nil }
+    }
+
+    /// Opens the iOS Settings page of iBoard (Keyboards, Full Access). Keyboard extensions have no public way to open a
+    /// URL, so this walks the responder chain to the host `UIApplication`, the way keyboards have always opened
+    /// Settings. Only ever called with `UIApplication.openSettingsURLString`.
+    private func openSettingsPage() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        let selector = NSSelectorFromString("openURL:options:completionHandler:")
+        var responder: UIResponder? = self
+        while let current = responder {
+            if current is UIApplication, current.responds(to: selector) {
+                typealias Open = @convention(c) (AnyObject, Selector, URL, [UIApplication.OpenExternalURLOptionsKey: Any], ((Bool) -> Void)?) -> Void
+                let open = unsafeBitCast(current.method(for: selector), to: Open.self)
+                open(current, selector, url, [:], nil)
+                return
+            }
+            responder = current.next
+        }
     }
 
     private func isHighlight(_ e: KeyEvent) -> Bool {

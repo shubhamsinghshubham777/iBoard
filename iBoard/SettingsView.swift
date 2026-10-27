@@ -37,11 +37,17 @@ struct SettingsView: View {
                     }
                 }
                 Toggle("Key click sound", isOn: $settings.keyClickSound)
+                Picker("Long-press time", selection: $settings.longPressDelay) {
+                    ForEach(LongPressDelay.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                }
+                Text("How long to hold a key before its alternates appear. Choose Long if you trigger them by accident.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Layout") {
                 Toggle("Number row", isOn: $settings.numberRow)
                 Toggle("Comma and period keys", isOn: $settings.punctuationKeys)
-                Toggle("Show flick hints on keys", isOn: $settings.flickHints)
+                Toggle("Show hint symbols on keys", isOn: $settings.flickHints)
+                Text("The small symbol on a key is what a long press or a flick up types.").font(.footnote).foregroundStyle(.secondary)
             }
             Section {
                 HeightPicker(title: "iPhone, portrait", key: HeightKey.make(displayClass: "phone", orientation: "portrait"), settings: $settings)

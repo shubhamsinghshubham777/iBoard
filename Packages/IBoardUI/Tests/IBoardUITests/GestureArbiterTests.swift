@@ -84,9 +84,9 @@ struct GestureArbiterTests {
 
     @Test func longPressFiresAtTheDelayWithoutMovement() {
         var arb = GestureArbiter(start: .letter, origin: g, time: 10, keyHeight: 43)
-        #expect(arb.tick(now: 10.34) == nil)
-        #expect(arb.tick(now: 10.351) == .longPress)
-        #expect(arb.end(at: g, time: 10.5) == .longPress)
+        #expect(arb.tick(now: 10.44) == nil)
+        #expect(arb.tick(now: 10.451) == .longPress)
+        #expect(arb.end(at: g, time: 10.6) == .longPress)
     }
 
     @Test func longPressNeedsAlternatesAndStillness() {
@@ -100,8 +100,8 @@ struct GestureArbiterTests {
 
     @Test func tapJustUnderTheLongPressDelayIsATap() {
         var arb = GestureArbiter(start: .letter, origin: g, time: 0, keyHeight: 43)
-        #expect(arb.tick(now: 0.349) == nil)
-        #expect(arb.end(at: g, time: 0.349) == .tap)
+        #expect(arb.tick(now: 0.449) == nil)
+        #expect(arb.end(at: g, time: 0.449) == .tap)
     }
 
     @Test func flickUpAndDown() {

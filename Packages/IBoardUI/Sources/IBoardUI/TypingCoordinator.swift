@@ -770,6 +770,14 @@ public final class TypingCoordinator {
         return true
     }
 
+    /// Decodes a swipe path to candidate words (best first) without touching the text field: used where the word goes
+    /// somewhere else, like the emoji search field. Empty when the decoder is not loaded yet or nothing matches.
+    public func decodeSwipeWords(points: [SwipePoint]) async -> [String] {
+        guard points.count >= 2, let decoder = swipeDecoder else { return [] }
+        let outcome = await decoder.decode(points: points, previousWords: [])
+        return outcome?.words ?? []
+    }
+
     /// The finger lifted after a swipe. The word being typed (if any) is committed as typed, the path is decoded on
     /// the engine's queue, and the best word is inserted with auto-space before and an implied space after.
     /// `shift` is the shift state at lift time. Nothing is inserted when there is no decoder yet or no match.
@@ -859,6 +867,10 @@ public final class TypingCoordinator {
     public func resync() {
         if swipePending { return } // the word is about to be inserted; the proxy is not up to date
         let ctx = input.proxy.contextBefore
+        // No left context means an empty field (cleared by the host, a submitted search, a new field) or a proxy that
+        // has not caught up. Either way any word session we still hold is stale, and without this check the strip
+        // stayed empty for good: `requestPrediction` refuses to run while a word is pending.
+        if ctx == nil { confirmEmptyContext(); return }
         if let ctx, let swiped = lastSwipe, !ctx.hasSuffix(swiped.word + swiped.trailing) {
             lastSwipe = nil
             swipeStripShown = false
@@ -873,6 +885,27 @@ public final class TypingCoordinator {
         if words != prevWords || content == .empty {
             prevWords = words
             requestPrediction()
+        }
+    }
+
+    /// Re-checks a nil left context after a beat (the proxy can lag the host by a turn); if it is still nil, everything
+    /// the session remembers about earlier text is dropped and the strip asks for a fresh prediction.
+    private func confirmEmptyContext() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, !self.swipePending, self.input.proxy.contextBefore == nil else { return }
+                let stale = !self.word.isEmpty || !self.tokenPrefix.isEmpty || self.lastSwipe != nil || self.lastCommit != nil
+                    || self.swipeStripShown || !self.prevWords.isEmpty || self.content == .empty
+                guard stale else { return }
+                self.resetSession()
+                self.lastSwipe = nil
+                self.lastCommit = nil
+                self.swipeStripShown = false
+                self.awaitingContinue = false
+                self.prevWords = []
+                self.autocorrectState.noteOtherInput()
+                self.requestPrediction()
+            }
         }
     }
 

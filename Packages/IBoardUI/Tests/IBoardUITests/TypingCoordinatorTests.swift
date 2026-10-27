@@ -11,7 +11,9 @@ import IBoardLayout
 
 private final class FakeProxy: TextProxy {
     var text = ""
-    var contextBefore: String? { text }
+    /// Real proxies report nil (not "") for an empty field.
+    var nilWhenEmpty = false
+    var contextBefore: String? { nilWhenEmpty && text.isEmpty ? nil : text }
     var hasText: Bool { !text.isEmpty }
     func insert(_ t: String) { text += t }
     func deleteBackwardOnce() { if !text.isEmpty { text.removeLast() } }
@@ -303,6 +305,32 @@ struct TypingCoordinatorTests {
         r.coordinator.fieldDidChange(FieldConfig())
         await r.type("h ")
         #expect(r.proxy.text == "h ")
+    }
+
+    @Test func resyncDropsTheWordWhenTheHostEmptiesTheField() async throws {
+        // The host cleared the field (a nil left context): the pending word "te" must not survive to become "teh" and
+        // be autocorrected, and the strip asks for a fresh prediction instead of staying empty.
+        let r = Rig()
+        r.proxy.nilWhenEmpty = true
+        await r.type("te")
+        r.proxy.text = ""
+        r.coordinator.resync()
+        try await Task.sleep(for: .milliseconds(450))
+        await r.type("h ")
+        #expect(r.proxy.text == "h ")
+    }
+
+    @Test func stripKeepsSuggestingAfterAnEmojiIsInserted() async throws {
+        let r = Rig()
+        r.proxy.nilWhenEmpty = true
+        await r.coordinator.waitForIdle()
+        r.coordinator.insertDirect("\u{1F44B}")
+        r.coordinator.resync()
+        await r.coordinator.waitForIdle()
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(r.coordinator.content != .empty)
+        await r.type("h")
+        #expect(r.proxy.text == "\u{1F44B}h")
     }
 
     @Test func resyncDropsWordWhenCursorMoved() async {

@@ -22,6 +22,10 @@ final class EmojiHost {
     private let store = EmojiStore()
     private var prefs = EmojiPreferences.decode(UserDefaults.standard.data(forKey: EmojiHost.prefsKey))
     private var panel: EmojiPanelView?
+    /// Search results: a scrolling row under the field (the keyboard grows by `searchRowHeight` while it shows).
+    private let resultsRow = EmojiResultsRow()
+    static let searchRowHeight: CGFloat = 44
+    private var resultItems: [Int?] = [] // entry index per row item (nil = a recent emoji, inserted as is)
     private var buffer = EmojiSearchBuffer()
     private var hits: [Int] = []
     private var parent: UIView?
@@ -37,6 +41,20 @@ final class EmojiHost {
     private(set) var lastOpenDeltaMB = 0.0
     private(set) var peakDeltaMB = 0.0
     private var baselineMB = 0.0
+
+    /// Extra strip height while the results row is up.
+    var searchRowHeight: CGFloat { mode == .search ? Self.searchRowHeight : 0 }
+
+    /// Extra strip height in every emoji mode: the results row while typing, a little air around the field while the
+    /// panel or the results grid is up (the system glass leaves ~13 pt above our view, so the field needs that much
+    /// room below it to look vertically centred).
+    var stripExtraHeight: CGFloat {
+        switch mode {
+        case .closed: 0
+        case .search: Self.searchRowHeight
+        case .panel, .results: 12
+        }
+    }
 
     var isOpen: Bool { mode != .closed }
     /// The key grid shows its keys unless the panel / results cover the key area.
@@ -70,6 +88,7 @@ final class EmojiHost {
     func close() {
         guard mode != .closed else { return }
         panel?.isHidden = true // stays resident
+        resultsRow.isHidden = true
         hits = []
         buffer.clear()
         mode = .closed
@@ -89,6 +108,11 @@ final class EmojiHost {
     func updateFrame(_ frame: CGRect) {
         panelFrame = frame
         panel?.frame = frame
+        positionRow()
+    }
+
+    private func positionRow() {
+        resultsRow.frame = CGRect(x: 0, y: panelFrame.minY - Self.searchRowHeight, width: panelFrame.width, height: Self.searchRowHeight)
     }
 
     /// Memory warning: everything rebuildable goes; an open panel reloads lazily when it is next shown.
@@ -136,13 +160,52 @@ final class EmojiHost {
         guard mode != .closed else { return }
         mode = .search
         panel?.isHidden = true
+        if resultsRow.superview == nil, let parent {
+            resultsRow.onSelect = { [weak self] i in self?.pickResult(i) }
+            parent.addSubview(resultsRow)
+        }
+        resultsRow.isHidden = false
+        positionRow()
         refreshHits()
         onChange?()
+    }
+
+    /// A tap on the results row: insert and stay in search so several emoji can be added.
+    private func pickResult(_ i: Int) {
+        guard mode == .search, resultItems.indices.contains(i) else { return }
+        if let e = resultItems[i], let catalog = store.catalog(), catalog.entries.indices.contains(e) {
+            var p = prefs
+            let text = p.pick(catalog.entries[e])
+            prefs = p
+            savePrefs()
+            onInsert?(text)
+        } else if let text = prefs.recents.items.indices.contains(i) ? prefs.recents.items[i] : nil {
+            onInsert?(text)
+        }
+    }
+
+    /// Hits for the query, or the recent emoji while the field is empty.
+    private func updateRow() {
+        guard mode == .search else { return }
+        var rows: [EmojiResultsRow.Item] = []
+        resultItems = []
+        if buffer.isEmpty {
+            for t in prefs.recents.items { rows.append(.init(text: t, accessibilityName: t)); resultItems.append(nil) }
+            resultsRow.show(rows, emptyMessage: "Type to search emoji")
+        } else if let catalog = store.catalog() {
+            for i in hits where catalog.entries.indices.contains(i) {
+                let e = catalog.entries[i]
+                rows.append(.init(text: prefs.skinTones.resolve(e), accessibilityName: e.name))
+                resultItems.append(i)
+            }
+            resultsRow.show(rows, emptyMessage: "No emoji found")
+        }
     }
 
     private func showResults() {
         guard mode == .search, !hits.isEmpty else { return }
         mode = .results
+        resultsRow.isHidden = true
         panel?.isHidden = false
         panel?.showSearchResults(hits)
         onChange?()
@@ -152,6 +215,7 @@ final class EmojiHost {
     private func refreshHits() {
         let q = buffer.query
         hits = q.isEmpty ? [] : (store.searchIndex()?.search(q, limit: 60).map(\.entryIndex) ?? [])
+        updateRow()
     }
 
     /// A character typed on the keys while searching. Returns false when the event is not a search event.
@@ -161,8 +225,19 @@ final class EmojiHost {
         return true
     }
 
+    var queryText: String { buffer.text }
+    var hasQuery: Bool { !buffer.isEmpty }
+
+    /// A swiped word replaces the query.
+    func setQuery(_ text: String) {
+        guard mode == .search else { return }
+        buffer.clear(); buffer.append(text)
+        refreshHits(); onChange?()
+    }
+
     func handleDeleteBackward() -> Bool {
         guard mode == .search else { return false }
+        if buffer.isEmpty { cancelSearch(); return true } // backspace on an empty field steps back to the panel
         if buffer.deleteBackward() { refreshHits(); onChange?() }
         return true
     }
@@ -179,38 +254,45 @@ final class EmojiHost {
         return true
     }
 
-    /// Strip contents: the query and the two best hits while searching; a prompt while the panel is up.
-    var stripTexts: [String]? {
+    /// The strip's search pill: a full-width placeholder while the panel is up, the query (with the top hits beside it)
+    /// while typing, the query alone while the results are shown.
+    var stripField: SuggestionStripView.SearchField? {
         switch mode {
         case .closed: return nil
-        case .panel: return ["\u{1F50D} Search emoji", "", ""]
-        case .search, .results:
-            let head = buffer.isEmpty ? "\u{1F50D} Search" : "\u{1F50D} \(buffer.text)"
-            guard mode == .search, let catalog = store.catalog() else { return [head, "", ""] }
-            let top = hits.prefix(2).compactMap { i in catalog.entries.indices.contains(i) ? prefs.skinTones.resolve(catalog.entries[i]) : nil }
-            return [head, top.count > 0 ? top[0] : "", top.count > 1 ? top[1] : ""]
+        case .panel: return .init(text: "", placeholder: "Search emoji", wide: true)
+        case .search: return .init(text: buffer.text, placeholder: "Search emoji", wide: true, trailingAction: "Cancel", focused: true)
+        case .results: return .init(text: buffer.text, placeholder: "Search emoji", wide: true, trailingAction: "Cancel")
         }
     }
 
-    /// A tap on strip slot `slot` (0...2).
-    func tapStrip(slot: Int) {
+    /// Slot texts: none; the results live in their own row.
+    var stripTexts: [String]? { mode == .closed ? nil : ["", "", ""] }
+
+    /// Leave the search and show the category panel again.
+    func cancelSearch() {
+        guard mode == .search || mode == .results else { return }
+        buffer.clear(); hits = []
+        mode = .panel
+        resultsRow.isHidden = true
+        panel?.isHidden = false
+        panel?.open()
+        onChange?()
+    }
+
+    /// A tap on strip slot `slot` (0...2). `onClear` = the tap landed on the pill's clear button.
+    func tapStrip(slot: Int, onClear: Bool = false, onCancel: Bool = false) {
+        if onCancel, mode == .search || mode == .results { close(); return } // straight back to normal typing
         switch mode {
         case .closed: return
-        case .panel, .results: beginSearch()
+        case .panel: beginSearch()
+        case .results:
+            if onClear { cancelSearch() } else { beginSearch() }
         case .search:
-            if slot == 0 { showResults(); return }
-            let i = slot - 1
-            guard i < hits.count, let catalog = store.catalog(), catalog.entries.indices.contains(hits[i]) else { return }
-            var p = prefs
-            let text = p.pick(catalog.entries[hits[i]])
-            prefs = p
-            savePrefs()
-            onInsert?(text)
-            // Back to the panel with fresh recents.
-            buffer.clear(); hits = []
-            mode = .panel
-            makePanel()
-            onChange?()
+            if onClear {
+                cancelSearch() // the emoji icon: back to the categories
+            } else if !buffer.isEmpty {
+                showResults()
+            }
         }
     }
 

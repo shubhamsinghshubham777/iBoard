@@ -89,7 +89,7 @@ public struct KeyboardInputMachine: Sendable {
     public private(set) var shift: ShiftState
     public var deletePolicy = DeleteRepeatPolicy()
     /// Hold time before alternates appear (F1: 350 ms).
-    public var longPressDelay: TimeInterval = 0.35
+    public var longPressDelay: TimeInterval = 0.45
 
     private var slots = [Slot](repeating: Slot(), count: KeyboardInputMachine.maxTouches)
     private var orderCounter: UInt64 = 0
@@ -153,7 +153,7 @@ public struct KeyboardInputMachine: Sendable {
         orderCounter &+= 1
         slots[free] = Slot(touchID: id, keyIndex: hit.keyIndex, order: orderCounter, isActive: true, isCommitted: false)
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
-        if KeyAlternates.options(for: layout.keys[hit.keyIndex].identity) != nil {
+        if KeyAlternates.longPressOptions(for: layout.keys[hit.keyIndex].identity) != nil {
             slots[free].longPressAt = time + longPressDelay
         }
 

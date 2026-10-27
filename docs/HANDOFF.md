@@ -1,4 +1,4 @@
-# iBoard — agent handoff (written 2026-10-27, mid-session)
+# iBoard — agent handoff (written 2026-10-27, mid-session; round 4 appended at the end)
 
 Read `CLAUDE.md` and `ROADMAP.md` first (single source of truth: §4 decisions, §5 platform facts P-01…P-27, §9 tasks with
 dated Result/Partial notes, §13 risks, §15 progress log). This file records the *working state and process* that the roadmap
@@ -103,3 +103,17 @@ Done/mostly done: M0 (except M0-10 measurements), M1-01…M1-09 partly, M2 engin
 M13-03 manifests. Not started: M12-02/03 (CloudKit), M13-01 accessibility fixes, M13-02 perf soak, M13-04 App Review audit,
 M13-05/06 (owner), M6-05 clipboard fallback, M8-03 haptics/sound packs, M8-04 landscape refinements, M8-05 wiring, M1-09 device
 perf gate, M4-04/M2-07 real eval sets.
+
+## 8. Round 4 state (2026-10-27, newest; this section supersedes the stale lines above)
+- `main` holds everything; no agents in flight. Owner has given standing permission to install builds on the physical iPhone
+  (`xcodebuild ... -destination id=00008101-0014596A1E01001E -allowProvisioningUpdates build`, then
+  `xcrun devicectl device install app --device 00008101-0014596A1E01001E build/DeviceDD/Build/Products/Debug-iphoneos/iBoard.app`),
+  and wants UI work verified by automation where possible. Still ask before sending email.
+- Simulator caveat: on this Xcode 27 / Device Hub setup the soft keyboard never appears in simulators (axe can tap a field but no
+  keyboard shows), so keyboard UI is verified on the phone and via package tests plus UIKit snapshot renders in a throwaway test.
+- Device crash logs: `xcrun devicectl device copy from --device <udid> --domain-type systemCrashLogs --source / --destination <dir>`
+  (iBoardKeyboard-*.ips; read `threads[faultingThread].frames`). This found the `documentIdentifier` crash (P-29).
+- Open items: confirm P-28 scroll fix; measure footprint with 32 pt emoji; long-press emoji key -> Settings on iOS 27; hint symbols;
+  reproduce the occasional empty suggestion strip (see BUGFIX_NOTES round 4); search-results polish.
+- Next roadmap task: M1-09 (perf gate, needs owner device numbers). Not built: autocorrect-target underline, GIF/stickers, per-key
+  gradients (needs budget check), per-app themes, Settings toggles that need App Group plumbing.

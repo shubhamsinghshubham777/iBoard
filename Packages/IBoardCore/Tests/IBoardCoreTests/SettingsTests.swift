@@ -84,7 +84,7 @@ struct SettingsTests {
         #expect(m.autocorrect == .conservative)
         #expect(m.hapticIntensity == .medium)
         #expect(m.doubleSpacePeriod && m.smartPunctuation && m.swipeTyping && m.emojiSuggestions)
-        #expect(!m.flickHints && !m.incognitoByDefault && !m.duoSplitPortrait && !m.duoSplitLandscape)
+        #expect(m.flickHints && !m.incognitoByDefault && !m.duoSplitPortrait && !m.duoSplitLandscape)
         #expect(m.spellingVariant == .auto)
     }
 
@@ -97,6 +97,12 @@ struct SettingsTests {
         #expect(s.load() == v)
         let m = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"version":3,"autocorrect":"turbo","spellingVariant":"xx","hapticIntensity":"huge"}"#.utf8))
         #expect(m.autocorrect == .conservative && m.spellingVariant == .auto && m.hapticIntensity == .medium)
+        // Long-press time: default 0.45 s, older files decode to it, an unknown value falls back.
+        #expect(m.longPressDelay == .standard && m.longPressDelay.seconds == 0.45)
+        let bad = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"version":3,"longPressDelay":"forever"}"#.utf8))
+        #expect(bad.longPressDelay == .standard)
+        let long = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"version":3,"longPressDelay":"long"}"#.utf8))
+        #expect(long.longPressDelay.seconds == 0.6)
     }
 
     @Test func spellingVariantFollowsLocale() {

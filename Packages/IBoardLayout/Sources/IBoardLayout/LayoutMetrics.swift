@@ -165,7 +165,8 @@ public struct LayoutMetrics: Sendable, Equatable {
     ) -> LayoutMetrics {
         let mode = duoMode(containerSize: containerSize, traits: traits, kind: kind, settings: rawSettings)
         let settings = effectiveSettings(rawSettings, mode: mode)
-        let ref = reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
+        var ref = reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
+        ref.stripHeight += settings.searchRowHeight
         let rows = rowCount(kind: kind, settings: settings)
 
         let availableHeight = max(containerSize.height - safeArea.bottom - ref.stripHeight, 1)

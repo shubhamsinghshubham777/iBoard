@@ -15,9 +15,11 @@ public struct EmojiSearchIndex: Sendable {
     public let catalog: EmojiCatalog
     private let tokens: [String]          // sorted, unique
     private let postings: [[Posting]]     // parallel to tokens
+    private let nameLength: [Int]         // name tokens per entry (tie-break)
 
     public init(catalog: EmojiCatalog) {
         self.catalog = catalog
+        nameLength = catalog.entries.map { EmojiSearchIndex.tokenize($0.name).count }
         var map: [String: [Posting]] = [:]
         for (i, e) in catalog.entries.enumerated() {
             var best: [String: UInt8] = [:]
@@ -122,7 +124,12 @@ public struct EmojiSearchIndex: Sendable {
         }
         var res: [EmojiSearchResult] = []
         for e in 0..<n where matched[e] == qs.count { res.append(EmojiSearchResult(entryIndex: e, score: total[e])) }
-        res.sort { $0.score != $1.score ? $0.score > $1.score : $0.entryIndex < $1.entryIndex }
+        // Equal scores: the shorter name wins ("heart" -> red heart before "smiling face with heart-eyes").
+        res.sort {
+            if $0.score != $1.score { return $0.score > $1.score }
+            let a = nameLength[$0.entryIndex], b = nameLength[$1.entryIndex]
+            return a != b ? a < b : $0.entryIndex < $1.entryIndex
+        }
         return Array(res.prefix(limit))
     }
 

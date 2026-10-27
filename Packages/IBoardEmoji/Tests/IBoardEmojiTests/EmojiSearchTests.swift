@@ -112,3 +112,9 @@ private func top(_ q: String, _ n: Int = 5) -> [String] {
     let ms = Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6
     print("EMOJI_INDEX_BUILD \(String(format: "%.1f", ms)) ms")
 }
+
+@Test func exactNameWordsRankShorterNamesFirst() {
+    // "heart": the plain hearts lead, not "smiling face with heart-eyes".
+    let top = shared.search("heart", limit: 3).map { shared.catalog.entries[$0.entryIndex].name }
+    #expect(top.allSatisfy { $0.split(separator: " ").count <= 2 })
+}

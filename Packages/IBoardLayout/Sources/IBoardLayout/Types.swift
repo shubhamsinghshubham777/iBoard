@@ -38,6 +38,17 @@ public enum KeyboardKind: String, Sendable, Codable, CaseIterable {
 /// Mirror of `UIReturnKeyType`.
 public enum ReturnKeyKind: String, Sendable, Codable, CaseIterable {
     case `default`, go, google, join, next, route, search, send, yahoo, done, emergencyCall, `continue`
+
+    /// SF Symbol for the long text labels (search, go, join, route, send, continue). Those keys shrink to icon width when
+    /// the comma/period keys are on, giving the space bar room. nil: the label stays text at full width.
+    public var iconSymbol: String? {
+        switch self {
+        case .search, .google, .yahoo: "magnifyingglass"
+        case .go, .join, .route, .continue: "arrow.right"
+        case .send: "paperplane.fill"
+        case .default, .next, .done, .emergencyCall: nil
+        }
+    }
 }
 
 /// Which key set is shown. Shift / caps lock do not change geometry, so they are not part of the kind.
@@ -172,6 +183,9 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
     /// Tighter chrome: a shorter suggestion strip, less space between the strip and the keys, smaller gaps between
     /// keys (bigger keys at the same width) and taller keys. Off in the Native metrics.
     public var compact: Bool
+    /// Extra strip height (pt) while the emoji search shows its results row between the field and the keys. Transient:
+    /// never stored; the keys keep their size, the keyboard just grows by this much.
+    public var searchRowHeight: CGFloat = 0
 
     public init(
         numberRow: Bool = false,

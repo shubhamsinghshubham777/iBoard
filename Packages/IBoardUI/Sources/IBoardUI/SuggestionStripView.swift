@@ -78,12 +78,47 @@ public final class SuggestionStripView: UIView {
         return (CGRect(x: 0, y: 0, width: x0 == 0 ? w : x0, height: h), CGRect(x: x0, y: 0, width: w - x0, height: h))
     }
 
+    /// Points the slot content sits above the strip's centre (see `relayout`).
+    static let upwardBias: CGFloat = 6
+
     private let slotLabels = (0..<SuggestionStripView.slotCount).map { _ in UILabel() }
     private let dividers = (0..<SuggestionStripView.slotCount - 1).map { _ in CALayer() }
     private let highlightLayer = CALayer()
     private let emphasisLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
     private var altLabels: [UILabel] = []
     private let bannerLabel = UILabel()
+    /// Emoji search field (rounded pill with a magnifier and, once there is a query, a clear button). It takes slot 0
+    /// (or the whole strip when `wide`); the other slots still show their texts when not wide.
+    public struct SearchField: Equatable, Sendable {
+        public var text: String
+        public var placeholder: String
+        public var wide: Bool
+        /// A text button after the pill (e.g. "Cancel").
+        public var trailingAction: String?
+        /// Typing goes into the field: a blinking caret shows after the text.
+        public var focused: Bool
+        public init(text: String, placeholder: String, wide: Bool, trailingAction: String? = nil, focused: Bool = false) {
+            self.text = text; self.placeholder = placeholder; self.wide = wide; self.trailingAction = trailingAction
+            self.focused = focused
+        }
+    }
+    /// Height (pt) of the results row under the field while emoji search shows it; the field then sits in the strip's
+    /// top part (`bounds.height - searchRowExtra`).
+    static let searchFieldHeight: CGFloat = 34
+    public var searchRowExtra: CGFloat = 0 { didSet { if searchRowExtra != oldValue { relayout() } } }
+    public var searchField: SearchField? { didSet { if searchField != oldValue { relayout() } } }
+    /// Width of the clear button's tap zone at the right end of the pill (strip points).
+    public static let searchClearZone: CGFloat = 52
+    /// Width reserved for the trailing text button.
+    public static let searchActionWidth: CGFloat = 72
+    private let trailingLabel = UILabel()
+    private let caret = CALayer()
+
+    private let pillLayer = CALayer()
+    private let searchLabel = UILabel()
+    private let magnifier = UIImageView(image: UIImage(systemName: "magnifyingglass"))
+    private let clearIcon = UIImageView(image: UIImage(systemName: "face.smiling"))
+
     private var actionLabels: [UILabel] = []
     private var tokens = NativeThemeTokens.light
     private let chipLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
@@ -105,6 +140,21 @@ public final class SuggestionStripView: UIView {
         bannerLabel.minimumScaleFactor = 0.75
         bannerLabel.isHidden = true
         addSubview(bannerLabel)
+        pillLayer.cornerCurve = .continuous
+        pillLayer.isHidden = true
+        layer.insertSublayer(pillLayer, at: 0)
+        searchLabel.font = .systemFont(ofSize: 16)
+        searchLabel.lineBreakMode = .byTruncatingHead
+        searchLabel.isHidden = true
+        addSubview(searchLabel)
+        caret.cornerRadius = 1
+        caret.isHidden = true
+        layer.addSublayer(caret)
+        trailingLabel.font = .systemFont(ofSize: 16)
+        trailingLabel.textAlignment = .center
+        trailingLabel.isHidden = true
+        addSubview(trailingLabel)
+        for v in [magnifier, clearIcon] { v.contentMode = .scaleAspectFit; v.isHidden = true; addSubview(v) }
         for d in dividers { layer.addSublayer(d) }
         for c in chipLayers {
             c.cornerCurve = .continuous
@@ -179,6 +229,8 @@ public final class SuggestionStripView: UIView {
         let label = UIColor(cgColor: skin.stripLabel.cgColor)
         for l in slotLabels { l.textColor = label }
         for l in altLabels { l.textColor = label }
+        magnifier.tintColor = label.withAlphaComponent(0.55)
+        clearIcon.tintColor = label.withAlphaComponent(0.45)
         backgroundColor = skin.stripKind == .filled ? UIColor(cgColor: skin.stripBackground.cgColor) : .clear
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -186,6 +238,7 @@ public final class SuggestionStripView: UIView {
         for c in chipLayers { c.backgroundColor = tokens.keyFill.cgColor }
         highlightLayer.backgroundColor = tokens.actionKeyFill.cgColor
         for e in emphasisLayers { e.backgroundColor = tokens.actionKeyFill.cgColor }
+        pillLayer.backgroundColor = skin.stripLabel.cgColor.copy(alpha: 0.12)
         CATransaction.commit()
         relayout()
     }
@@ -195,6 +248,63 @@ public final class SuggestionStripView: UIView {
 
     /// Share of the strip the banner takes when an action row sits beside it (0.36 for selections, more for tips).
     public var bannerShare: CGFloat = 0.36 { didSet { if bannerShare != oldValue { relayout() } } }
+
+    private func layoutSearchField(rects: [CGRect], h: CGFloat, hidden: Bool) {
+        guard let f = searchField, !hidden, let first = rects.first, let last = rects.last else {
+            pillLayer.isHidden = true; searchLabel.isHidden = true; magnifier.isHidden = true; clearIcon.isHidden = true
+            trailingLabel.isHidden = true
+            hideCaret()
+            return
+        }
+        let span = f.wide ? first.union(last) : first
+        // Sits in the upper part like the text (the system glass leaves ~13 pt above our view), so it looks centred
+        // between the keyboard's top edge and the panel / keys below it.
+        let trailW = f.trailingAction == nil ? 0 : Self.searchActionWidth
+        let pill = CGRect(x: span.minX + 14, y: 0, width: span.width - 28 - trailW, height: max(min(Self.searchFieldHeight, h - searchRowExtra - 2), 1))
+        pillLayer.isHidden = false
+        pillLayer.frame = pill
+        pillLayer.cornerRadius = pill.height / 2
+        magnifier.isHidden = false
+        magnifier.frame = CGRect(x: pill.minX + 10, y: pill.midY - 9, width: 18, height: 18)
+        // The emoji icon (back to the categories) only shows once the search is active, not in the default state.
+        let showsClear = f.trailingAction != nil
+        clearIcon.isHidden = !showsClear
+        clearIcon.frame = CGRect(x: pill.maxX - 34, y: pill.midY - 12, width: 24, height: 24)
+        trailingLabel.isHidden = f.trailingAction == nil
+        trailingLabel.text = f.trailingAction
+        trailingLabel.textColor = UIColor(cgColor: tokens.actionKeyFill.cgColor)
+        trailingLabel.frame = CGRect(x: pill.maxX + 4, y: pill.minY, width: trailW - 14, height: pill.height)
+        searchLabel.isHidden = false
+        defer { placeCaret(field: f, in: searchLabel.frame) }
+        let empty = f.text.isEmpty
+        searchLabel.text = empty ? f.placeholder : f.text
+        searchLabel.textColor = UIColor(cgColor: skin.stripLabel.cgColor).withAlphaComponent(empty ? 0.5 : 1)
+        searchLabel.frame = CGRect(x: pill.minX + 34, y: pill.minY, width: pill.width - 34 - (showsClear ? 46 : 10), height: pill.height)
+    }
+
+    private func hideCaret() {
+        caret.isHidden = true
+        caret.removeAnimation(forKey: "blink")
+    }
+
+    /// The text cursor: after the query (or at the start of the placeholder), blinking unless Reduce Motion is on.
+    private func placeCaret(field f: SearchField, in labelFrame: CGRect) {
+        guard f.focused else { hideCaret(); return }
+        let textW = f.text.isEmpty ? 0 : ceil((f.text as NSString).size(withAttributes: [.font: searchLabel.font as Any]).width)
+        let x = labelFrame.minX + min(textW, labelFrame.width - 2) + (f.text.isEmpty ? 0 : 1)
+        caret.frame = CGRect(x: x, y: labelFrame.midY - 10, width: 2, height: 20)
+        caret.backgroundColor = tokens.actionKeyFill.cgColor
+        caret.isHidden = false
+        if caret.animation(forKey: "blink") == nil, !UIAccessibility.isReduceMotionEnabled {
+            let a = CAKeyframeAnimation(keyPath: "opacity")
+            a.values = [1, 1, 0, 0]
+            a.keyTimes = [0, 0.5, 0.5, 1]
+            a.duration = 1.0
+            a.repeatCount = .infinity
+            a.calculationMode = .discrete
+            caret.add(a, forKey: "blink")
+        }
+    }
 
     private func layoutOverlay(w: CGFloat, h: CGFloat) {
         let label = UIColor(cgColor: tokens.keyLabel.cgColor)
@@ -236,7 +346,9 @@ public final class SuggestionStripView: UIView {
         layoutOverlay(w: w, h: h)
         let rects = slotRects(width: w, height: h)
         for (i, l) in slotLabels.enumerated() {
-            l.frame = rects[i]
+            // The system glass leaves ~16 pt above our view, so a centred strip looked top-heavy (about 34 pt above the
+            // text, 22 below): draw the content in the upper part of the strip so both sides match.
+            l.frame = CGRect(x: rects[i].minX, y: 0, width: rects[i].width, height: max(h - 2 * Self.upwardBias, 1))
             let newText = i < slotTexts.count ? slotTexts[i] : ""
             if l.text != newText, !UIAccessibility.isReduceMotionEnabled, alt == nil, !overlay, l.window != nil {
                 // New words fade in instead of snapping (60 ms, only when something is already on screen).
@@ -244,22 +356,23 @@ public final class SuggestionStripView: UIView {
                 l.layer.add(t, forKey: "iboard.slotFade")
             }
             l.text = newText
-            l.isHidden = alt != nil || overlay
+            l.isHidden = alt != nil || overlay || (searchField != nil && (i == 0 || searchField!.wide))
             let on = alt == nil && !overlay && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
             l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
             l.font = .systemFont(ofSize: 16, weight: on || boldSlots.contains(i) ? .semibold : skin.fontWeight.uiWeight)
             let chip = chipLayers[i]
             chip.isHidden = skin.stripKind != .chips || alt != nil || overlay || on || (l.text ?? "").isEmpty
-            chip.frame = l.frame.insetBy(dx: 3, dy: 5)
+            chip.frame = l.frame.insetBy(dx: 3, dy: 1)
             chip.cornerRadius = min(chip.frame.height, chip.frame.width) / 3
             let e = emphasisLayers[i]
             e.isHidden = !on
-            e.frame = l.frame.insetBy(dx: 4, dy: 5)
+            e.frame = l.frame.insetBy(dx: 4, dy: 1)
             e.cornerRadius = min(e.frame.height, e.frame.width) / 3
         }
+        layoutSearchField(rects: rects, h: h, hidden: alt != nil || overlay)
         for (i, d) in dividers.enumerated() {
             // No divider across the fold band (between the two runs).
-            d.frame = CGRect(x: rects[i].maxX - 0.25, y: h * 0.25, width: 0.5, height: h * 0.5)
+            d.frame = CGRect(x: rects[i].maxX - 0.25, y: (h - 2 * Self.upwardBias) * 0.075, width: 0.5, height: (h - 2 * Self.upwardBias) * 0.85)
             // Separators only between two filled slots (an empty strip stays clean).
             let filled = i + 1 < slotTexts.count && !slotTexts[i].isEmpty && !slotTexts[i + 1].isEmpty
             d.isHidden = alt != nil || overlay || (segments.count == 2 && i == 1) || !filled

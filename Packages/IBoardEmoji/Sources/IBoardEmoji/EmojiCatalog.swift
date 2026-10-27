@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(CoreText)
+import CoreText
+#endif
 
 /// Skin tone modifiers in Fitzpatrick order (light ... dark).
 public enum SkinTone: Int, CaseIterable, Codable, Sendable {
@@ -53,7 +56,28 @@ public struct EmojiCatalog: Sendable {
         guard let url = Bundle.module.url(forResource: "emoji", withExtension: "json") else {
             throw EmojiCatalogError.resourceMissing
         }
-        return try parse(Data(contentsOf: url))
+        return try parse(Data(contentsOf: url)).droppingUnrenderable()
+    }
+
+    /// The data is Emoji 18.0; an older iOS has no glyph for the newest ones and draws a "?" box. Entries whose scalars
+    /// the system emoji font cannot draw are dropped (their skin-tone variants go with them).
+    public func droppingUnrenderable() -> EmojiCatalog {
+        #if canImport(CoreText)
+        let font = CTFontCreateWithName("AppleColorEmoji" as CFString, 20, nil)
+        func drawable(_ s: String) -> Bool {
+            for u in s.unicodeScalars where u.value != 0x200D && u.value != 0xFE0F && !(0x1F3FB...0x1F3FF).contains(u.value) {
+                var chars = [UniChar](String(u).utf16)
+                var glyphs = [CGGlyph](repeating: 0, count: chars.count)
+                if !CTFontGetGlyphsForCharacters(font, &chars, &glyphs, chars.count) { return false }
+            }
+            return true
+        }
+        guard drawable("\u{1F600}") else { return self } // font lookup failed: filter nothing rather than everything
+        let kept = entries.filter { drawable($0.emoji) }
+        return kept.count == entries.count ? self : EmojiCatalog(groups: groups, entries: kept, source: source)
+        #else
+        return self
+        #endif
     }
 
     public static func parse(_ data: Data) throws -> EmojiCatalog {

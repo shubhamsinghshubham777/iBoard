@@ -303,6 +303,32 @@ struct TraitVariantTests {
         #expect(!email.keys.contains { $0.identity == .symbol(",") })
     }
 
+    @Test func searchReturnKeyShrinksToAnIconAndGivesTheSpaceBarRoom() {
+        func widths(_ kind: ReturnKeyKind, punctuation: Bool) -> (ret: CGFloat, space: CGFloat) {
+            let l = layout(traits: LayoutTraits(returnKey: kind), settings: LayoutSettings(punctuationKeys: punctuation))
+            return (l.firstKey(.returnKey(kind))!.frame.width, l.firstKey(.space)!.frame.width)
+        }
+        let icon = widths(.search, punctuation: true), plain = widths(.default, punctuation: true)
+        #expect(icon.ret < plain.ret * 0.7 && icon.space > plain.space)
+        // Without the comma/period keys the native text key stays; "return" and "done" keep text and width.
+        #expect(widths(.search, punctuation: false).ret == plain.ret)
+        #expect(ReturnKeyKind.search.iconSymbol == "magnifyingglass" && ReturnKeyKind.done.iconSymbol == nil)
+    }
+
+    @Test func searchRowGrowsTheStripAndKeepsTheKeySizes() {
+        let base = LayoutSettings(compact: true)
+        var withRow = base; withRow.searchRowHeight = 44
+        let t = LayoutTraits()
+        let h0 = LayoutEngine.preferredHeight(width: 390, safeArea: .zero, traits: t, kind: .letters, settings: base)
+        let h1 = LayoutEngine.preferredHeight(width: 390, safeArea: .zero, traits: t, kind: .letters, settings: withRow)
+        #expect(abs((h1 - h0) - 44) < 0.01)
+        let a = LayoutEngine.layout(containerSize: CGSize(width: 390, height: h0), safeArea: .zero, traits: t, kind: .letters, settings: base)
+        let b = LayoutEngine.layout(containerSize: CGSize(width: 390, height: h1), safeArea: .zero, traits: t, kind: .letters, settings: withRow)
+        #expect(abs(b.stripFrame.height - a.stripFrame.height - 44) < 0.01)
+        let qa = a.firstKey(.letter("q"))!.frame, qb = b.firstKey(.letter("q"))!.frame
+        #expect(abs(qa.height - qb.height) < 0.01 && abs(qb.minY - qa.minY - 44) < 0.01)
+    }
+
     @Test func numbersAndSymbols() {
         let n = layout(.numbers, settings: LayoutSettings(currency: .inr))
         #expect(n.keys.count == 10 + 10 + 7 + 3)
