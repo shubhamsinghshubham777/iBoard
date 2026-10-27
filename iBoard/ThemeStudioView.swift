@@ -215,7 +215,8 @@ struct ThemeStudioView: View {
             guard let item else { return }
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self) {
-                    let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+                    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+                    let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
                     await model.setPhoto(data, scene: scene)
                 } else { model.message = "That image could not be loaded." }
                 photoItem = nil
