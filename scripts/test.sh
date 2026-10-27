@@ -45,11 +45,12 @@ fi
 udid=$(python3 - <<'PY'
 import json, os, subprocess
 d = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "-j"]))
-devs = [x for rt in d["devices"].values() for x in rt
-        if x["name"].startswith("iPhone") and "Duo" not in x["name"]]
 want = os.environ.get("SIM_NAME")
-if want:
-    devs = [x for x in devs if x["name"] == want]
+alld = [x for rt in d["devices"].values() for x in rt]
+if want:  # an explicit name may be any simulator (custom names, iPhone Duo)
+    devs = [x for x in alld if x["name"] == want]
+else:
+    devs = [x for x in alld if x["name"].startswith("iPhone") and "Duo" not in x["name"]]
 devs.sort(key=lambda x: x["state"] != "Booted")
 print(devs[0]["udid"] if devs else "")
 PY

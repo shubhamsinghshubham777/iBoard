@@ -63,3 +63,12 @@ jobs:
       - run: brew install xcodegen
       - run: scripts/build.sh
       - run: scripts/test.sh --no-ui --xcode-only
+
+  ios-ui-tests:
+    # UI tests (onboarding, settings, theme studio, dictionary) on the default simulator; same entry point as local runs.
+    runs-on: macos-latest
+    needs: ios-build-test
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: scripts/test.sh --xcode-only
