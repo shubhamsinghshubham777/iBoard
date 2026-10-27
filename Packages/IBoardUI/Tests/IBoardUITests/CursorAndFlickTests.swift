@@ -65,6 +65,12 @@ private func coordinator(_ proxy: CursorProxy) -> TypingCoordinator {
         #expect(CursorMath.utf16Offset(graphemes: -5, before: "ab", after: "") == -2)
         #expect(CursorMath.utf16Offset(graphemes: 5, before: "", after: "xy") == 2)
         #expect(CursorMath.utf16Offset(graphemes: -1, before: "", after: "") == 0)
+        // Right drag at the end of a line (the host's after-context stops before the line break): step over it.
+        #expect(CursorMath.utf16Offset(graphemes: 1, before: "ab", after: "", crossingLineEnd: true) == 1)
+        #expect(CursorMath.utf16Offset(graphemes: 3, before: "ab", after: "x", crossingLineEnd: true) == 2)
+        #expect(CursorMath.utf16Offset(graphemes: 2, before: "ab", after: "xy", crossingLineEnd: true) == 2)
+        #expect(CursorMath.utf16Offset(graphemes: 3, before: "ab", after: "x\ny", crossingLineEnd: true) == 3)
+        #expect(CursorMath.utf16Offset(graphemes: -1, before: "a\n", after: "", crossingLineEnd: true) == -1)
     }
 
     @Test func lineJumpsOnlyOnHardBreaksAndKeepColumn() {
@@ -163,9 +169,20 @@ private func coordinator(_ proxy: CursorProxy) -> TypingCoordinator {
     @Test func noMoveWhenThereIsNothingToMoveTo() {
         let p = CursorProxy("only", "")
         let c = coordinator(p)
-        #expect(!c.moveCursor(graphemes: 1))
         #expect(!c.moveCursor(lines: 1))
         #expect(p.adjustCalls == 0)
+        // A step right at the end of the visible context is attempted (it may cross a line break the host does not
+        // show); at the real end of the document the host clamps it to nothing.
+        #expect(c.moveCursor(graphemes: 1))
+        #expect(p.adjustCalls == 1)
+    }
+
+    @Test func rightDragAtTheEndOfALineWrapsDown() {
+        // The host shows only the rest of the current line after the cursor (no "\n"), like UITextView does.
+        let p = CursorProxy("first", "")
+        let c = coordinator(p)
+        #expect(c.moveCursor(graphemes: 1))
+        #expect(p.adjustCalls == 1)
     }
 
     @Test func deleteRunRemovesPlannedGraphemes() {

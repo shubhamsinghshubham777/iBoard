@@ -9,11 +9,19 @@ import Foundation
 public enum CursorMath {
     /// UTF-16 offset that moves the cursor `graphemes` clusters (negative: left, positive: right), clamped to what
     /// the visible context holds. Never ends inside a cluster.
-    public static func utf16Offset(graphemes: Int, before: String, after: String) -> Int {
+    ///
+    /// `crossingLineEnd`: hosts hand a keyboard only the rest of the CURRENT line as `documentContextAfterInput`
+    /// (the line break itself is not in it), so a rightwards drag at the end of a line would stop there while the
+    /// leftwards drag wraps up (the context before the cursor spans lines). When the visible text after the cursor
+    /// runs out before the requested steps do, one more UTF-16 unit is added: the line break (or, at the very end of
+    /// the document, a move the host clamps to nothing). Only one unit per call; the next move re-reads the context.
+    public static func utf16Offset(graphemes: Int, before: String, after: String, crossingLineEnd: Bool = false) -> Int {
         if graphemes < 0 {
             return -before.suffix(-graphemes).reduce(0) { $0 + $1.utf16.count }
         }
-        return after.prefix(graphemes).reduce(0) { $0 + $1.utf16.count }
+        let moved = after.prefix(graphemes).reduce(0) { $0 + $1.utf16.count }
+        if crossingLineEnd, graphemes > 0, !after.contains("\n"), after.count < graphemes { return moved + 1 }
+        return moved
     }
 
     /// UTF-16 offset that jumps one HARD line (separated by a newline) up or down keeping the column, or nil when

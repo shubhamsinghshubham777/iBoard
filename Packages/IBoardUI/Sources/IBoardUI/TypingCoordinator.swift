@@ -621,7 +621,7 @@ public final class TypingCoordinator {
             offset += o
             (b, a) = Self.shifted(before: b, after: a, by: o)
         }
-        if graphemes != 0 { offset += CursorMath.utf16Offset(graphemes: graphemes, before: b, after: a) }
+        if graphemes != 0 { offset += CursorMath.utf16Offset(graphemes: graphemes, before: b, after: a, crossingLineEnd: true) }
         guard offset != 0 else { return false }
         input.proxy.adjustPosition(byUTF16: offset)
         noteTyped(); autocorrectState.noteOtherInput()
