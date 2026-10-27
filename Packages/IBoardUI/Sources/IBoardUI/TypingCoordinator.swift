@@ -169,6 +169,8 @@ public final class TypingCoordinator {
     public private(set) var content = StripContent.empty
     public private(set) var config = FieldConfig()
     public var autocorrectSettings = AutocorrectSettings()
+    /// App setting `autocorrect == .off`: nothing is replaced (not even contractions); suggestions still show.
+    public var autocorrectionEnabled = true
     public private(set) var autocorrectState = AutocorrectState()
     public private(set) var incognito = false
 
@@ -464,7 +466,7 @@ public final class TypingCoordinator {
         var committed = token
         var source = CommitSource.typed
         var original: String?
-        if !token.isEmpty, tokenPrefix.isEmpty, config.autocorrectEnabled,
+        if !token.isEmpty, tokenPrefix.isEmpty, config.autocorrectEnabled, autocorrectionEnabled,
            text == " " || Self.correctingPunctuation.contains(text),
            let fixed = correction(for: word), fixed != word {
             deleteCount += word.count

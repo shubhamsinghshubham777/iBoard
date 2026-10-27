@@ -27,7 +27,7 @@ final class KeyboardViewController: UIInputViewController {
     private var machine: KeyboardInputMachine?
     private var layerChangePending = false
     private var repeatLink: CADisplayLink?
-    private var hapticsEnabled: Bool { settings.haptics && hasFullAccess }
+    private var hapticsEnabled: Bool { SettingsPolicy.hapticsActive(settings: settings, hasFullAccess: hasFullAccess) }
     private lazy var input = InputController(proxy: ProxyAdapter(controller: self))
     private var haptic: UIImpactFeedbackGenerator?
     private var autoShiftPending = false
@@ -102,9 +102,8 @@ final class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         settings = SettingsStore().load()
-        grid.showsFlickHints = UserDefaults.standard.bool(forKey: KeyFlick.hintsDefaultsKey)
+        applySettings()
         refreshAppearanceAndTraits()
-        coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
         applyFieldConfig(forceFieldChange: true)
         applyAppCommands()
         personalInfo = PersonalInfoReader().load() // F7: saved by the app, read-only here (works without Full Access)
@@ -220,9 +219,9 @@ final class KeyboardViewController: UIInputViewController {
             }(),
             smartQuotes: sw(proxy.smartQuotesType?.rawValue),
             smartDashes: sw(proxy.smartDashesType?.rawValue),
-            doubleSpacePeriod: !excluded
+            doubleSpacePeriod: !excluded && settings.doubleSpacePeriod
         )
-        if excluded { punct.smartQuotes = .no; punct.smartDashes = .no }
+        if excluded || !settings.smartPunctuation { punct.smartQuotes = .no; punct.smartDashes = .no }
         let config = FieldConfig(
             learning: learning,
             autocorrect: AutocorrectTraits(autocorrection: sw(proxy.autocorrectionType?.rawValue),
@@ -238,8 +237,27 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// Pushes the app-written settings (IBoardSettings v3) into the pieces that honour them. Cheap; runs on every
+    /// appearance. Haptics are additionally gated on Full Access in `feedback()` (P-23).
+    private func applySettings() {
+        // F5: hints are the app setting; the keyboard-local key stays as an extra way to turn them on.
+        grid.showsFlickHints = settings.flickHints || UserDefaults.standard.bool(forKey: KeyFlick.hintsDefaultsKey)
+        // F6: an explicit keyboard-local choice wins, otherwise the app's "start in incognito" default.
+        coordinator.setIncognito(incognitoEnabled)
+        let policy = SettingsPolicy.autocorrect(for: settings.autocorrect)
+        coordinator.autocorrectionEnabled = policy.enabled
+        coordinator.autocorrectSettings.aggressiveness = policy.aggressiveness
+        // Haptic generator is rebuilt lazily when the strength changed.
+        haptic = nil
+    }
+
+    private var incognitoEnabled: Bool {
+        let d = UserDefaults.standard
+        return d.object(forKey: Self.incognitoKey) == nil ? settings.incognitoByDefault : d.bool(forKey: Self.incognitoKey)
+    }
+
     private func toggleIncognito() {
-        let on = !UserDefaults.standard.bool(forKey: Self.incognitoKey)
+        let on = !incognitoEnabled
         UserDefaults.standard.set(on, forKey: Self.incognitoKey)
         coordinator.setIncognito(on)
     }
@@ -642,7 +660,7 @@ final class KeyboardViewController: UIInputViewController {
             if emojiPressID == id, hypot(point.x - emojiPressOrigin.x, point.y - emojiPressOrigin.y) > 12 { cancelEmojiPress() }
             if arbiterTouchID == id, routeArbiterMove(id: id, to: point, time: time, sink: sink) { break }
             if swipeCapture.tracks(id), let layout = grid.layout {
-                switch swipeCapture.move(id: id, to: point, time: time, layout: layout, allowSwipe: arbiter?.decided == .swipeTyping) {
+                switch swipeCapture.move(id: id, to: point, time: time, layout: layout, allowSwipe: settings.swipeTyping && arbiter?.decided == .swipeTyping) {
                 case .began:
                     // Crossed into another key: no longer a key press (F3/F5). Release the cap, insert nothing.
                     machine!.touchCancelled(id: id, emit: sink)
@@ -1022,7 +1040,7 @@ final class KeyboardViewController: UIInputViewController {
     private func feedback() {
         if settings.keyClickSound { UIDevice.current.playInputClick() }
         if hapticsEnabled {
-            if haptic == nil { haptic = UIImpactFeedbackGenerator(style: .light) }
+            if haptic == nil { haptic = UIImpactFeedbackGenerator(style: SettingsPolicy.impactStyle(for: settings.hapticIntensity)) }
             haptic?.impactOccurred()
         }
     }
@@ -1134,3 +1152,14 @@ extension AutoCapMode {
     }
 }
 
+
+extension SettingsPolicy {
+    /// Strength of the key haptic (light / medium / strong -> UIKit light / medium / heavy impact).
+    static func impactStyle(for intensity: HapticIntensity) -> UIImpactFeedbackGenerator.FeedbackStyle {
+        switch intensity {
+        case .light: .light
+        case .medium: .medium
+        case .strong: .heavy
+        }
+    }
+}
