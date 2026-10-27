@@ -18,6 +18,8 @@ public struct StripChip: Equatable, Sendable {
         /// An OTP chip: the stored code's id (marked as inserted in keyboard memory after the tap).
         case code(id: String)
         case info
+        /// M6-05: "Paste code" offer; the pasteboard is read only when the user taps it (P-25), `insert` is empty.
+        case clipboardCode
     }
     public var display: String
     public var insert: String
@@ -48,10 +50,18 @@ public struct ChipField: Sendable, Equatable {
 
 public enum ChipPlanner {
     /// Three entries (one per strip slot); nil keeps the suggestion in that slot.
+    public static let pasteCodeTitle = "Paste code"
+
+    /// `clipboardOffer`: Full Access is on, the user enabled the fallback and no fresh code is stored; a code field then
+    /// shows a "Paste code" chip that reads the pasteboard on tap (never before).
     public static func plan(codes: [StoredCode], info: PersonalInfo, field: ChipField,
-                            suggestions: [SuggestionSlot?] = [nil, nil, nil]) -> [StripChip?] {
+                            suggestions: [SuggestionSlot?] = [nil, nil, nil], clipboardOffer: Bool = false) -> [StripChip?] {
         var out: [StripChip?] = [nil, nil, nil]
         if field.isSecure, !field.isOneTimeCode { return out }
+        if clipboardOffer, codes.isEmpty, field.codeIsProminent {
+            out[0] = StripChip(display: pasteCodeTitle, insert: "", source: .clipboardCode, emphasized: false)
+            return out
+        }
         if field.codeIsProminent, !codes.isEmpty {
             for (i, c) in codes.prefix(3).enumerated() {
                 out[i] = StripChip(display: label(c), insert: c.code, source: .code(id: c.id), emphasized: true)
@@ -75,5 +85,19 @@ public enum ChipPlanner {
     static func label(_ c: StoredCode) -> String {
         let s = c.sender.trimmingCharacters(in: .whitespaces)
         return s.isEmpty || s.count > 10 ? c.code : "\(c.code) · \(s)"
+    }
+}
+
+/// M6-05: pulls a verification code out of pasteboard text. Pure; the keyboard calls it off the main thread on tap.
+public enum ClipboardCode {
+    /// Longest pasteboard text examined (a copied article is not a message).
+    public static let maxLength = 600
+    public static func extract(from text: String?) -> String? {
+        guard let text, !text.isEmpty, text.count <= maxLength else { return nil }
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A bare code (4-8 digits, or short alphanumeric with a digit) copied by itself.
+        if (4...8).contains(t.count), t.allSatisfy({ $0.isASCII && ($0.isNumber || $0.isLetter) }), t.contains(where: \.isNumber),
+           t.allSatisfy(\.isNumber) || t.allSatisfy({ $0.isUppercase || $0.isNumber }) { return t }
+        return OTPParser.extract(from: t)?.code
     }
 }
