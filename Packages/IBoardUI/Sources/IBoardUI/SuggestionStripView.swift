@@ -415,10 +415,11 @@ public final class SuggestionStripView: UIView {
             return
         }
         let span = f.wide ? first.union(last) : first
-        // Sits in the upper part like the text (the system glass leaves ~13 pt above our view), so it looks centred
-        // between the keyboard's top edge and the panel / keys below it.
+        // Vertically centred in the strip's top part, so it has an even margin above (the keyboard's top edge) and below
+        // (owner screenshot 2026-10-27: at y = 0 it touched the top edge).
         let trailW = f.trailingAction == nil ? 0 : Self.searchActionWidth
-        let pill = CGRect(x: span.minX + 14, y: 0, width: span.width - 28 - trailW, height: max(min(Self.searchFieldHeight, h - searchRowExtra - 2), 1))
+        let pillH = max(min(Self.searchFieldHeight, h - searchRowExtra - 2), 1)
+        let pill = CGRect(x: span.minX + 14, y: max(0, ((h - searchRowExtra) - pillH) / 2), width: span.width - 28 - trailW, height: pillH)
         pillLayer.isHidden = false
         pillLayer.frame = pill
         pillLayer.cornerRadius = pill.height / 2
