@@ -312,8 +312,10 @@ struct ThemeStudioView: View {
                 sliderRow("Angle", \.backdrop.gradientAngle, 0...360)
                 sliderRow("Dim", \.dim, 0...0.8, format: .percent)
             case .photo:
+                // Read main-actor state here: the label closure is Sendable and must not touch `model`.
+                let photoTitle = model.isProcessingPhoto ? "Processing..." : "Choose photo"
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    Label(model.isProcessingPhoto ? "Processing..." : "Choose photo", systemImage: "photo")
+                    Label(photoTitle, systemImage: "photo")
                 }
                 sliderRow("Blur", \.backdrop.blurRadius, 0...40)
                 sliderRow("Dim", \.dim, 0...0.8, format: .percent)
