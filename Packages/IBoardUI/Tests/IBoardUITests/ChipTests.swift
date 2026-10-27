@@ -35,7 +35,7 @@ import IBoardOTP
     }
 
     @Test func noCodesNoChip() {
-        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode")) == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), systemCodeOffer: false) == [nil, nil, nil])
     }
 
     @Test func secureFieldsGetNothingExceptOneTimeCode() {
@@ -55,7 +55,7 @@ import IBoardOTP
         #expect(texts("postalCode") == ["411001"])
         #expect(texts("fullStreetAddress") == ["1 MG Road, Pune, MH, 411001"])
         #expect(texts("addressCity") == ["Pune"])
-        for none in [nil, "", "username", "password", "organizationName", "creditCardNumber", "oneTimeCode", "url", "jobTitle"] {
+        for none in [nil, "", "username", "password", "organizationName", "creditCardNumber", "url", "jobTitle"] {
             #expect(texts(none) == [], "content type \(String(describing: none))")
         }
     }
@@ -99,7 +99,7 @@ import IBoardOTP
     }
 
     @Test func clipboardOfferOnlyForCodeFieldsWithoutStoredCode() {
-        let off = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"))
+        let off = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), systemCodeOffer: false)
         #expect(off == [nil, nil, nil])
         let on = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), clipboardOffer: true)
         #expect(on[0]?.source == .clipboardCode && on[0]?.display == "Paste code" && on[0]?.insert == "")
@@ -124,5 +124,32 @@ import IBoardOTP
         #expect(ChipPlanner.plan(codes: [], info: .empty, field: field(empty: false), clipboardItem: "x y") == [nil, nil, nil])
         #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("password", secure: true), clipboardItem: "x y") == [nil, nil, nil])
         #expect(ChipPlanner.plan(codes: [code], info: .empty, field: field(), clipboardItem: "x y")[2]?.source == .code(id: code.id))
+    }
+
+    @Test func systemCodeChipOnlyInOneTimeCodeFieldWithoutFreshCode() {
+        let plan = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"))
+        #expect(plan[0]?.source == .systemCode)
+        #expect(plan[0]?.display == ChipPlanner.systemCodeTitle)
+        #expect(plan[0]?.insert.isEmpty == true)
+        #expect(plan[1] == nil && plan[2] == nil)
+        // Secure one-time-code field still qualifies.
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode", secure: true))[0]?.source == .systemCode)
+        // Not for number pads, other fields, secure plain fields, or when switched off.
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field(nil, .numberPad))[0] == nil)
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("username"))[0]?.source != .systemCode)
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("password", secure: true))[0] == nil)
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), systemCodeOffer: false)[0] == nil)
+    }
+
+    @Test func freshCodeBeatsSystemChip() {
+        let plan = ChipPlanner.plan(codes: [code], info: .empty, field: field("oneTimeCode"))
+        #expect(plan[0]?.source == .code(id: code.id))
+        #expect(!plan.contains { $0?.source == .systemCode })
+    }
+
+    @Test func clipboardOfferKeepsSlotZeroSystemChipFollows() {
+        let plan = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), clipboardOffer: true)
+        #expect(plan[0]?.source == .clipboardCode)
+        #expect(plan[1]?.source == .systemCode)
     }
 }
