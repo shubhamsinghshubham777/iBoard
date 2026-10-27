@@ -55,7 +55,7 @@ func swipeSampleWords(_ lex: Lexicon, upTo ids: Int, count: Int, seed: UInt64) -
             i += 1
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
         var visited = 0, scored = 0, cut = 0
         for t in traces {
             let r = dec.decode(points: t)
@@ -92,6 +92,6 @@ func swipeSampleWords(_ lex: Lexicon, upTo ids: Int, count: Int, seed: UInt64) -
             i += 1
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
     }
 }
