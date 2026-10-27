@@ -41,9 +41,9 @@ public struct SwipeParameters: Sendable, Equatable {
     /// Scale of the shape channel (normalized units, shape distance of 1 sigma).
     public var shapeSigma = 0.09
     /// Scale of the location channel in key widths (after the free `locationTolerance`).
-    public var locationSigma = 0.35
+    public var locationSigma = 0.30
     /// Distance (key widths) inside which the location channel charges nothing.
-    public var locationTolerance = 0.45
+    public var locationTolerance = 0.35
     /// Scale (key sizes) of the dwell / corner anchor penalty, and the cap on one anchor's distance.
     public var anchorSigma = 0.6
     public var anchorCap = 1.5
@@ -59,7 +59,7 @@ public struct SwipeParameters: Sendable, Equatable {
 
     // Scoring
     /// Weight of the language-model log-probability against the spatial log-likelihood.
-    public var lmWeight = 0.5
+    public var lmWeight = 0.4
     /// Share of the unigram probability mixed into the contextual (bigram / trigram) probability before it is scored,
     /// so an unseen continuation is not charged the full backoff penalty (0 = off). DATA2: 0.3, tuned on the even Hinglish eval sentences with `lmWeight`.
     public var lmUnigramMix = 0.3
