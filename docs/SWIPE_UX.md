@@ -65,3 +65,26 @@ NOT WIRED yet (belongs to M5-02..04): the controller still uses `SwipeCapture` d
 starts a swipe immediately, so a flick that crosses a key becomes swipe typing. When flicks land (M5-04) the controller must
 feed the arbiter and start the trail only when it reports `.swipeTyping` (or buffer the samples while it is undecided);
 the spacebar / backspace gestures (M5-02/03) consume `.spacebarCursor/.spacebarSelection/.backspaceSwipe*` the same way.
+
+## Arbiter in the touch path, flicks, spacebar cursor, backspace swipe-delete (M5-02/03/04)
+
+- `KeyboardViewController` creates one `GestureArbiter` per first finger on a letter / space / backspace key. A touch that
+  crosses into another letter key only becomes a swipe once the arbiter says so (`SwipeCapture.move(..., allowSwipe:)`), so a
+  quick vertical flick (< 220 ms, <= 1 key height, `|dy| > 1.5 |dx|`) is never a swipe. Not done: the "released on a likely word"
+  override (`likelyWord` is always false; a flick onto a neighbouring row is a flick).
+- Flicks (`KeyFlick`): up = digit / symbol (q..p = 1..0, a s d f g h j k l = `@ # $ & * ( ) ' "`, z x c v b n m = `% - + = / ; :`),
+  down = the key's first long-press alternate (uppercased with shift). A flick with no character for that key is a normal tap.
+  Faint up-flick glyphs on the keys: keyboard-local default `iboard.local.flickHints` (off by default); the companion app
+  cannot write it (needs an `IBoardSettings` field, IBoardCore is out of scope here).
+- Spacebar cursor (`SpacebarCursorDrag`, `CursorMath`): drag > 12 pt starts it (no space is typed). One cluster per 9 pt, speed
+  multiplier up to 4x above ~250 pt/s; vertical travel of 28 pt jumps one HARD line (newline) keeping the column, never across
+  soft wraps or beyond the visible context. Steps are grapheme clusters converted to UTF-16 offsets (P-24) so emoji, ZWJ,
+  combining marks and Devanagari conjuncts never split. Selection with shift (D-27) is not part of this task.
+- Backspace swipe-delete (`BackspaceSwipePlan`): drag left > 20 pt, one more word per 38 pt; the strip shows the words that will
+  go (in memory only); lift deletes them, dragging back right (< 10 pt from the start) or lifting > 2 key heights above/below
+  cancels. The backspace key still deletes one character on touch-down (existing immediate-key behaviour), so a swipe-delete
+  also removes that one character.
+- Verified (iPhone 12 simulator, iOS 27.0, `axe swipe --delta 4`): up flick on S types `#`, down flick on A types `à`,
+  spacebar drag left 36 pt moved the cursor 4 characters, backspace drag left removed the preceding word. NOT TESTED: the strip
+  preview rendering, vertical line jumps, emoji in a real host (unit tests with a UTF-16 fake proxy only), faint hint glyph
+  rendering, Reduce Motion, devices, hosts other than the companion app's text field.

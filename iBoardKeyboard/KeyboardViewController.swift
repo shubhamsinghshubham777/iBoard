@@ -522,15 +522,13 @@ final class KeyboardViewController: UIInputViewController {
             // The space key is released without typing a space; the drag now owns the touch.
             machine!.touchCancelled(id: id, emit: sink)
             coordinator.releaseTouch(id: id)
-            dragMode = .cursor(SpacebarCursorDrag(start: point, time: time))
-            return true
+            // Starts at the touch-down point so travel up to the decision (and sparse move events) still counts.
+            dragMode = .cursor(SpacebarCursorDrag(start: gestureOrigin, time: time - 0.1))
         case .backspaceSwipeDelete?:
             // Touch-down already deleted one character and started the repeat; the repeat stops here.
             machine!.touchCancelled(id: id, emit: sink)
             coordinator.releaseTouch(id: id)
             dragMode = .deleteWords(BackspaceSwipePlan(words: 0, graphemes: 0, preview: ""))
-            updateDeletePreview(at: point)
-            return true
         default: break
         }
         switch dragMode {
@@ -562,9 +560,28 @@ final class KeyboardViewController: UIInputViewController {
     private func finishArbiter(id: Int, at point: CGPoint, time: TimeInterval, sink: (KeyEvent) -> Void) -> Bool {
         guard var a = arbiter, let layout = grid.layout else { resetArbiter(); return false }
         let keyHeight = layout.metrics.keyHeight
+        let origin0 = gestureOrigin
         // Released far above / below the key row it was dragged away: counts as "onto the keys" for backspace.
         let away = abs(point.y - gestureOrigin.y) > 2 * keyHeight
         let g = a.end(at: point, time: time, endedOverKeys: away)
+        // A drag decided only by the lift (no move events in between): the same as if it had been decided live.
+        if case .none = dragMode {
+            if g == .spacebarCursor {
+                machine!.touchCancelled(id: id, emit: sink)
+                coordinator.releaseTouch(id: id)
+                dragMode = .cursor(SpacebarCursorDrag(start: origin0, time: time - 0.1))
+            } else if g == .backspaceSwipeDelete || g == .backspaceSwipeCancel {
+                machine!.touchCancelled(id: id, emit: sink)
+                coordinator.releaseTouch(id: id)
+                dragMode = .deleteWords(BackspaceSwipePlan(words: 0, graphemes: 0, preview: ""))
+            }
+        }
+        if case .cursor(var drag) = dragMode {
+            // The lift point is a last sample (a quick drag may have had no move events at all).
+            let step = drag.move(to: point, time: time)
+            if step.horizontal != 0 || step.vertical != 0 { _ = coordinator.moveCursor(graphemes: step.horizontal, lines: step.vertical) }
+        }
+        if case .deleteWords = dragMode { updateDeletePreview(at: point) }
         let mode = dragMode
         let startIndex = gestureKeyIndex
         let origin = gestureOrigin
@@ -797,3 +814,4 @@ extension AutoCapMode {
         }
     }
 }
+
