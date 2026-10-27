@@ -239,16 +239,6 @@ private func coordinator(_ proxy: CursorProxy) -> TypingCoordinator {
     }
 }
 
-@Suite("Resize preview math")
-struct ResizePreviewMathTests {
-    @Test func previewEdgeOnlyMovesWhenShrinking() {
-        #expect(ResizeMath.previewTopOffset(currentHeight: 300, targetHeight: 250) == 50)
-        #expect(ResizeMath.previewTopOffset(currentHeight: 300, targetHeight: 340) == 0)
-        #expect(ResizeMath.percentText(scale: 1.1) == "110%")
-        #expect(ResizeMath.percentText(scale: 0.8) == "80%")
-    }
-}
-
 @Suite("Swipe trail gradient")
 struct SwipeTrailGradientTests {
     @Test func tailIsFaintAndThinHeadIsBrightAndFullWidth() {

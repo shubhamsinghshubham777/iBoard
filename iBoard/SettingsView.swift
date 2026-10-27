@@ -42,9 +42,17 @@ struct SettingsView: View {
                 Toggle("Number row", isOn: $settings.numberRow)
                 Toggle("Show flick hints on keys", isOn: $settings.flickHints)
             }
-            Section("Keyboard height (80% to 140%)") {
-                HeightSlider(title: "iPhone portrait", key: HeightKey.make(displayClass: "phone", orientation: "portrait"), settings: $settings)
-                HeightSlider(title: "iPhone landscape", key: HeightKey.make(displayClass: "phone", orientation: "landscape"), settings: $settings)
+            Section {
+                HeightPicker(title: "iPhone, portrait", key: HeightKey.make(displayClass: "phone", orientation: "portrait"), settings: $settings)
+                HeightPicker(title: "iPhone, landscape", key: HeightKey.make(displayClass: "phone", orientation: "landscape"), settings: $settings)
+                HeightPicker(title: "iPhone Duo outer, portrait", key: HeightKey.make(displayClass: "duoOuter", orientation: "portrait"), settings: $settings)
+                HeightPicker(title: "iPhone Duo outer, landscape", key: HeightKey.make(displayClass: "duoOuter", orientation: "landscape"), settings: $settings)
+                HeightPicker(title: "iPhone Duo inner, portrait", key: HeightKey.make(displayClass: "duoInner", orientation: "portrait"), settings: $settings)
+                HeightPicker(title: "iPhone Duo inner, landscape", key: HeightKey.make(displayClass: "duoInner", orientation: "landscape"), settings: $settings)
+            } header: {
+                Text("Keyboard size")
+            } footer: {
+                Text("Takes effect the next time the keyboard appears.")
             }
             Section {
                 Toggle("Split in portrait", isOn: $settings.duoSplitPortrait)
@@ -66,18 +74,18 @@ struct SettingsView: View {
     }
 }
 
-struct HeightSlider: View {
+struct HeightPicker: View {
     let title: String
     let key: String
     @Binding var settings: IBoardSettings
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("\(title): \(Int((settings.heightScale(forKey: key) * 100).rounded())) %")
-            Slider(
-                value: Binding(get: { settings.heightScale(forKey: key) }, set: { settings.heightScales[key] = HeightScale.clamp($0) }),
-                in: HeightScale.range
-            )
+        Picker(title, selection: Binding(
+            get: { HeightPreset.nearest(to: settings.heightScale(forKey: key)) },
+            set: { settings.heightScales[key] = $0.scale }
+        )) {
+            ForEach(HeightPreset.allCases, id: \.self) { Text($0.title).tag($0) }
         }
+        .pickerStyle(.menu)
     }
 }
 

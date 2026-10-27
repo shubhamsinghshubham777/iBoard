@@ -20,12 +20,6 @@ final class KeyboardViewController: UIInputViewController {
     private var appliedSkin: KeyboardSkin?
     private var appliedBackdropPhoto: URL?
     private let strip = SuggestionStripView()
-    private let handle = ResizeHandleView()
-    private let resizePreview = ResizePreviewView()
-    private let overrides = LocalLayoutOverrides()
-    /// Target scale while the handle is being dragged: previewed only, applied and persisted once when the drag ends.
-    private var liveScale: Double?
-    private var dragStartHeight: CGFloat = 0
     private var consumeShiftOnce = false
     private var heightConstraint: NSLayoutConstraint?
     private var layoutKind: LayoutKind = .letters
@@ -151,19 +145,6 @@ final class KeyboardViewController: UIInputViewController {
         grid.accessibilityIdentifier = "key-grid"
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
-        handle.onDragBegan = { [weak self] in
-            guard let self else { return }
-            self.dragStartHeight = self.view.bounds.height
-            self.resizePreview.frame = self.view.bounds
-            self.view.bringSubviewToFront(self.resizePreview)
-            self.view.bringSubviewToFront(self.handle)
-            self.resizePreview.show()
-        }
-        handle.onDragChanged = { [weak self] dy in self?.dragHandle(translationY: dy) }
-        handle.onDragEnded = { [weak self] in self?.endDrag() }
-        handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
-        view.addSubview(resizePreview)
-        view.addSubview(handle)
         emojiButton.setImage(UIImage(systemName: "face.smiling"), for: .normal)
         emojiButton.tintColor = .secondaryLabel
         emojiButton.accessibilityLabel = "Emoji"
@@ -509,12 +490,10 @@ final class KeyboardViewController: UIInputViewController {
         grid.clearHighlights()
         emoji.open(in: view, frame: emojiFrame, interfaceStyle: grid.appearance == .dark ? .dark : .light)
         view.bringSubviewToFront(strip)
-        view.bringSubviewToFront(handle)
     }
 
     private func emojiChanged() {
         grid.keysHidden = emoji.keysHidden
-        handle.isHidden = emoji.isOpen
         emojiButton.isHidden = emoji.isOpen
         renderStrip()
     }
@@ -619,16 +598,15 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private let duoLocal = DuoLocalStore()
-    /// Laptop pose: height snapped to the fold while the handle is dragged (persisted when the drag ends).
-    private var liveFillToFold: Bool?
 
     /// Layout settings from the app (App Group) overridden by what the user did in the keyboard (F11, F1).
     private func currentLayoutSettings() -> LayoutSettings {
         let traits = currentTraits()
         // Display-class defaults (Duo inner: number row in portrait, split in landscape), then the app's values.
         var ls = LayoutSettings.defaults(for: traits)
-        ls.numberRow = overrides.numberRow ?? (settings.numberRow || ls.numberRow)
-        ls.heightScale = CGFloat(overrides.heightScale(forKey: heightKey) ?? settings.heightScale(forKey: heightKey))
+        ls.numberRow = settings.numberRow || ls.numberRow
+        // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
+        ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {
             // F12: the pinch (extension-local) wins, then what the app saved explicitly, then the D-20 default.
             let blob = UserDefaults(suiteName: SettingsStore.appGroup)?.data(forKey: SettingsStore.key)
@@ -638,47 +616,9 @@ final class KeyboardViewController: UIInputViewController {
             ls.splitLandscape = DuoSplitPolicy.resolve(
                 local: duoLocal.split(for: .landscape),
                 app: DuoSplitPolicy.explicitAppValue(blob: blob, key: "duoSplitLandscape"), fallback: ls.splitLandscape)
-            ls.fillToFold = traits.orientation == .landscape && duoLocal.fillToFold
+            ls.fillToFold = false // the fill-to-fold snap lived on the removed drag handle
         }
         return ls
-    }
-
-    private func dragHandle(translationY dy: CGFloat) {
-        let size = view.bounds.size
-        guard size.width > 0 else { return }
-        let safe = LayoutInsets(top: 0, left: view.safeAreaInsets.left, bottom: view.safeAreaInsets.bottom, right: view.safeAreaInsets.right)
-        let traits = currentTraits()
-        func h(_ scale: CGFloat) -> CGFloat {
-            var ls = currentLayoutSettings(); ls.heightScale = scale
-            return LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
-        }
-        // Dragging up grows the keyboard (it is bottom-anchored). The keyboard is NOT resized while dragging (that
-        // moved the handle under the finger and flickered): the preview shows the target and release applies it once.
-        let proposed = dragStartHeight - dy
-        var snapped = false
-        var target = proposed
-        if traits.displayClass == .duoInner, traits.orientation == .landscape, let screen = screenSize {
-            // Laptop pose (D-20, F18): snap to half the inner landscape height and fill to the fold.
-            let snap = DuoGeometry.snappedHeight(proposed: proposed, innerLandscapeHeight: min(screen.width, screen.height))
-            snapped = snap.snapped
-            if snapped { target = DuoGeometry.fillToFoldHeight(innerLandscapeHeight: min(screen.width, screen.height)) }
-            liveFillToFold = snapped
-        }
-        let scale = ResizeMath.scale(forHeight: proposed, height0: h(0), height1: h(1))
-        liveScale = scale
-        if !snapped { target = min(max(proposed, h(0.8)), h(1.4)) }
-        resizePreview.frame = view.bounds
-        resizePreview.update(scale: scale, lower: 0.8, upper: 1.4, targetHeight: target, currentHeight: dragStartHeight, snapped: snapped)
-    }
-
-    private func endDrag() {
-        resizePreview.hide()
-        if let fill = liveFillToFold { duoLocal.setFillToFold(fill) }
-        liveFillToFold = nil
-        if let s = liveScale, !currentLayoutSettings().fillToFold { overrides.setHeightScale(s, forKey: heightKey) }
-        liveScale = nil
-        lastLayoutKey = nil // one final layout with the new height
-        relayoutIfNeeded()
     }
 
     /// Spread = split, pinch together = merged (like the iPad keyboard); remembered per orientation, extension-local.
@@ -694,12 +634,6 @@ final class KeyboardViewController: UIInputViewController {
         grid.trail.clear()
         grid.clearHighlights()
         duoLocal.setSplit(on, for: traits.orientation)
-        lastLayoutKey = nil
-        relayoutIfNeeded()
-    }
-
-    private func toggleNumberRow() {
-        overrides.setNumberRow(!currentLayoutSettings().numberRow)
         lastLayoutKey = nil
         relayoutIfNeeded()
     }
@@ -735,7 +669,6 @@ final class KeyboardViewController: UIInputViewController {
         let eb: CGFloat = 32
         emojiButton.frame = CGRect(x: size.width - eb - 4, y: strip.frame.minY + max(0, (strip.frame.height - eb) / 2), width: eb, height: eb)
         view.bringSubviewToFront(emojiButton)
-        handle.frame = CGRect(x: (size.width - ResizeHandleView.size.width) / 2, y: 0, width: ResizeHandleView.size.width, height: ResizeHandleView.size.height)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
             updateAutoShift()
@@ -1157,12 +1090,10 @@ final class KeyboardViewController: UIInputViewController {
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]
             let options = KeyAlternates.options(for: key.identity, uppercase: grid.shift != .off) ?? []
-            handle.isHidden = true
             strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
-            handle.isHidden = false
             if let text = strip.end(at: p) {
                 if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)
@@ -1172,7 +1103,6 @@ final class KeyboardViewController: UIInputViewController {
             }
         case .alternatesCancelled:
             strip.cancelAlternates()
-            handle.isHidden = false
         case .layerChanged(let kind):
             layoutKind = kind
             layerChangePending = true

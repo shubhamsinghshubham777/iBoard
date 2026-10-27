@@ -155,6 +155,38 @@ public enum HeightScale {
     }
 }
 
+/// The keyboard sizes the app offers in a picker (there is no drag handle). Each maps to a height scale inside
+/// `HeightScale.range`; a stored value that is not exactly a preset (older slider values) shows as the nearest one.
+public enum HeightPreset: String, CaseIterable, Sendable {
+    case extraSmall, small, standard, large, extraLarge, maximum
+
+    public var scale: Double {
+        switch self {
+        case .extraSmall: 0.8
+        case .small: 0.9
+        case .standard: 1.0
+        case .large: 1.15
+        case .extraLarge: 1.3
+        case .maximum: 1.4
+        }
+    }
+
+    public var title: String {
+        switch self {
+        case .extraSmall: "Extra small"
+        case .small: "Small"
+        case .standard: "Standard"
+        case .large: "Large"
+        case .extraLarge: "Extra large"
+        case .maximum: "Maximum"
+        }
+    }
+
+    public static func nearest(to scale: Double) -> HeightPreset {
+        allCases.min { abs($0.scale - scale) < abs($1.scale - scale) } ?? .standard
+    }
+}
+
 /// Storage key for per display class x orientation values (D-18). Plain strings so IBoardCore stays free of
 /// IBoardLayout; the host passes the raw values of its layout enums.
 public enum HeightKey {

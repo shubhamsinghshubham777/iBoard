@@ -110,4 +110,14 @@ struct SettingsTests {
         #expect(IBoardSettings(spellingVariant: .auto).effectiveSpellingVariant(localeIdentifier: "en_GB") == .uk)
         #expect(IBoardSettings(spellingVariant: .us).effectiveSpellingVariant(localeIdentifier: "en_GB") == .us)
     }
+
+    @Test func heightPresetsStayInsideTheRangeAndMapOldSliderValues() {
+        #expect(HeightPreset.allCases.allSatisfy { HeightScale.range.contains($0.scale) })
+        #expect(HeightPreset.allCases.map(\.scale) == HeightPreset.allCases.map(\.scale).sorted())
+        #expect(HeightPreset.nearest(to: 1) == .standard)
+        #expect(HeightPreset.nearest(to: 1.12) == .large)
+        #expect(HeightPreset.nearest(to: 0.85) == .extraSmall || HeightPreset.nearest(to: 0.85) == .small)
+        #expect(HeightPreset.nearest(to: 5) == .maximum)
+        #expect(HeightPreset.allCases.allSatisfy { HeightPreset.nearest(to: $0.scale) == $0 })
+    }
 }
