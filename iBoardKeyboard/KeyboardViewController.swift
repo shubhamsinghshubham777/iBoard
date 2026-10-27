@@ -481,17 +481,23 @@ final class KeyboardViewController: UIInputViewController {
     private func replanChips() {
         let plan = ChipPlanner.plan(codes: freshCodes, info: personalInfo, field: currentChipField(), suggestions: lastStrip.slots,
                                    clipboardOffer: hasFullAccess && !clipboardMissed,
-                                   clipboardItem: hasFullAccess ? clipboard.newest(at: Date())?.text : nil)
+                                   clipboardItem: (hasFullAccess && settings.clipboardHistory) ? clipboard.newest(at: Date())?.text : nil)
         guard plan != chipPlan else { return }
         chipPlan = plan
         renderStrip()
     }
 
+    /// Loads the stored history once and applies the owner's retention setting (settings.clipboardTTL).
+    private func loadClipboardIfNeeded() {
+        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        clipboard.ttl = settings.clipboardTTL.seconds
+    }
+
     /// M9-03: records a new pasteboard item while the keyboard is visible. `changeCount` is free to read; the string is
     /// read only when it changed, off the main thread (the first read may show the system paste prompt, P-25).
     private func recordClipboardIfChanged() {
-        guard hasFullAccess, !clipboardReading else { return }
-        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        guard hasFullAccess, settings.clipboardHistory, !clipboardReading else { return }
+        loadClipboardIfNeeded()
         let count = UIPasteboard.general.changeCount
         guard clipboard.needsRead(changeCount: count) else { return }
         // Never record from secure fields' context: nothing is read while a password field is focused.
@@ -672,8 +678,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func openClipboardPanel() {
-        guard hasFullAccess, !clipboardPanel.isOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
-        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        guard hasFullAccess, settings.clipboardHistory, !clipboardPanel.isOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
+        loadClipboardIfNeeded()
         machine?.cancelAll { _ in }
         swipeCapture.cancel()
         resetArbiter()

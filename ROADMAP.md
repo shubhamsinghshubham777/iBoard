@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — parallel round 2 (APP2, SYNC2, KEYBOARD2 merged; DATA2 pending)
+Merged; build + `scripts/test.sh --no-ui` pass. Settings v4 (haptic pack picker, clipboard history toggle + TTL), Full Access wording fixed, wide-width app layout (unseen on screen), D-29 Full Access requested; sync now exports/applies the real personal model (shards split, tombstones compacted); keyboard: UILexicon wiring + text-replacement expansion, clipboard history panel, Dynamic Type/VoiceOver actions. Keyboard now honours `clipboardHistory`/`clipboardTTL`. All `[~]`: device pass needed (see docs/agent-reports/{app2,sync2,keyboard2}.md). Open risks: sync opens a second PersonalStore writer from the app; IBoardSync now linked into the extension (measure footprint); clipboard panel only reachable via the chip.
+
 ### 2026-10-27 — parallel round (KEYBOARD, SYNC, DATA, APP agents merged)
 Merged four worktree branches; `scripts/build.sh` and `scripts/test.sh --no-ui` pass on the merged tree. Tasks moved to `[~]`: M3-04, M3-05, M6-05, M7-04, M8-03, M8-05, M9-03, M11-06, M12-02, M12-03, M13-01, M13-04 (none verified on device; details in `docs/agent-reports/`). Added a privacy-audit allowlist entry for the sync app file. Follow-ups: iCloud entitlement/container (owner), hapticPack picker in the app, UILexicon keyboard wiring, swipe accuracy vs F3, real swipe traces (M4-04), device test of new keyboard UI.
 
