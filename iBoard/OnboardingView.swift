@@ -117,9 +117,9 @@ private struct FullAccessStep: View {
 private struct CodesStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Optional. A Shortcuts automation can pass text and email codes to iBoard so they appear in the suggestion strip, with no Full Access needed.")
+            Text("When a field asks for a verification code, iBoard shows a \"Code from Messages\" chip that switches to the system keyboard, which offers the code from your messages. Nothing to set up. Optionally, a Shortcuts automation can pass codes to iBoard so they appear right in the suggestion strip.")
                 .font(.subheadline)
-            NavigationLink("Set up verification codes") { OTPSetupView() }
+            NavigationLink("Optional: automatic codes in the strip") { OTPSetupView() }
                 .buttonStyle(.bordered)
             Text("You can skip this and do it later from the main screen.")
                 .font(.footnote).foregroundStyle(.secondary)

@@ -715,8 +715,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** `PrivacyInfo.xcprivacy` for app + keyboard (no tracking/collection; UserDefaults reasons CA92.1, 1C8F.1) and `docs/PRIVACY.md`; reason codes from memory, not yet validated by App Store Connect; privacy labels still to do.
 - [~] **M13-04 App Review audit** — 4.4.1 checklist with `app-store-review` skill. Depends: M13-03.
   Update 2026-10-27: audit done without the app-store-review skill (not installed); added ITSAppUsesNonExemptEncryption; owner items in docs/RELEASE_CHECKLIST.md.
-- [ ] **M13-05 👤 TestFlight beta** — Depends: M13-04.
-- [ ] **M13-06 👤 App Store submission & public repo launch** — Depends: M13-05.
+- [ ] **M13-05 👤 TestFlight beta** *(deprioritized by the owner 2026-10-27)* — Depends: M13-04.
+- [ ] **M13-06 👤 App Store submission & public repo launch** *(deprioritized by the owner 2026-10-27)* — Depends: M13-05.
 
 ---
 
@@ -807,6 +807,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ---
 
 ## 15. Progress log
+
+### 2026-10-27 — Round 8: system-keyboard OTP chip, sync key wiring, perf run script
+Merged: (1) "Code from Messages" strip chip in `.oneTimeCode` fields with no fresh iBoard code, calls `advanceToNextInputMode()` (zero setup, no Full Access, reads nothing; caveat: goes to the next enabled keyboard, not necessarily the system one); onboarding now says so and demotes the Shortcuts automation to optional. Device steps in otpsys.md; not tried on the phone. (2) App: production Keychain item (`SyncKeychainItem`) + `SyncKeyManager` in `SyncSettingsModel`, key-missing/mismatch states with confirmed start-over, ThemeStudioView concurrency warnings fixed, extension version aligned to 1.0.0 (last build warning); 4 new tests; real Keychain/iCloud propagation untested (appsync4.md). (3) `scripts/device-perf.sh run`: one command that builds, installs, guides the steps, pulls and prints PASS/FAIL vs §6. Owner deprioritized TestFlight and App Store submission (M13-05/06). `scripts/build.sh` and `scripts/test.sh --no-ui` pass on the merged tree.
 
 ### 2026-10-27 — "id" -> i'd preference
 Owner confirmed thanks/what's work on device; "id" swipes should prefer i'd. Raised the i'd rate in `Tools/EnglishData/data/contractions.tsv` 450 -> 1300 per million (realistic conversational rate; "is" had won on LM prior), rebuilt `Data/english/` (sizes unchanged). Scorer counts an "id" prompt as i'd. Real (402): top-1 89.6 / top-3 99.3, held-out top-3 99.5; i'd is now rank 1 / rank 2 on the two "id" swipes (n=2, weak evidence). Engine tests 260 pass, `scripts/build.sh` OK. Plain "id" typed by tapping is unaffected by swipe ranking but autocorrect may now prefer i'd more: check on device.

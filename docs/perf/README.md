@@ -5,7 +5,10 @@ Every 0.5 s it samples `phys_footprint` and every 2 s writes counts and numbers 
 `Library/Caches/perf-metrics.json` in the extension container: `peakMB`, `currentMB`, `appearCount`, `memoryWarnings`,
 Perf p50/p95 per metric, and a footprint timeline `[unixSeconds, MB]`.
 
-Build and install (Release + hook): `scripts/device-perf.sh build` then `scripts/device-perf.sh install`.
+**Quickest:** `scripts/device-perf.sh run` (phone unlocked and plugged in): builds the Release + hook build, installs it, prints
+the step list, waits for you to finish, pulls the numbers and prints PASS/FAIL against the ROADMAP §6 budgets.
+
+Individual steps. Build and install (Release + hook): `scripts/device-perf.sh build` then `scripts/device-perf.sh install`.
 Read: `scripts/device-perf.sh pull` (prints a summary; raw file in `build/device-perf/`).
 Crash logs: `scripts/device-perf.sh crashes`.
 
