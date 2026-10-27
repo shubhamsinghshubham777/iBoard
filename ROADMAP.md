@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — DATA2 merged (swipe accuracy)
+Hinglish swipe: top-1 now 95.5/94.4/89.5% and top-3 99.7/99.1/96.3% (careful/normal/sloppy) on synthetic traces, up from 89.8/88.1/82.8 and 98.4/96.9/92.7; held-out half 94.6/98.6. Cause: sharp Hinglish n-gram backoff vetoed correct swipes; fixed via `lmUnigramMix` 0.3 and `lmWeight` 0.5. English top-1 93.5→95.1%. Engine 254 tests pass. M4-04 still needs real traces (versioned `.jsonl` format + loader in `Fixtures/traces/`). F3 on real fingers unproven. See docs/agent-reports/data2.md.
+
 ### 2026-10-27 — parallel round 2 (APP2, SYNC2, KEYBOARD2 merged; DATA2 pending)
 Merged; build + `scripts/test.sh --no-ui` pass. Settings v4 (haptic pack picker, clipboard history toggle + TTL), Full Access wording fixed, wide-width app layout (unseen on screen), D-29 Full Access requested; sync now exports/applies the real personal model (shards split, tombstones compacted); keyboard: UILexicon wiring + text-replacement expansion, clipboard history panel, Dynamic Type/VoiceOver actions. Keyboard now honours `clipboardHistory`/`clipboardTTL`. All `[~]`: device pass needed (see docs/agent-reports/{app2,sync2,keyboard2}.md). Open risks: sync opens a second PersonalStore writer from the app; IBoardSync now linked into the extension (measure footprint); clipboard panel only reachable via the chip.
 
