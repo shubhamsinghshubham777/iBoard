@@ -589,8 +589,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Result (2026-10-27):** learning policy: 20 excluded content types × 12 keyboard types × incognito, kept-word detection, forget list (30 days, 3 deliberate retypes), word filter; 25 tests; the keyboard controller still has to call the events (contract in `PersonalLearner.swift`). Not run in the extension.
 - [~] **M3-03 Phrase model + smart wide chip (D-13)** — Depends: M3-02.
   **Partial (2026-10-27):** engine side: `PhraseModel` (confidence ≥0.6, uses ≥2, wide-chip slot, tap = all words / long-press = next word); 11 tests; not wired into EngineActor; thresholds untuned.
-- [ ] **M3-04 Forget & never-correct UX** — Long-press suggestion → forget; lists persist. Depends: M3-02.
-- [ ] **M3-05 UILexicon import** — Contacts + Text Replacements, cheap refresh. Depends: M3-01.
+- [~] **M3-04 Forget & never-correct UX** — Long-press suggestion → forget; lists persist. Depends: M3-02.
+  Update 2026-10-27: long-press menu (Forget / Never correct) built; only menu policy unit-tested; feel needs device. See docs/agent-reports/keyboard.md.
+- [~] **M3-05 UILexicon import** — Contacts + Text Replacements, cheap refresh. Depends: M3-01.
+  Update 2026-10-27: engine side done (SystemLexicon, 6 tests); keyboard adapter for UILexicon + fingerprint persistence not wired. See docs/agent-reports/data.md.
 - [~] **M3-06 Adaptive touch model (F14)** — Depends: M3-02.
   **Partial (2026-10-27):** engine side: `AdaptiveTouchModel` (EMA mean/cov per orientation×display class, ±30% clamp); synthetic sloppy-typist key error 9.0%→4.7%, neutral 0.33%→0.41%; hook is `adaptive.apply(to:&params,…)` + rebuild TapDecoder; not wired, no real traces.
 - [~] **M3-07 Import/export `.iboarddict`** (app side). Depends: M3-01, M1-08.
@@ -630,7 +632,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [~] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
   Depends: M6-02, M1-08.
   **Partial (2026-10-27):** guided OTP setup (6 steps for Message or Email, wording from P-27) + self-test screen polling `OTPReader` (2 min, shows code on screen only); signed `.shortcut` carrying the automation trigger is NOT DETERMINED — `shortcuts sign` works on a hand-written trigger-less plist, but no real automation export could be inspected (Mac Shortcuts library is privacy-blocked); owner could export the working automation to settle it. On-screen behaviour NOT tested. `docs/ONBOARDING.md`.
-- [ ] **M6-05 Clipboard code fallback** — Depends: M6-03, M0-09.
+- [~] **M6-05 Clipboard code fallback** — Depends: M6-03, M0-09.
+  Update 2026-10-27: tap-only 'Paste code' chip built (no unprompted pasteboard reads); P-25 prompt behaviour needs device.
 - [~] **M6-06 Personal-info chips (F7)** — Depends: M2-04, M1-08.
   **Partial (2026-10-27):** personal-info chips (reader/model in IBoardUI): `name` chip verified in Safari on the simulator; email/telephone/address only unit-tested (Safari did not appear to pass `emailAddress`); the app-side editor does not exist.
 
@@ -642,16 +645,19 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** `SecondaryLanguage` dual-lexicon scoring in TapDecoder/SwipeDecoder/EngineActor (previous-word language prior + personal bias; backward compatible); 227 engine tests; dual-lexicon latency measured on macOS release only with a synthetic English proxy. Not wired into the keyboard.
 - [~] **M7-03 Autocorrect protection for Hinglish** — Depends: M7-02.
   **Partial (2026-10-27):** protection rule implemented and unit-tested (a valid Hinglish word is never auto-corrected into an English-only word; the English word stays as a suggestion).
-- [ ] **M7-04 Hinglish eval set** — Accuracy targets equal to F2/F3 on mixed text. Depends: M7-03.
+- [~] **M7-04 Hinglish eval set** — Accuracy targets equal to F2/F3 on mixed text. Depends: M7-03.
+  Update 2026-10-27: eval built; tap meets F2, swipe misses F3 (top-1 82.8-89.8%, top-3 92.7-98.4%); synthetic touches. See docs/agent-reports/data.md.
 
 ### M8 — Themes, feel & landscape (F10, F12, F13)
 - [x] **M8-01 Theme model + presets (Native, Native Glass, …)** — Depends: M0-04, M1-03.
   **Result (2026-10-27):** versioned `Theme` model + presets (Native token-identical, Native Glass key-only per P-22, Midnight, Paper, High Contrast ≥7:1), export/import with validation, accessibility resolution (M8-05 logic) — 12 tests; IBoardUI still renders from `NativeThemeTokens`, `Theme` not wired into rendering. `docs/THEMES.md`.
 - [~] **M8-02 Theme studio (app)** — Live preview, photo pipeline, export/import. Depends: M8-01, M1-08.
   **Partial (2026-10-27):** theme studio (preset picker, light/dark editing, export/import `.iboardtheme`, photo pipeline to exact pixel size, `ThemeStore` writes theme to the App Group); 18 theme tests; on-screen, PhotosPicker and the keyboard reading photo files without Full Access NOT tested; photo target heights assumed.
-- [ ] **M8-03 Haptics & sound packs** — Depends: M1-05.
+- [~] **M8-03 Haptics & sound packs** — Depends: M1-05.
+  Update 2026-10-27: haptic packs built (hapticPack in IBoardSettings; app picker missing); sound packs impossible in an extension (P-23).
 - [ ] **M8-04 Landscape layouts (F13)** — Depends: M1-02.
-- [ ] **M8-05 Accessibility of themes** — Reduce Transparency/Contrast/Bold Text. Depends: M8-01.
+- [~] **M8-05 Accessibility of themes** — Reduce Transparency/Contrast/Bold Text. Depends: M8-01.
+  Update 2026-10-27: observers + skin tests already existed; not re-checked on device.
 
 ### M9 — Emoji & clipboard (F8, F9)
 - [~] **M9-01 Emoji panel** (memory-safe). Depends: M0-03, M1-03.
@@ -660,7 +666,8 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [~] **M9-02 Emoji search & prediction** — Depends: M9-01, M2-04.
   **Partial (2026-10-27):** `EmojiSearchIndex` + `predict(afterWord:)` over en/hi CLDR + ~200 Hinglish keywords: release p95 0.011 ms on macOS (index build 32 ms); 21 tests; not wired into the keyboard; index build cost on an iPhone 12 unmeasured.
   **Update (2026-10-27):** wired: typing `pizza` shows 🍕 in the strip and tap inserts; full-results view after Return NOT tested.
-- [ ] **M9-03 Clipboard manager** — Depends: M0-05, M1-06.
+- [~] **M9-03 Clipboard manager** — Depends: M0-05, M1-06.
+  Update 2026-10-27: history model/store + empty-field chip built; history panel and TTL setting not built; background pasteboard prompt risk needs device.
 
 ### M10 — Companion app (F16, F17)
 - [~] **M10-01 Onboarding** — Depends: M6-04.
@@ -687,21 +694,26 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** laptop fill-to-fold layout (half inner landscape height, no split, number row, key cap 72); the arrow/edit column is reserved space only and the snap handle is not wired — ESTIMATED.
 - [ ] **M11-05 Device Hub pose verification** — All poses × orientations; screenshots in `docs/reference/duo/`.
   Depends: M11-04.
-- [ ] **M11-06 Companion app Duo pass** — Run `app-resizability` skill; fix findings. Depends: M10-02.
+- [~] **M11-06 Companion app Duo pass** — Run `app-resizability` skill; fix findings. Depends: M10-02.
+  Update 2026-10-27: audit found no screen/orientation hacks; one scene fix; no split layout, not run on Duo sim. See docs/agent-reports/app.md.
 
 ### M12 — iCloud sync (opt-in)
 - [~] **M12-01 CloudKit private DB schema** — Per-device grow-only counters merged by sum; forget/never-correct as
   last-writer-wins sets. Depends: M3-01.
   **Partial (2026-10-27):** pure merge model in new `Packages/IBoardSync` (per-device counters summed; forget as max-merged floor stamp, never-correct LWW+tombstones; commutative/associative/idempotent over 300 random histories; 8 tests) and `docs/SYNC.md` with a proposed CloudKit mapping; no CloudKit code yet; sync keys must be encrypted/hashed (typed words are sensitive).
-- [ ] **M12-02 Sync engine in app** (keyboard never touches the network for sync). Depends: M12-01.
-- [ ] **M12-03 Settings & conflict tests** — Depends: M12-02.
+- [~] **M12-02 Sync engine in app** (keyboard never touches the network for sync). Depends: M12-01.
+  Update 2026-10-27: SyncEngine/CloudKitSyncStore/crypto + settings screen, 18 package tests; needs iCloud entitlement + container and real-device test; not wired to personal model. See docs/agent-reports/sync.md.
+- [~] **M12-03 Settings & conflict tests** — Depends: M12-02.
+  Update 2026-10-27: conflict/failure tests done against in-memory fake; real iCloud untested.
 
 ### M13 — Hardening & launch
-- [ ] **M13-01 Accessibility (F19)** — Depends: M5, M8.
+- [~] **M13-01 Accessibility (F19)** — Depends: M5, M8.
+  Update 2026-10-27: keys + strip now VoiceOver elements; Dynamic Type, Switch/Voice Control, rotor, emoji panel not done.
 - [ ] **M13-02 Performance soak** — 30-min typing soak on iPhone 12, memgraph before/after, no growth. Depends: all features.
 - [~] **M13-03 Privacy manifest & labels** — `PrivacyInfo.xcprivacy`, "Data Not Collected", required-reason APIs.
   **Partial (2026-10-27):** `PrivacyInfo.xcprivacy` for app + keyboard (no tracking/collection; UserDefaults reasons CA92.1, 1C8F.1) and `docs/PRIVACY.md`; reason codes from memory, not yet validated by App Store Connect; privacy labels still to do.
-- [ ] **M13-04 App Review audit** — 4.4.1 checklist with `app-store-review` skill. Depends: M13-03.
+- [~] **M13-04 App Review audit** — 4.4.1 checklist with `app-store-review` skill. Depends: M13-03.
+  Update 2026-10-27: audit done without the app-store-review skill (not installed); added ITSAppUsesNonExemptEncryption; owner items in docs/RELEASE_CHECKLIST.md.
 - [ ] **M13-05 👤 TestFlight beta** — Depends: M13-04.
 - [ ] **M13-06 👤 App Store submission & public repo launch** — Depends: M13-05.
 
@@ -794,6 +806,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ---
 
 ## 15. Progress log
+
+### 2026-10-27 — parallel round (KEYBOARD, SYNC, DATA, APP agents merged)
+Merged four worktree branches; `scripts/build.sh` and `scripts/test.sh --no-ui` pass on the merged tree. Tasks moved to `[~]`: M3-04, M3-05, M6-05, M7-04, M8-03, M8-05, M9-03, M11-06, M12-02, M12-03, M13-01, M13-04 (none verified on device; details in `docs/agent-reports/`). Added a privacy-audit allowlist entry for the sync app file. Follow-ups: iCloud entitlement/container (owner), hapticPack picker in the app, UILexicon keyboard wiring, swipe accuracy vs F3, real swipe traces (M4-04), device test of new keyboard UI.
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
 
