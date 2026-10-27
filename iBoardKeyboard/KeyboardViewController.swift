@@ -12,6 +12,13 @@ final class KeyboardViewController: UIInputViewController {
     private(set) var settings = IBoardSettings.defaults
 
     private let grid = KeyGridView()
+    /// Themed backdrop behind keys and strip (F10); draws nothing for the system material (Native, P-22).
+    private let backdropView = ThemeBackdropView()
+    private let themeStore = ThemeStore()
+    /// The selected theme from the App Group (written by the app's ThemeStore; Native when absent or invalid).
+    private var theme = ThemePresets.native
+    private var appliedSkin: KeyboardSkin?
+    private var appliedBackdropPhoto: URL?
     private let strip = SuggestionStripView()
     private let handle = ResizeHandleView()
     private let overrides = LocalLayoutOverrides()
@@ -103,6 +110,8 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         settings = SettingsStore().load()
         applySettings()
+        theme = themeStore.loadSelected() // Native on any problem (D-07); works without Full Access (P-23)
+        appliedSkin = nil
         refreshAppearanceAndTraits()
         applyFieldConfig(forceFieldChange: true)
         applyAppCommands()
@@ -118,6 +127,16 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear // P-22: the system draws the keyboard backdrop
+        backdropView.frame = view.bounds
+        backdropView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(backdropView) // below the grid
+        for name in [UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+                     UIAccessibility.darkerSystemColorsStatusDidChangeNotification,
+                     UIAccessibility.boldTextStatusDidChangeNotification] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refreshAppearanceAndTraits() }
+            }
+        }
         grid.frame = view.bounds
         grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         grid.accessibilityIdentifier = "key-grid"
@@ -529,13 +548,35 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func refreshAppearanceAndTraits() {
+        let appearance: ThemeAppearance
         switch textDocumentProxy.keyboardAppearance ?? .default {
-        case .dark: grid.appearance = .dark
-        case .light: grid.appearance = .light
-        default: grid.appearance = traitCollection.userInterfaceStyle == .dark ? .dark : .light
+        case .dark: appearance = .dark
+        case .light: appearance = .light
+        default: appearance = traitCollection.userInterfaceStyle == .dark ? .dark : .light
         }
-        strip.appearance = grid.appearance
+        applyTheme(appearance: appearance)
         relayoutIfNeeded()
+    }
+
+    /// Resolves the selected theme under Reduce Transparency / Increase Contrast / Bold Text (M8-05) and hands the
+    /// result to the grid, the strip and the backdrop. Cheap no-op when nothing changed.
+    private func applyTheme(appearance: ThemeAppearance) {
+        let skin = KeyboardSkin(
+            theme: theme, appearance: appearance,
+            accessibility: ThemeAccessibilitySettings(
+                reduceTransparency: UIAccessibility.isReduceTransparencyEnabled,
+                increaseContrast: UIAccessibility.isDarkerSystemColorsEnabled,
+                boldText: UIAccessibility.isBoldTextEnabled))
+        // Photos only come from the pre-sized files the app wrote, picked by orientation.
+        let photo = skin.backdrop.photoToken.flatMap {
+            themeStore.photoURL(token: $0, orientation: currentTraits().orientation == .landscape ? .landscape : .portrait)
+        }
+        guard skin != appliedSkin || photo != appliedBackdropPhoto else { return }
+        appliedSkin = skin
+        appliedBackdropPhoto = photo
+        grid.skin = skin
+        strip.skin = skin
+        backdropView.apply(skin.backdrop, photoURL: photo, displayScale: traitCollection.displayScale > 0 ? traitCollection.displayScale : 3)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -668,6 +709,7 @@ final class KeyboardViewController: UIInputViewController {
         let key = LayoutKey(size: size, safe: safe, traits: traits, kind: layoutKind, layoutSettings: ls)
         guard key != lastLayoutKey else { return }
         lastLayoutKey = key
+        applyTheme(appearance: grid.appearance) // photo file follows the orientation
 
         var want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         if ls.fillToFold, layoutKind == .letters, let screen = screenSize {

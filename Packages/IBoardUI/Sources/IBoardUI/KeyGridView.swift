@@ -25,16 +25,14 @@ public final class KeyGridView: UIView {
     /// `enablesReturnKeyAutomatically` with an empty field: the return key is drawn dimmed.
     public private(set) var returnKeyEnabled = true
 
-    public var appearance: ThemeAppearance = .light {
-        didSet { if appearance != oldValue { applyTheme() } }
+    /// What to draw (colours, fonts, key decoration, trail). Native until the host installs the selected theme.
+    public var skin: KeyboardSkin = .native(.light) {
+        didSet { if skin != oldValue { applyTheme() } }
     }
+    public var appearance: ThemeAppearance { skin.appearance }
 
     /// The swipe trail (M4-01), above all key layers. Style follows the theme (`trailStyle`).
     public let trail = SwipeTrailLayer()
-    /// Trail colour / width / fade; nil follows the native tokens.
-    public var trailStyle: SwipeTrailStyle? {
-        didSet { trail.trailStyle = trailStyle ?? SwipeTrailStyle(color: tokens.actionKeyFill) }
-    }
 
     /// Faint secondary glyph (the up-flick character, M5-04) in the corner of each letter key. Off by default.
     public var showsFlickHints = false {
@@ -83,7 +81,7 @@ public final class KeyGridView: UIView {
         if let newShift { shift = newShift }
         layout = new
         let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 3
-        glyphs.configure(tokens: tokens, scale: scale, keyHeight: new.metrics.keyHeight)
+        glyphs.configure(skin: skin, scale: scale, keyHeight: new.metrics.keyHeight)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -102,7 +100,8 @@ public final class KeyGridView: UIView {
         for (i, key) in new.keys.enumerated() {
             let l = keyLayers[i]
             l.frame = snapped(key.frame, scale: scale)
-            l.cornerRadius = new.metrics.cornerRadius
+            l.cornerRadius = new.metrics.cornerRadius * CGFloat(skin.cornerRadiusScale)
+            decorate(l)
             l.contentsScale = scale
             l.backgroundColor = isAction[i] ? actionFill : fill
             l.contents = glyphs.image(for: glyphSpec(for: key.identity))
@@ -169,18 +168,38 @@ public final class KeyGridView: UIView {
     // MARK: Layout / theme
 
     private func applyTheme() {
-        tokens = NativeThemeTokens.tokens(for: appearance)
         applyThemeColors()
         if let layout { apply(layout: layout) }
     }
 
     private func applyThemeColors() {
-        tokens = NativeThemeTokens.tokens(for: appearance)
+        tokens = skin.tokens
         fill = tokens.keyFill.cgColor
         fillPressed = tokens.keyPressedFill.cgColor
         actionFill = tokens.actionKeyFill.cgColor
         actionFillPressed = tokens.actionKeyPressedFill.cgColor
-        trail.trailStyle = trailStyle ?? SwipeTrailStyle(color: tokens.actionKeyFill)
+        trail.trailStyle = skin.trail
+    }
+
+    /// Border / shadow of a key tile (themes only; Native has neither, so nothing is set and nothing is rasterised).
+    private func decorate(_ l: CALayer) {
+        if skin.keyBorderWidth > 0 {
+            l.borderWidth = CGFloat(skin.keyBorderWidth)
+            l.borderColor = skin.keyBorderColor.cgColor
+        } else {
+            l.borderWidth = 0
+        }
+        if skin.keyShadowColor.alpha > 0, skin.keyShadowRadius > 0 {
+            l.shadowColor = skin.keyShadowColor.cgColor.copy(alpha: 1)
+            l.shadowOpacity = Float(skin.keyShadowColor.alpha)
+            l.shadowRadius = CGFloat(skin.keyShadowRadius)
+            l.shadowOffset = CGSize(width: 0, height: skin.keyShadowOffsetY)
+            // An explicit path keeps the shadow off the offscreen-rendering path.
+            l.shadowPath = CGPath(roundedRect: l.bounds, cornerWidth: l.cornerRadius, cornerHeight: l.cornerRadius, transform: nil)
+        } else {
+            l.shadowOpacity = 0
+            l.shadowPath = nil
+        }
     }
 
     private func color(forKey i: Int, pressed: Bool) -> CGColor {
@@ -281,6 +300,8 @@ enum GlyphSpec: Hashable {
 @MainActor
 final class GlyphCache {
     private var tokens = NativeThemeTokens.light
+    private var weight = FontWeightToken.regular
+    private var family: String?
     private var scale: CGFloat = 3
     private var keyHeight: CGFloat = 43
     private var images: [GlyphSpec: CGImage] = [:]
@@ -288,11 +309,19 @@ final class GlyphCache {
     /// Native baseline sits 28 pt below the tile top on a 43 pt tile (measured, native-metrics.json glyph table).
     private static let baselineRatio: CGFloat = 28.0 / 43.0
 
-    func configure(tokens: NativeThemeTokens, scale: CGFloat, keyHeight: CGFloat) {
-        if tokens != self.tokens || scale != self.scale || keyHeight != self.keyHeight {
+    func configure(skin: KeyboardSkin, scale: CGFloat, keyHeight: CGFloat) {
+        if skin.tokens != tokens || skin.fontWeight != weight || skin.fontFamily != family
+            || scale != self.scale || keyHeight != self.keyHeight {
             images.removeAll(keepingCapacity: true)
         }
-        self.tokens = tokens; self.scale = scale; self.keyHeight = keyHeight
+        self.tokens = skin.tokens; self.weight = skin.fontWeight; self.family = skin.fontFamily
+        self.scale = scale; self.keyHeight = keyHeight
+    }
+
+    /// SF Pro at the theme weight (Native: regular), or the theme's installed family when it exists.
+    private func font(_ size: CGFloat) -> UIFont {
+        if let family, let custom = UIFont(name: family, size: size) { return custom }
+        return UIFont.systemFont(ofSize: size, weight: weight.uiWeight)
     }
 
     func image(for spec: GlyphSpec?) -> CGImage? {
@@ -312,7 +341,7 @@ final class GlyphCache {
             case .symbol: size = tokens.symbolFontSize
             case .function: size = tokens.functionLabelFontSize
             }
-            let font = UIFont.systemFont(ofSize: size, weight: .regular)
+            let font = font(size)
             let color = UIColor(cgColor: (onAction ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
             let textSize = (text as NSString).size(withAttributes: attrs)
@@ -332,7 +361,7 @@ final class GlyphCache {
             }
             return image.cgImage
         case .hinted(let text, let hint, let upper):
-            let font = UIFont.systemFont(ofSize: upper ? tokens.uppercaseLetterFontSize : tokens.letterFontSize, weight: .regular)
+            let font = font(upper ? tokens.uppercaseLetterFontSize : tokens.letterFontSize)
             let hintFont = UIFont.systemFont(ofSize: 9, weight: .regular)
             let color = UIColor(cgColor: tokens.keyLabel.cgColor)
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
@@ -350,7 +379,7 @@ final class GlyphCache {
                 (hint as NSString).draw(at: CGPoint(x: width - hintSize.width - 1, y: 2), withAttributes: hintAttrs)
             }.cgImage
         case .symbol(let name, let onAction):
-            let config = UIImage.SymbolConfiguration(pointSize: name == "globe" ? 20 : 19, weight: .regular)
+            let config = UIImage.SymbolConfiguration(pointSize: name == "globe" ? 20 : 19, weight: weight.symbolWeight)
             let color = UIColor(cgColor: (onAction ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
             guard let base = UIImage(systemName: name, withConfiguration: config) else { return nil }
             let tinted = base.withTintColor(color, renderingMode: .alwaysOriginal)
@@ -361,6 +390,25 @@ final class GlyphCache {
             return UIGraphicsImageRenderer(size: size, format: format).image { _ in
                 tinted.draw(in: CGRect(origin: .zero, size: size))
             }.cgImage
+        }
+    }
+}
+extension FontWeightToken {
+    var uiWeight: UIFont.Weight {
+        switch self {
+        case .regular: .regular
+        case .medium: .medium
+        case .semibold: .semibold
+        case .bold: .bold
+        }
+    }
+
+    var symbolWeight: UIImage.SymbolWeight {
+        switch self {
+        case .regular: .regular
+        case .medium: .medium
+        case .semibold: .semibold
+        case .bold: .bold
         }
     }
 }

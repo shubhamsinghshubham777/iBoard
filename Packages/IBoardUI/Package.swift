@@ -23,6 +23,7 @@ let package = Package(
         .testTarget(name: "IBoardUITests", dependencies: [
             "IBoardUI",
             .product(name: "IBoardEngine", package: "IBoardEngine"),
+            .product(name: "IBoardTheme", package: "IBoardTheme"),
         ]),
     ],
     swiftLanguageModes: [.v6]

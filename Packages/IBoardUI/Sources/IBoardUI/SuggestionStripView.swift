@@ -12,7 +12,9 @@ import IBoardTheme
 public final class SuggestionStripView: UIView {
     public static let slotCount = 3
 
-    public var appearance: ThemeAppearance = .light { didSet { if appearance != oldValue { applyColors() } } }
+    /// Colours / weights from the selected theme (Native by default).
+    public var skin: KeyboardSkin = .native(.light) { didSet { if skin != oldValue { applyColors() } } }
+    public var appearance: ThemeAppearance { skin.appearance }
 
     /// Slot text (static placeholders until F2 supplies candidates). Ignored while the alternates row shows.
     public var slotTexts: [String] = ["", "", ""] { didSet { relayout() } }
@@ -81,6 +83,7 @@ public final class SuggestionStripView: UIView {
     private let bannerLabel = UILabel()
     private var actionLabels: [UILabel] = []
     private var tokens = NativeThemeTokens.light
+    private let chipLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -98,6 +101,11 @@ public final class SuggestionStripView: UIView {
         bannerLabel.isHidden = true
         addSubview(bannerLabel)
         for d in dividers { layer.addSublayer(d) }
+        for c in chipLayers {
+            c.cornerCurve = .continuous
+            c.isHidden = true
+            layer.insertSublayer(c, at: 0)
+        }
         for e in emphasisLayers {
             e.cornerCurve = .continuous
             e.isHidden = true
@@ -162,13 +170,15 @@ public final class SuggestionStripView: UIView {
     // MARK: Layout
 
     private func applyColors() {
-        tokens = NativeThemeTokens.tokens(for: appearance)
-        let label = UIColor(cgColor: tokens.keyLabel.cgColor)
+        tokens = skin.tokens
+        let label = UIColor(cgColor: skin.stripLabel.cgColor)
         for l in slotLabels { l.textColor = label }
         for l in altLabels { l.textColor = label }
+        backgroundColor = skin.stripKind == .filled ? UIColor(cgColor: skin.stripBackground.cgColor) : .clear
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        for d in dividers { d.backgroundColor = tokens.keyLabel.cgColor.copy(alpha: 0.18) }
+        for d in dividers { d.backgroundColor = skin.stripSeparator.cgColor }
+        for c in chipLayers { c.backgroundColor = tokens.keyFill.cgColor }
         highlightLayer.backgroundColor = tokens.actionKeyFill.cgColor
         for e in emphasisLayers { e.backgroundColor = tokens.actionKeyFill.cgColor }
         CATransaction.commit()
@@ -222,8 +232,12 @@ public final class SuggestionStripView: UIView {
             l.text = i < slotTexts.count ? slotTexts[i] : ""
             l.isHidden = alt != nil || overlay
             let on = alt == nil && !overlay && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
-            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
-            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : .regular)
+            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
+            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : skin.fontWeight.uiWeight)
+            let chip = chipLayers[i]
+            chip.isHidden = skin.stripKind != .chips || alt != nil || overlay || on || (l.text ?? "").isEmpty
+            chip.frame = l.frame.insetBy(dx: 3, dy: 5)
+            chip.cornerRadius = min(chip.frame.height, chip.frame.width) / 3
             let e = emphasisLayers[i]
             e.isHidden = !on
             e.frame = l.frame.insetBy(dx: 4, dy: 5)
@@ -238,7 +252,7 @@ public final class SuggestionStripView: UIView {
         for (i, l) in altLabels.enumerated() where i < alt.options.count {
             l.frame = alt.cellFrame(i).offsetBy(dx: -frame.minX, dy: -frame.minY)
             let on = alt.highlighted == i
-            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
+            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
         }
         if let hi = alt.highlighted {
             highlightLayer.isHidden = false
