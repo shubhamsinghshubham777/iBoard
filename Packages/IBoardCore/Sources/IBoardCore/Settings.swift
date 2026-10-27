@@ -47,6 +47,9 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     public var clipboardHistory: Bool
     /// How long unpinned clipboard items are kept.
     public var clipboardTTL: ClipboardTTL
+    /// Phone landscape: a punctuation column on each side of the letters (M8-04). Default on. Added to v4 without a
+    /// version bump: older blobs lack the key and decode to the default.
+    public var landscapeSideKeys: Bool
 
     public init(
         version: Int = IBoardSettings.currentVersion, haptics: Bool = true, keyClickSound: Bool = false,
@@ -56,8 +59,10 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
         duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true,
         longPressDelay: LongPressDelay = .standard, hapticPack: HapticPack = .standard,
-        clipboardHistory: Bool = false, clipboardTTL: ClipboardTTL = .oneHour
+        clipboardHistory: Bool = false, clipboardTTL: ClipboardTTL = .oneHour,
+        landscapeSideKeys: Bool = true
     ) {
+        self.landscapeSideKeys = landscapeSideKeys
         self.clipboardHistory = clipboardHistory
         self.clipboardTTL = clipboardTTL
         self.hapticPack = hapticPack
@@ -96,7 +101,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
         case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys, longPressDelay
         case flickHints = "keyHints"
-        case hapticPack, clipboardHistory, clipboardTTL
+        case hapticPack, clipboardHistory, clipboardTTL, landscapeSideKeys
     }
 
     /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
@@ -131,6 +136,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         // v4 adds clipboardHistory + clipboardTTL.
         self.clipboardHistory = try c.decodeIfPresent(Bool.self, forKey: .clipboardHistory) ?? d.clipboardHistory
         self.clipboardTTL = (try? c.decodeIfPresent(ClipboardTTL.self, forKey: .clipboardTTL)) ?? d.clipboardTTL
+        self.landscapeSideKeys = try c.decodeIfPresent(Bool.self, forKey: .landscapeSideKeys) ?? d.landscapeSideKeys
     }
 }
 
