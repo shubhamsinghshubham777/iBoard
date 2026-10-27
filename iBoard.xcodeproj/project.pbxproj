@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		015158E3B1264CC95D506C35 /* lm.iblm in Resources */ = {isa = PBXBuildFile; fileRef = 7D80AAA9E4344144F1B3DD5C /* lm.iblm */; };
 		180AE19B8493AECE9386B4A4 /* OnboardingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */; };
 		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
 		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
@@ -21,8 +20,10 @@
 		68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */; };
 		69D508E38E6A569FDEF72281 /* OTPSetupGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC18F2697DA0784F0B0EA8E /* OTPSetupGuide.swift */; };
 		710DBC17B10427AD3B191D7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */; };
+		74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9DD939AC545CBC1667056403 /* lm.iblm */; };
 		76C0AFC7D63968EEF93A6891 /* DictionaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4021068ED546815593C37204 /* DictionaryStore.swift */; };
 		796C736BDA07FBDA04E645E1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90FB5660B13029D53411C374 /* OnboardingView.swift */; };
+		7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */ = {isa = PBXBuildFile; fileRef = C5CF122CB70C1309F378CC9B /* lexicon.iblex */; };
 		7D70078B4CAAA570FBBF620C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A27A8EC462F171D099FC8 /* ContentView.swift */; };
 		803CBBF590340B6D0F9186D2 /* IBoardCore in Frameworks */ = {isa = PBXBuildFile; productRef = 216285A7FBA94D1A19DDF35B /* IBoardCore */; };
 		8EB80591B1223E71D47EFA0E /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = C1E596259DA263BECA26D1B3 /* IBoardTheme */; };
@@ -32,7 +33,6 @@
 		A74AF87C028F5092E6F6FAE9 /* ThemeStudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */; };
 		AD864BF989D52C359147095F /* CaptureVerificationCodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */; };
 		B0BBF305F0FFB97152D74736 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C311DADFD5AB90CD0C8A04 /* InsightsView.swift */; };
-		B404810CFD92858BE5926AEC /* lexicon.iblex in Resources */ = {isa = PBXBuildFile; fileRef = 898AF8C7931E754E2A3583F0 /* lexicon.iblex */; };
 		B4C5143AD95D645A595D9954 /* IBoardTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 261EEFEA2D4EF829F24DE453 /* IBoardTheme */; };
 		B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 29D74A64C1D3FB7BA0CD5D3D /* lm.iblm */; };
 		B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDB32790B189574630A5B54 /* EngineHost.swift */; };
@@ -97,6 +97,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = english;
+			dstSubfolderSpec = 7;
+			files = (
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -119,18 +130,18 @@
 		6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iBoardKeyboard.entitlements; sourceTree = "<group>"; };
 		69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6DA6764C0EBA1B765A5E2882 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		7D80AAA9E4344144F1B3DD5C /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
 		8842ADAFC09F10311FD66887 /* OTPSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPSetupView.swift; sourceTree = "<group>"; };
-		898AF8C7931E754E2A3583F0 /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
 		8A0E463C150FB74CE1E4C489 /* DictionaryTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryTransferView.swift; sourceTree = "<group>"; };
 		8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHost.swift; sourceTree = "<group>"; };
 		90FB5660B13029D53411C374 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTests.swift; sourceTree = "<group>"; };
+		9DD939AC545CBC1667056403 /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
 		A79FA046627E67810DEBBE9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
+		C5CF122CB70C1309F378CC9B /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
 		CA1844700032908B476959FE /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
 		CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStudioView.swift; sourceTree = "<group>"; };
 		CD7C21085C40332AA7A01200 /* iBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardApp.swift; sourceTree = "<group>"; };
@@ -209,6 +220,15 @@
 			path = iBoard;
 			sourceTree = "<group>";
 		};
+		2AE4A810DEB787D0C13F4A28 /* english */ = {
+			isa = PBXGroup;
+			children = (
+				C5CF122CB70C1309F378CC9B /* lexicon.iblex */,
+				9DD939AC545CBC1667056403 /* lm.iblm */,
+			);
+			path = english;
+			sourceTree = "<group>";
+		};
 		461F96B303F47DF8EDBA4BF8 = {
 			isa = PBXGroup;
 			children = (
@@ -274,7 +294,6 @@
 				A79FA046627E67810DEBBE9E /* Info.plist */,
 				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
 				ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */,
-				EB81B62FC879E690A364B370 /* Resources */,
 			);
 			path = iBoardKeyboard;
 			sourceTree = "<group>";
@@ -288,15 +307,6 @@
 			path = hinglish;
 			sourceTree = "<group>";
 		};
-		EB81B62FC879E690A364B370 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				898AF8C7931E754E2A3583F0 /* lexicon.iblex */,
-				7D80AAA9E4344144F1B3DD5C /* lm.iblm */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		EED913B27068807561016C56 /* Config */ = {
 			isa = PBXGroup;
 			children = (
@@ -308,6 +318,7 @@
 		F6F49B7737E346AADA1E6F80 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				2AE4A810DEB787D0C13F4A28 /* english */,
 				BF967EACA861C969A492C582 /* hinglish */,
 			);
 			path = Data;
@@ -384,6 +395,7 @@
 				E21EA03E3C052CAB4043ABD9 /* Sources */,
 				BC893E0DA339C601C518B9F8 /* Resources */,
 				542E0CD6A6A5F52D98CB7F9C /* CopyFiles */,
+				79ADCEFC4F584199BD6ACD83 /* CopyFiles */,
 				1CA0CF9C8E6D6DCF9114B8D9 /* Frameworks */,
 			);
 			buildRules = (
@@ -474,8 +486,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F233255FA56EB6B132E94384 /* PrivacyInfo.xcprivacy in Resources */,
-				B404810CFD92858BE5926AEC /* lexicon.iblex in Resources */,
-				015158E3B1264CC95D506C35 /* lm.iblm in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -579,6 +589,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -701,6 +712,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
