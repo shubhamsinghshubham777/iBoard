@@ -45,6 +45,25 @@ JSON, `ThemeFile.export/import`. Cap 64 KiB. Import checks size, `schemaVersion`
 decodes, then validates every range, colour component finiteness, gradient stop count, asset-name safety (no separators), string lengths.
 Errors: `tooLarge`, `malformed`, `unsupportedVersion`, `invalid(path)`. Export of a valid theme is deterministic (sorted keys).
 
+## Theme studio and photo pipeline (M8-02)
+
+App side: `iBoard/ThemeStudioView.swift` (preset picker, My themes, light/dark editing of key fill/opacity/radius/border/shadow,
+label colours, weight, backdrop (system/solid/gradient/photo), swipe trail; `fileExporter`/`fileImporter` for `.iboardtheme`)
+and `ThemePreviewView.swift` (preview drawn from the `Theme` model only; the system-glass backdrop is a stand-in, P-22).
+Editing a preset forks it into a user theme with a fresh UUID; presets are never overwritten. Imported files get a fresh id and
+lose photo backdrops (photos are never embedded).
+
+`PhotoPipeline.process(data, target:)` (IBoardTheme, CoreGraphics/ImageIO, macOS-testable): ImageIO thumbnail decode (EXIF applied,
+full bitmap never built), aspect-fill centre crop to exactly `PhotoTarget` pixels, opaque sRGB JPEG q0.8. Source cap 100 MP.
+The app renders portrait and landscape targets from the keyboard point size x display scale; base heights (portrait 291 pt,
+landscape 200 pt) are ASSUMED constants scaled by the user's height setting, to be checked against the real keyboard heights.
+
+Storage (`ThemeStore`, App Group `group.app.iBoard`): selected theme JSON in defaults key `iboard.theme.selected` (keyboard reads it
+without Full Access, P-23; invalid or missing falls back to Native), user themes in `iboard.theme.user`, photos as files
+`ThemePhotos/<token>-p.jpg` and `<token>-l.jpg`; the theme's `photoAsset` is the token. Keyboard-side file reads without Full Access
+are NOT TESTED. Colours quantise to 8 bits on save.
+
 ## Not done here
 
-Rendering (IBoardUI still consumes `NativeThemeTokens`), theme studio (M8-02), photo pipeline, persistence of the selected theme.
+Rendering in the keyboard (IBoardUI still consumes `NativeThemeTokens`), keyboard-side reading of `ThemeStore`, an exported UTType
+declaration for `.iboardtheme` (the app uses a dynamic type conforming to JSON), on-screen testing of the studio.

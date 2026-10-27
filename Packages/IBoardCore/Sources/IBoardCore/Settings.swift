@@ -3,28 +3,63 @@ import Foundation
 /// Versioned user settings written by the companion app and read by the keyboard (works WITHOUT Full Access;
 /// keyboard->app writes do not work, see docs/spikes/device-session-2026-10-26.md). Contains no typed text.
 public struct IBoardSettings: Codable, Sendable, Equatable {
-    public static let currentVersion = 2
+    public static let currentVersion = 3
     public static let defaults = IBoardSettings()
 
     public var version: Int
     /// Haptic key feedback. Only effective when the keyboard has Full Access.
     public var haptics: Bool
+    /// Strength of key haptics (only used when `haptics` is on and Full Access is granted).
+    public var hapticIntensity: HapticIntensity
     public var keyClickSound: Bool
     /// Number row above the letters (F1). Layout default is off (on for Duo inner portrait, applied by the host).
     public var numberRow: Bool
     /// Keyboard height multiplier (F11, D-18) per display class x orientation, keyed by `HeightKey.make`.
     /// Missing key means 1.0. Values are clamped to `HeightScale.range` on read.
     public var heightScales: [String: Double]
+    /// Show the secondary-symbol hints on keys that have a flick (F5). Off mirrors the iPhone system keyboard (D-07).
+    public var flickHints: Bool
+    /// Autocorrect strength (D-12: conservative by default).
+    public var autocorrect: AutocorrectLevel
+    /// Double space inserts ". " (iOS default on).
+    public var doubleSpacePeriod: Bool
+    /// Smart quotes/dashes (iOS default on).
+    public var smartPunctuation: Bool
+    /// Swipe typing (F3). Default on once the feature ships.
+    public var swipeTyping: Bool
+    /// Start every text field in incognito (no learning) mode (F6).
+    public var incognitoByDefault: Bool
+    public var spellingVariant: SpellingVariantSetting
+    /// iPhone Duo: split the keyboard in the inner display, per orientation (F12).
+    public var duoSplitPortrait: Bool
+    public var duoSplitLandscape: Bool
+    /// Emoji suggestions on the strip (F8).
+    public var emojiSuggestions: Bool
 
     public init(
         version: Int = IBoardSettings.currentVersion, haptics: Bool = true, keyClickSound: Bool = false,
-        numberRow: Bool = false, heightScales: [String: Double] = [:]
+        numberRow: Bool = false, heightScales: [String: Double] = [:], hapticIntensity: HapticIntensity = .medium,
+        flickHints: Bool = false, autocorrect: AutocorrectLevel = .conservative, doubleSpacePeriod: Bool = true,
+        smartPunctuation: Bool = true, swipeTyping: Bool = true, incognitoByDefault: Bool = false,
+        spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
+        duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true
     ) {
         self.version = version
         self.haptics = haptics
         self.keyClickSound = keyClickSound
         self.numberRow = numberRow
         self.heightScales = heightScales
+        self.hapticIntensity = hapticIntensity
+        self.flickHints = flickHints
+        self.autocorrect = autocorrect
+        self.doubleSpacePeriod = doubleSpacePeriod
+        self.smartPunctuation = smartPunctuation
+        self.swipeTyping = swipeTyping
+        self.incognitoByDefault = incognitoByDefault
+        self.spellingVariant = spellingVariant
+        self.duoSplitPortrait = duoSplitPortrait
+        self.duoSplitLandscape = duoSplitLandscape
+        self.emojiSuggestions = emojiSuggestions
     }
 
     /// Stored height multiplier for a key, clamped; 1 when none.
@@ -32,9 +67,18 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         HeightScale.clamp(heightScales[key] ?? 1)
     }
 
-    private enum CodingKeys: String, CodingKey { case version, haptics, keyClickSound, numberRow, heightScales }
+    /// Effective variant for a device locale identifier (e.g. "en_GB").
+    public func effectiveSpellingVariant(localeIdentifier: String) -> SpellingVariant {
+        spellingVariant.resolve(localeIdentifier: localeIdentifier)
+    }
 
-    /// Tolerant decoding: missing fields fall back to defaults; older versions are migrated to current.
+    private enum CodingKeys: String, CodingKey {
+        case version, haptics, keyClickSound, numberRow, heightScales, hapticIntensity, flickHints, autocorrect
+        case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
+        case duoSplitPortrait, duoSplitLandscape, emojiSuggestions
+    }
+
+    /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let d = IBoardSettings.defaults
@@ -42,12 +86,64 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         guard v <= IBoardSettings.currentVersion else {
             throw DecodingError.dataCorruptedError(forKey: .version, in: c, debugDescription: "Newer settings version \(v)")
         }
-        // Migration: v0 (unversioned) and v1 keep known fields; v2 adds numberRow + heightScales (defaults).
+        // Migration: v0 (unversioned) and v1 keep known fields; v2 adds numberRow + heightScales; v3 adds the
+        // feature switches below. Every missing field takes its default.
         self.version = IBoardSettings.currentVersion
         self.haptics = try c.decodeIfPresent(Bool.self, forKey: .haptics) ?? d.haptics
         self.keyClickSound = try c.decodeIfPresent(Bool.self, forKey: .keyClickSound) ?? d.keyClickSound
         self.numberRow = try c.decodeIfPresent(Bool.self, forKey: .numberRow) ?? d.numberRow
         self.heightScales = try c.decodeIfPresent([String: Double].self, forKey: .heightScales) ?? d.heightScales
+        self.hapticIntensity = (try? c.decodeIfPresent(HapticIntensity.self, forKey: .hapticIntensity)) ?? d.hapticIntensity
+        self.flickHints = try c.decodeIfPresent(Bool.self, forKey: .flickHints) ?? d.flickHints
+        self.autocorrect = (try? c.decodeIfPresent(AutocorrectLevel.self, forKey: .autocorrect)) ?? d.autocorrect
+        self.doubleSpacePeriod = try c.decodeIfPresent(Bool.self, forKey: .doubleSpacePeriod) ?? d.doubleSpacePeriod
+        self.smartPunctuation = try c.decodeIfPresent(Bool.self, forKey: .smartPunctuation) ?? d.smartPunctuation
+        self.swipeTyping = try c.decodeIfPresent(Bool.self, forKey: .swipeTyping) ?? d.swipeTyping
+        self.incognitoByDefault = try c.decodeIfPresent(Bool.self, forKey: .incognitoByDefault) ?? d.incognitoByDefault
+        self.spellingVariant = (try? c.decodeIfPresent(SpellingVariantSetting.self, forKey: .spellingVariant)) ?? d.spellingVariant
+        self.duoSplitPortrait = try c.decodeIfPresent(Bool.self, forKey: .duoSplitPortrait) ?? d.duoSplitPortrait
+        self.duoSplitLandscape = try c.decodeIfPresent(Bool.self, forKey: .duoSplitLandscape) ?? d.duoSplitLandscape
+        self.emojiSuggestions = try c.decodeIfPresent(Bool.self, forKey: .emojiSuggestions) ?? d.emojiSuggestions
+    }
+}
+
+public enum HapticIntensity: String, Codable, Sendable, CaseIterable { case light, medium, strong }
+
+/// How eagerly autocorrect replaces words (D-12). `conservative` is the default.
+public enum AutocorrectLevel: String, Codable, Sendable, CaseIterable {
+    /// Suggestions only, never replace.
+    case off
+    /// Only high-confidence typos.
+    case conservative
+    case balanced
+    case aggressive
+}
+
+public enum SpellingVariant: String, Codable, Sendable, CaseIterable { case us, uk, `in` }
+
+/// Stored choice: follow the device locale or pin a variant.
+public enum SpellingVariantSetting: String, Codable, Sendable, CaseIterable {
+    case auto, us, uk, `in`
+
+    public func resolve(localeIdentifier: String) -> SpellingVariant {
+        switch self {
+        case .us: return .us
+        case .uk: return .uk
+        case .in: return .in
+        case .auto: return SpellingVariant.forLocale(localeIdentifier)
+        }
+    }
+}
+
+extension SpellingVariant {
+    /// en_IN -> in; British-style English regions -> uk; everything else (including non-English) -> us.
+    public static func forLocale(_ identifier: String) -> SpellingVariant {
+        let parts = identifier.replacingOccurrences(of: "-", with: "_").split(separator: "_").map(String.init)
+        guard parts.first?.lowercased() == "en", let region = parts.last(where: { $0.count == 2 && $0 != parts[0] })?.uppercased()
+        else { return .us }
+        if region == "IN" { return .in }
+        let uk: Set<String> = ["GB", "IE", "AU", "NZ", "ZA", "SG", "HK", "MY", "PK", "BD", "LK", "KE", "NG", "GH"]
+        return uk.contains(region) ? .uk : .us
     }
 }
 

@@ -1,0 +1,122 @@
+import SwiftUI
+import IBoardCore
+
+/// Companion settings for every shipped feature. Writes the whole versioned blob to the App Group; the keyboard
+/// reads it without Full Access (P-23). Defaults mirror iOS (D-07); autocorrect is conservative (D-12).
+struct SettingsView: View {
+    @State private var settings = SettingsStore().load()
+
+    var body: some View {
+        Form {
+            Section("Typing") {
+                Picker("Autocorrect", selection: $settings.autocorrect) {
+                    ForEach(AutocorrectLevel.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                Text(settings.autocorrect.explanation).font(.footnote).foregroundStyle(.secondary)
+                Toggle("Double-space period", isOn: $settings.doubleSpacePeriod)
+                Toggle("Smart punctuation", isOn: $settings.smartPunctuation)
+                Toggle("Swipe typing", isOn: $settings.swipeTyping)
+                Toggle("Emoji suggestions", isOn: $settings.emojiSuggestions)
+                Picker("Spelling", selection: $settings.spellingVariant) {
+                    ForEach(SpellingVariantSetting.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                if settings.spellingVariant == .auto {
+                    Text("Following your device region: \(settings.effectiveSpellingVariant(localeIdentifier: Locale.current.identifier).title).")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            Section("Privacy") {
+                Toggle("Incognito by default", isOn: $settings.incognitoByDefault)
+                Text("Nothing is learned while incognito is on.").font(.footnote).foregroundStyle(.secondary)
+            }
+            Section("Feel") {
+                Toggle("Haptic feedback (needs Full Access)", isOn: $settings.haptics)
+                if settings.haptics {
+                    Picker("Haptic strength", selection: $settings.hapticIntensity) {
+                        ForEach(HapticIntensity.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                    }
+                }
+                Toggle("Key click sound", isOn: $settings.keyClickSound)
+            }
+            Section("Layout") {
+                Toggle("Number row", isOn: $settings.numberRow)
+                Toggle("Show flick hints on keys", isOn: $settings.flickHints)
+            }
+            Section("Keyboard height (80% to 140%)") {
+                HeightSlider(title: "iPhone portrait", key: HeightKey.make(displayClass: "phone", orientation: "portrait"), settings: $settings)
+                HeightSlider(title: "iPhone landscape", key: HeightKey.make(displayClass: "phone", orientation: "landscape"), settings: $settings)
+            }
+            Section {
+                Toggle("Split in portrait", isOn: $settings.duoSplitPortrait)
+                Toggle("Split in landscape", isOn: $settings.duoSplitLandscape)
+            } header: {
+                Text("iPhone Duo inner display")
+            } footer: {
+                Text("Only applies when the keyboard is shown on the inner display.")
+            }
+            Section {
+                NavigationLink("Theme studio") { ThemeStudioView() }
+            }
+            Section {
+                Button("Reset to defaults", role: .destructive) { settings = .defaults }
+            }
+        }
+        .navigationTitle("Settings")
+        .onChange(of: settings) { _, new in SettingsStore().save(new) }
+    }
+}
+
+struct HeightSlider: View {
+    let title: String
+    let key: String
+    @Binding var settings: IBoardSettings
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("\(title): \(Int((settings.heightScale(forKey: key) * 100).rounded())) %")
+            Slider(
+                value: Binding(get: { settings.heightScale(forKey: key) }, set: { settings.heightScales[key] = HeightScale.clamp($0) }),
+                in: HeightScale.range
+            )
+        }
+    }
+}
+
+extension AutocorrectLevel {
+    var title: String {
+        switch self {
+        case .off: "Off (suggestions only)"
+        case .conservative: "Conservative"
+        case .balanced: "Balanced"
+        case .aggressive: "Aggressive"
+        }
+    }
+    var explanation: String {
+        switch self {
+        case .off: "Never replaces what you type; the strip still offers suggestions."
+        case .conservative: "Fixes only clear typos. Backspace right after a correction undoes it."
+        case .balanced: "Fixes most likely typos."
+        case .aggressive: "Corrects eagerly. Backspace right after a correction undoes it."
+        }
+    }
+}
+
+extension SpellingVariantSetting {
+    var title: String {
+        switch self {
+        case .auto: "Follow device"
+        case .us: "US English"
+        case .uk: "UK English"
+        case .in: "Indian English"
+        }
+    }
+}
+
+extension SpellingVariant {
+    var title: String {
+        switch self {
+        case .us: "US English"
+        case .uk: "UK English"
+        case .in: "Indian English"
+        }
+    }
+}
