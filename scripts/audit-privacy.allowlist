@@ -13,7 +13,7 @@ WRITE|Packages/IBoardUI/Sources/IBoardUI/PersonalInfo.swift|user-entered persona
 WRITE|Packages/IBoardUI/Sources/IBoardUI/AppCommandApplier.swift|applies app commands to settings flags
 WRITE|Packages/IBoardTheme/Sources/IBoardTheme/ThemeStore.swift|theme definitions and user-chosen theme photos
 WRITE|iBoardKeyboard/EngineHost.swift|exports the personal store as shared/dictionary.iboarddict for the companion app (Full Access only)
-WRITE|iBoardKeyboard/KeyboardViewController.swift|incognito flag only
+WRITE|iBoardKeyboard/KeyboardViewController.swift|incognito flag; M3-05 system-lexicon fingerprint (one unsigned integer digest of the system's Text Replacement/contact entries, no text)
 WRITE|iBoardKeyboard/EmojiHost.swift|emoji recents/skin-tone preferences (emoji, not typed words)
 WRITE|iBoardKeyboard/DebugOverlay.swift|overlay visibility flag
 WRITE|Packages/IBoardUI/Sources/IBoardUI/DuoPolicy.swift|per-orientation split and fill-to-fold booleans (layout preferences, no text)

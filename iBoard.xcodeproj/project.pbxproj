@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		072129F92D9E5B427337DE58 /* ClipboardHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF350BABED64EE056983837C /* ClipboardHost.swift */; };
 		180AE19B8493AECE9386B4A4 /* OnboardingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */; };
 		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
 		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
@@ -144,6 +145,7 @@
 		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
+		BF350BABED64EE056983837C /* ClipboardHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHost.swift; sourceTree = "<group>"; };
 		C5CF122CB70C1309F378CC9B /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
 		CA1844700032908B476959FE /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
 		CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStudioView.swift; sourceTree = "<group>"; };
@@ -294,6 +296,7 @@
 		BEB699DF9E939523A20ED08C /* iBoardKeyboard */ = {
 			isa = PBXGroup;
 			children = (
+				BF350BABED64EE056983837C /* ClipboardHost.swift */,
 				324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */,
 				8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */,
 				BEDB32790B189574630A5B54 /* EngineHost.swift */,
@@ -545,6 +548,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				072129F92D9E5B427337DE58 /* ClipboardHost.swift in Sources */,
 				68AF69523F7F1557FDA555D6 /* DebugOverlay.swift in Sources */,
 				CA048403036AD09EBB58189E /* EmojiHost.swift in Sources */,
 				B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */,

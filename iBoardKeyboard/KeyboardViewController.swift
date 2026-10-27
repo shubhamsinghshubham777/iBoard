@@ -97,6 +97,14 @@ final class KeyboardViewController: UIInputViewController {
     private var clipboardLoaded = false
     private var clipboardReading = false
     private var chipTimer: Timer?
+    /// M9-03: the full clipboard history panel (opened from the clipboard chip; Full Access only).
+    private let clipboardPanel = ClipboardHost()
+    /// M3-05: system lexicon (Text Replacements + contact names) from `requestSupplementaryLexicon`. Entries and the
+    /// derived snapshot live in memory only; only an integer fingerprint is persisted (extension-local defaults).
+    private var lexiconEntries: [SystemLexiconEntry]?
+    private var lexiconSnapshot = SystemLexiconSnapshot.empty
+    private var lexiconRefreshing = false
+    static let lexiconFingerprintKey = "iBoard.systemLexicon.fingerprint"
     /// Emoji panel + search (M9-01/M9-02 wired): opened by the emoji button at the trailing end of the strip.
     private let emoji = EmojiHost()
     /// Shift + space selection (M5-05): virtual selection while dragging, then the action row; or a real host selection.
@@ -143,6 +151,7 @@ final class KeyboardViewController: UIInputViewController {
         reloadCodes()
         recordClipboardIfChanged()
         startChipTimer()
+        requestSystemLexicon()
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
         grid.accessibilityValue = "haptics=\(settings.haptics) fullAccess=\(hasFullAccess)"
@@ -188,6 +197,8 @@ final class KeyboardViewController: UIInputViewController {
             self.scheduleAutoShift()
         }
         emoji.onChange = { [weak self] in self?.emojiChanged() }
+        wireClipboardPanel()
+        strip.onAccessibilityAction = { [weak self] slot, index in self?.performStripAccessibilityAction(slot: slot, index: index) }
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
         coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
         coordinator.onInsight = { [weak self] event in
@@ -349,6 +360,7 @@ final class KeyboardViewController: UIInputViewController {
                 self.coordinator.setLearner(loaded.learner)
                 self.coordinator.setTouchModel(loaded.touchModel, store: loaded.touchStore)
                 self.applyAppCommands()
+                self.refreshSystemLexicon() // seeds contact names into the personal model now that the store exists
                 // Build the emoji panel hidden shortly after the keyboard is ready: opening it is then instant.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                     guard let self, !self.emoji.isOpen, self.strip.frame.height > 0 else { return }
@@ -533,6 +545,16 @@ final class KeyboardViewController: UIInputViewController {
             strip.actionEnabled = []
             return
         }
+        if clipboardPanel.isOpen {
+            strip.emphasizedSlots = []
+            strip.boldSlots = []
+            strip.bannerText = nil
+            strip.actionTitles = []
+            strip.searchField = nil
+            strip.slotAccessibilityActions = [:]
+            strip.slotTexts = ["", "", ""]
+            return
+        }
         if let texts = emoji.stripTexts {
             strip.emphasizedSlots = []
             strip.bannerText = nil
@@ -583,6 +605,142 @@ final class KeyboardViewController: UIInputViewController {
         }
         strip.emphasizedSlots = emphasized
         strip.slotTexts = texts
+        strip.slotAccessibilityActions = stripAccessibilityActions()
+    }
+
+    // MARK: VoiceOver actions on the strip (M13-01)
+
+    /// Custom actions per slot: the clipboard chip opens the history, plain suggestions can be forgotten / never
+    /// corrected (what the long-press menu does, which VoiceOver users cannot reach by touch).
+    private func stripAccessibilityActions() -> [Int: [String]] {
+        var out: [Int: [String]] = [:]
+        for slot in 0..<SuggestionStripView.slotCount {
+            if slot < chipPlan.count, let chip = chipPlan[slot] {
+                if chip.source == .clipboardItem { out[slot] = ["Open clipboard history"] }
+            } else if coach.isDone, !(slot == 0 && coordinator.undoableAutocorrection != nil), slot < lastStrip.slots.count,
+                      SuggestionMenu.menu(for: lastStrip.slots[slot], at: slot) != nil {
+                out[slot] = ["Forget suggestion", "Never correct"]
+            }
+        }
+        return out
+    }
+
+    private func performStripAccessibilityAction(slot: Int, index: Int) {
+        if slot < chipPlan.count, chipPlan[slot]?.source == .clipboardItem { openClipboardPanel(); return }
+        guard slot < lastStrip.slots.count, let menu = SuggestionMenu.menu(for: lastStrip.slots[slot], at: slot) else { return }
+        suggestionMenu = menu
+        performSuggestionMenu(index == 0 ? .forget : .neverCorrect)
+        UIAccessibility.post(notification: .announcement, argument: index == 0 ? "Suggestion forgotten" : "Will never correct")
+    }
+
+    // MARK: Clipboard history panel (M9-03)
+
+    private func wireClipboardPanel() {
+        clipboardPanel.onPaste = { [weak self] text in
+            guard let self else { return }
+            self.coordinator.insertDirect(text)
+            self.feedback()
+            self.scheduleAutoShift()
+            self.closeClipboardPanel()
+        }
+        clipboardPanel.onTogglePin = { [weak self] id, pinned in
+            guard let self else { return }
+            self.clipboard.setPinned(id, pinned)
+            self.clipboardEdited()
+            UIAccessibility.post(notification: .announcement, argument: pinned ? "Pinned" : "Unpinned")
+        }
+        clipboardPanel.onDelete = { [weak self] id in
+            guard let self else { return }
+            self.clipboard.remove(id)
+            self.clipboardEdited()
+            UIAccessibility.post(notification: .announcement, argument: "Deleted")
+        }
+        clipboardPanel.onClearAll = { [weak self] in
+            guard let self else { return }
+            self.clipboard.clearAll()
+            self.clipboardEdited()
+            self.feedback(.action)
+            UIAccessibility.post(notification: .announcement, argument: "Clipboard history cleared")
+        }
+        clipboardPanel.onClose = { [weak self] in self?.closeClipboardPanel() }
+    }
+
+    private func clipboardEdited() {
+        clipboardStore.save(clipboard)
+        clipboardPanel.update(model: ClipboardPanelModel(history: clipboard, now: Date()))
+        replanChips()
+    }
+
+    private func openClipboardPanel() {
+        guard hasFullAccess, !clipboardPanel.isOpen, !emoji.isOpen, strip.frame.height > 0 else { return }
+        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        machine?.cancelAll { _ in }
+        swipeCapture.cancel()
+        resetArbiter()
+        grid.trail.clear()
+        clearSelection()
+        grid.clearHighlights()
+        suggestionMenu = nil
+        clipboardPanel.open(in: view, frame: emojiFrame, model: ClipboardPanelModel(history: clipboard, now: Date()),
+                            skin: appliedSkin ?? .native(.light), style: grid.appearance == .dark ? .dark : .light)
+        grid.keysHidden = true
+        view.bringSubviewToFront(strip)
+        renderStrip()
+    }
+
+    private func closeClipboardPanel() {
+        guard clipboardPanel.isOpen else { return }
+        clipboardPanel.close()
+        grid.keysHidden = emoji.keysHidden
+        renderStrip()
+        UIAccessibility.post(notification: .screenChanged, argument: nil)
+    }
+
+    // MARK: System lexicon (M3-05)
+
+    /// Asks the system for Text Replacements and contact names (once per appearance; cheap). The callback may arrive off
+    /// the main thread (P-25), so it only copies plain strings.
+    private func requestSystemLexicon() {
+        requestSupplementaryLexicon { [weak self] lexicon in
+            let entries = lexicon.entries.map { SystemLexiconEntry(userInput: $0.userInput, documentText: $0.documentText) }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    self?.lexiconEntries = entries
+                    self?.refreshSystemLexicon()
+                }
+            }
+        }
+    }
+
+    /// Rebuilds the snapshot (always, for the expansion lookups) and, once the personal store exists, seeds new contact
+    /// names through `SystemLexiconImporter`. The persisted fingerprint keeps an unchanged address book free.
+    private func refreshSystemLexicon() {
+        guard let entries = lexiconEntries, !lexiconRefreshing else { return }
+        guard let host else { lexiconSnapshot = SystemLexiconSnapshot(entries: entries); return }
+        lexiconRefreshing = true
+        let previous = SystemLexiconFingerprintStore.decode(UserDefaults.standard.string(forKey: Self.lexiconFingerprintKey))
+        let importer = SystemLexiconImporter(source: FixedLexiconSource(list: entries), store: host.store, previousFingerprint: previous)
+        Task { [weak self] in
+            let result = await importer.refresh()
+            let snapshot = await importer.current
+            if result.namesAdded > 0 { await host.engine?.refreshPersonal() }
+            guard let self else { return }
+            self.lexiconSnapshot = snapshot
+            UserDefaults.standard.set(SystemLexiconFingerprintStore.encode(result.fingerprint), forKey: Self.lexiconFingerprintKey)
+            self.lexiconRefreshing = false
+        }
+    }
+
+    /// Space after a Text Replacement shortcut ("omw") inserts the expansion instead. Returns true when it did.
+    /// Never in secure fields, emoji search, or with autocorrection turned off in settings.
+    private func expandTextReplacementIfAny() -> Bool {
+        guard !lexiconSnapshot.replacements.isEmpty, emoji.mode != .search, !clipboardPanel.isOpen else { return false }
+        let token = coordinator.typedToken
+        guard TextReplacementPolicy.shouldExpand(token: token, secure: textDocumentProxy.isSecureTextEntry ?? false,
+                                                 enabled: coordinator.autocorrectionEnabled),
+              let expansion = lexiconSnapshot.expansion(for: token) else { return false }
+        coordinator.expandShortcut(expansion)
+        return true
     }
 
     // MARK: Suggestion menu (M3-04)
@@ -598,6 +756,13 @@ final class KeyboardViewController: UIInputViewController {
     private func openSuggestionMenu(at point: CGPoint) {
         guard stripTouchID != nil, strip.frame.width > 0, suggestionMenu == nil else { return }
         let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
+        // A long press on the clipboard chip opens the full history (M9-03).
+        if slot >= 0, slot < chipPlan.count, chipPlan[slot]?.source == .clipboardItem {
+            stripTouchIgnored = true
+            feedback(.action)
+            openClipboardPanel()
+            return
+        }
         // Chips (codes, personal info) and the undo-autocorrect slot are not words in the model.
         guard slot >= 0, slot < lastStrip.slots.count, chipPlan[slot] == nil,
               !(slot == 0 && coordinator.undoableAutocorrection != nil),
@@ -724,6 +889,7 @@ final class KeyboardViewController: UIInputViewController {
         appliedBackdropPhoto = photo
         grid.skin = skin
         strip.skin = skin
+        clipboardPanel.updateSkin(skin)
         backdropView.apply(skin.backdrop, photoURL: photo, displayScale: traitCollection.displayScale > 0 ? traitCollection.displayScale : 3)
     }
 
@@ -736,6 +902,7 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.keyboardWillDisappear()
         selectionUI = .none
         emoji.close()
+        closeClipboardPanel()
         settleOnDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
@@ -836,6 +1003,7 @@ final class KeyboardViewController: UIInputViewController {
         strip.segments = layout.stripSegments.count == 2
             ? layout.stripSegments.map { $0.offsetBy(dx: -layout.stripFrame.minX, dy: 0) } : []
         emoji.updateFrame(emojiFrame)
+        clipboardPanel.updateFrame(emojiFrame)
         coordinator.setLayout(layout)
         startEngineLoad(layout: layout)
         if machine == nil {
@@ -879,6 +1047,7 @@ final class KeyboardViewController: UIInputViewController {
                 if stripTouchIgnored { stripTouchIgnored = false; return }
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
+                    if clipboardPanel.isOpen { return } // the panel has its own Done button
                     if emoji.isOpen {
                         let localX = point.x - strip.frame.minX
                         let field = emoji.stripField
@@ -1296,6 +1465,11 @@ final class KeyboardViewController: UIInputViewController {
             if on, let p = perfDown { Perf.end(p); perfDown = nil }
         case .insert(let text):
             clearSelection()
+            if text == " ", expandTextReplacementIfAny() {
+                feedback(.space)
+                scheduleAutoShift()
+                break
+            }
             coordinator.insert(text)
             feedback(text == " " ? .space : .letter)
             scheduleAutoShift()
@@ -1520,4 +1694,10 @@ extension SettingsPolicy {
         case .strong: .heavy
         }
     }
+}
+
+/// M3-05: the system lexicon entries, already read, as a `SystemLexiconSource`.
+private struct FixedLexiconSource: SystemLexiconSource {
+    let list: [SystemLexiconEntry]
+    func entries() async -> [SystemLexiconEntry] { list }
 }
