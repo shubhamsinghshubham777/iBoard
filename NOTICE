@@ -15,9 +15,8 @@ Third-party material included in this repository:
 Language data: the research shortlist and licence analysis are in docs/DATA_SOURCES.md, whose section "Data actually
 in the repository" lists what is present and what ships in the keyboard.
 
-- iBoardKeyboard/Resources/lexicon.iblex and lm.iblm, and Packages/IBoardEngine/Tests/IBoardEngineTests/Fixtures/ —
-  synthetic English and Hinglish test words and phrases authored for this repository (made-up counts), CC0-1.0, built
-  with Tools/LexiconBuilder. No third-party corpus is included in them.
+- Packages/IBoardEngine/Tests/IBoardEngineTests/Fixtures/ — synthetic English and Hinglish test words and phrases
+  authored for this repository (made-up counts), CC0-1.0. Test-only; not shipped.
 
 - CODE_OF_CONDUCT.md is adapted from the Contributor Covenant, version 2.1
   (https://www.contributor-covenant.org), licensed under CC BY 4.0.
@@ -31,17 +30,14 @@ in the repository" lists what is present and what ships in the keyboard.
   Quasthoff, LREC 2012), AI4Bharat Aksharantar Hindi pairs (CC BY / CC0; includes rows from Google Dakshina,
   CC BY-SA 4.0; Madhani et al. 2022, Roark et al. 2020) and project-authored CC0 lists. The derived data files are
   released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); see Data/hinglish/LICENSE.md and
-  docs/HINGLISH.md. The code stays Apache-2.0. Status when this notice was written: these files are in the repository
-  and used by engine tests, and are NOT yet bundled into the keyboard extension; once they are, the attribution above
-  must also appear in the app's Settings > Licenses screen (ROADMAP M10-05). The word lists and phrases under
+  docs/HINGLISH.md. The code stays Apache-2.0. These files are bundled in the keyboard extension, and the attribution
+  above is repeated in the app under About > Data attributions. The word lists and phrases under
   Tools/HinglishData/data/ are project-authored, CC0 1.0.
 
 - Packages/IBoardEmoji/Tools/hinglish_overlay.json — romanized-Hindi emoji keywords written by the iBoard project
   (Apache-2.0); merged into emoji.json alongside the Unicode data above.
 
-  docs/HINGLISH.md. The code stays Apache-2.0.
-
-- Data/english/ (lexicon.iblex, lm.iblm) — English word list and 3-gram model, built by Tools/EnglishData from SCOWL
+- Data/english/ (lexicon.iblex, lm.iblm; bundled in the keyboard extension) — English word list and 3-gram model, built by Tools/EnglishData from SCOWL
   2020.12.07 (Copyright 2000-2018 Kevin Atkinson; permission notice and the notices of its sources, incl. Princeton
   WordNet and Ispell/VarCon, are reproduced in Data/english/LICENSE.md), the Leipzig Corpora Collection English news
   2023/2024 (CC BY 4.0; Goldhahn, Eckart, Quasthoff, LREC 2012) and project-authored CC0 lists. The derived data files

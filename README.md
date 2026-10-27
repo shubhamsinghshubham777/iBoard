@@ -4,13 +4,13 @@ A free, open-source (Apache-2.0), privacy-first keyboard for iOS 27 that aims to
 on day one** and then quietly become better: it learns your words and phrases, reads one-time codes, edits text with
 fluid gestures, and types Hinglish as naturally as English, all on-device.
 
-> **Status: early development.** There is no release, no App Store build and no screenshots yet. The keyboard
-> extension builds and runs with a native-look layout, tap decoding, autocorrect (against a tiny 219-word placeholder
-> English lexicon), a personal learning store, swipe decoding, one-time-code and personal-info chips, an emoji panel
-> and shift+space selection. Hinglish data is built and tested in the engine package but not yet bundled into the
-> keyboard, and the iPhone Duo fold layout is not wired in. Real-device behaviour is still being verified. See
-> [ROADMAP.md](ROADMAP.md) for the exact state and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits
-> together.
+> **Status: pre-release (1.0 in preparation).** The keyboard and companion app build and run: native-look layout,
+> English and Hinglish language data, autocorrect, personal learning, swipe typing, one-time-code and personal-info
+> chips, emoji panel, clipboard history, gestures, themes, iPhone Duo layouts and opt-in iCloud sync. Real-device
+> verification is still in progress and there is no App Store build yet. See [ROADMAP.md](ROADMAP.md) for the exact
+> state and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together. Privacy policy and support pages
+> live in [docs/site](docs/site) (static, GitHub Pages ready); the App Store text is in
+> [docs/APP_STORE_LISTING.md](docs/APP_STORE_LISTING.md).
 
 ## Goals
 
@@ -34,10 +34,11 @@ typography, colors, click sound, auto-capitalization, shift/caps-lock behavior a
 ## Privacy
 
 - Core typing never uses the network. The keyboard extension makes no network calls except opt-in features
-  (currently only iCloud sync, off by default).
+  (currently only iCloud sync, performed by the app, off by default).
 - Typed text is never logged or persisted for diagnostics, including in debug builds.
 - No analytics SDKs, no ads, no data collection.
-- Designed to work without Full Access.
+- Works without Full Access. With it on you additionally get haptics, clipboard history, the dictionary shown in the
+  app, and iCloud sync (see [docs/site/privacy.html](docs/site/privacy.html)).
 
 To report a privacy or security problem, see [SECURITY.md](SECURITY.md).
 
@@ -88,12 +89,12 @@ never device numbers.
 - `Packages/` Swift packages, each with its own tests (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)):
   `IBoardCore` (settings, perf signposts, app-to-keyboard commands), `IBoardLayout` (key geometry, Duo split logic),
   `IBoardEngine` (lexicon, tap and swipe decoding, autocorrect, personal model), `IBoardUI` (UIKit keyboard views and
-  typing coordinator), `IBoardOTP`, `IBoardTheme`, `IBoardEmoji`, `IBoardSync` (iCloud merge model only, not linked)
+  typing coordinator), `IBoardOTP`, `IBoardTheme`, `IBoardEmoji`, `IBoardSync` (iCloud sync model and CloudKit store, used by the app only)
 - `Tools/` `LexiconBuilder` (binary lexicon and LM builder), `HinglishData` (Hinglish data pipeline)
-- `Data/hinglish/` built Hinglish lexicon and LM (CC BY-SA 4.0)
+- `Data/english/` (CC BY 4.0 with SCOWL notices) and `Data/hinglish/` (CC BY-SA 4.0) built lexicons and language models
 - `Config/` shared and local build settings; `project.yml` is the XcodeGen spec
 - `scripts/` `build.sh`, `test.sh`, `audit-privacy.sh`, `bootstrap-agent-skills.sh`
-- `docs/` design notes, measured platform facts, data sources
+- `docs/` design notes, measured platform facts, data sources, `site/` (privacy and support pages), release checklist
 - [ROADMAP.md](ROADMAP.md) plan, locked decisions, performance budgets and progress log
 
 ## Contributing

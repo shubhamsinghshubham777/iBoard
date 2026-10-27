@@ -5,7 +5,7 @@ typed text as a security issue.
 
 ## Supported versions
 
-iBoard is in early development and has no releases yet. Only the latest `main` is supported.
+Only the latest release and the current `main` are supported. Until the first App Store release, only `main` is.
 
 ## Reporting a vulnerability
 
@@ -23,7 +23,7 @@ fixed response times.
   unexpectedly, including in debug builds.
 - Network access from the keyboard extension outside documented opt-in features.
 - Leaks through the shared App Group container, pasteboard, backups, crash reports or system logs.
-- Learned-data handling: the on-device store, import/export files and iCloud sync (when it exists).
+- Learned-data handling: the on-device store, import/export files and iCloud sync.
 - Bypassing Full Access boundaries or secure-field behavior.
 - Vulnerabilities in build or release scripts, or in vendored dependencies.
 
