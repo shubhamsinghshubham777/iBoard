@@ -70,6 +70,13 @@ public struct SyncState: Sendable, Equatable, Codable {
         counters = [:]; forgetFloors = [:]; neverCorrect = [:]
     }
 
+    /// Internal piece constructor used by shard splitting.
+    init(schemaVersion: Int, counters: [String: [String: CounterSlot]], forgetFloors: [String: SyncStamp],
+         neverCorrect: [String: LWWFlag]) {
+        self.schemaVersion = schemaVersion; self.counters = counters
+        self.forgetFloors = forgetFloors; self.neverCorrect = neverCorrect
+    }
+
     // MARK: Reads
 
     /// Sum over devices of live slots (slots newer than the forget floor).

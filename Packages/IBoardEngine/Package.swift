@@ -8,10 +8,12 @@ let package = Package(
     dependencies: [
         .package(path: "../IBoardCore"),
         .package(path: "../IBoardLayout"),
+        .package(path: "../IBoardSync"),
     ],
     targets: [
         .target(name: "IBoardEngine", dependencies: [
             .product(name: "IBoardLayout", package: "IBoardLayout"),
+            .product(name: "IBoardSync", package: "IBoardSync"),
         ]),
         .testTarget(
             name: "IBoardEngineTests",
