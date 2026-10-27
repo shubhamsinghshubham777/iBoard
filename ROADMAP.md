@@ -611,29 +611,36 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** backspace swipe-delete: drag >20 pt previews words, release deletes, drag back cancels; simulator: a left drag deleted the preceding word. Caveat: backspace still deletes one character on touch-down, so a swipe-delete also removes that character; strip preview rendering not verified.
 - [~] **M5-04 Key flicks** — Up/down, secondary glyph rendering setting. Depends: M5-01.
   **Partial (2026-10-27):** key flicks (up = digit/symbol, down = first alternate), simulator-verified `#` on S↑ and `à` on A↓; faint hint glyphs behind a keyboard-local flag (`iboard.local.flickHints`, off) because `IBoardSettings` has no field yet.
-- [ ] **M5-05 Shift + space selection** — Virtual selection, preview, action row, host-selection support. Depends: M5-02.
+- [~] **M5-05 Shift + space selection** — Virtual selection, preview, action row, host-selection support. Depends: M5-02.
+  **Partial (2026-10-27):** Shift+space virtual selection: simulator-verified (11-char selection, banner + Cut/Copy/Delete/Aa/✕, Cut/Copy dimmed without Full Access, Aa case cycling, Delete); Cut/Copy with Full Access, host selection and vertical line-jump live NOT tested; only a manually tapped shift arms it.
 
 ### M6 — OTP & smart chips (F6, F7)
 - [x] **M6-01 IBoardOTP parser + corpus** — Depends: none (can start any time after M0-02).
   **Result (2026-10-26):** `OTPParser` + 149-message synthetic corpus, 100% / 0 FP (self-written corpus, optimistic; sample real SMS later). Gaps: yyyymmdd-like 8-digit OTPs, Devanagari digits, non-alternating alphanumerics.
 - [x] **M6-02 App Intent + TTL store** — Background intent writing code/sender/timestamp. Depends: M6-01, M0-06.
   **Result (2026-10-27):** `OTPWriter`/`OTPReader` store (code, sender, time; last 3; TTL 10 min; App Group `iBoard.otp.` keys; keyboard read-only) with 11 tests, and `iBoard/Intents/CaptureVerificationCodeIntent.swift` (background); App Intents metadata is generated in the build. The same flow was device-verified in M0-06; this production intent itself was not re-run on the phone yet.
-- [ ] **M6-03 Keyboard code chip** — Freshness, oneTimeCode prominence, insert + clear. Depends: M6-02, M2-04.
+- [~] **M6-03 Keyboard code chip** — Freshness, oneTimeCode prominence, insert + clear. Depends: M6-02, M2-04.
+  **Partial (2026-10-27):** code chip in the strip (slot 2; emphasised slot 0 for `one-time-code` fields), insert on tap, consumed ids kept in memory (cannot delete from the shared store); simulator-verified without Full Access using a seeded code. Not tested on the real device with the production intent; clipboard fallback not built.
 - [ ] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
   Depends: M6-02, M1-08.
 - [ ] **M6-05 Clipboard code fallback** — Depends: M6-03, M0-09.
-- [ ] **M6-06 Personal-info chips (F7)** — Depends: M2-04, M1-08.
+- [~] **M6-06 Personal-info chips (F7)** — Depends: M2-04, M1-08.
+  **Partial (2026-10-27):** personal-info chips (reader/model in IBoardUI): `name` chip verified in Safari on the simulator; email/telephone/address only unit-tested (Safari did not appear to pass `emailAddress`); the app-side editor does not exist.
 
 ### M7 — Hinglish
-- [ ] **M7-01 Hinglish lexicon & LM** (variant clusters). Depends: M0-11, M2-01.
-- [ ] **M7-02 Code-switch scoring in decoders** — Depends: M7-01, M2-03, M4-02.
-- [ ] **M7-03 Autocorrect protection for Hinglish** — Depends: M7-02.
+- [~] **M7-01 Hinglish lexicon & LM** (variant clusters). Depends: M0-11, M2-01.
+  **Partial (2026-10-27):** real data built: `Data/hinglish/lexicon.iblex` 4.0 MB (56,235 words, 18k variant clusters) + `lm.iblm` 3.0 MB (150k bigrams, 60k trigrams); sources Leipzig Hindi (CC BY), AI4Bharat Aksharantar (mixed; treated as CC BY-SA 4.0 because ~25k rows derive from Dakshina), authored CC0 lists; byte-identical rebuilds; `docs/HINGLISH.md`. Quality on real Hinglish text unmeasured; the keyboard does not bundle it yet.
+- [~] **M7-02 Code-switch scoring in decoders** — Depends: M7-01, M2-03, M4-02.
+  **Partial (2026-10-27):** `SecondaryLanguage` dual-lexicon scoring in TapDecoder/SwipeDecoder/EngineActor (previous-word language prior + personal bias; backward compatible); 227 engine tests; dual-lexicon latency measured on macOS release only with a synthetic English proxy. Not wired into the keyboard.
+- [~] **M7-03 Autocorrect protection for Hinglish** — Depends: M7-02.
+  **Partial (2026-10-27):** protection rule implemented and unit-tested (a valid Hinglish word is never auto-corrected into an English-only word; the English word stays as a suggestion).
 - [ ] **M7-04 Hinglish eval set** — Accuracy targets equal to F2/F3 on mixed text. Depends: M7-03.
 
 ### M8 — Themes, feel & landscape (F10, F12, F13)
 - [x] **M8-01 Theme model + presets (Native, Native Glass, …)** — Depends: M0-04, M1-03.
   **Result (2026-10-27):** versioned `Theme` model + presets (Native token-identical, Native Glass key-only per P-22, Midnight, Paper, High Contrast ≥7:1), export/import with validation, accessibility resolution (M8-05 logic) — 12 tests; IBoardUI still renders from `NativeThemeTokens`, `Theme` not wired into rendering. `docs/THEMES.md`.
-- [ ] **M8-02 Theme studio (app)** — Live preview, photo pipeline, export/import. Depends: M8-01, M1-08.
+- [~] **M8-02 Theme studio (app)** — Live preview, photo pipeline, export/import. Depends: M8-01, M1-08.
+  **Partial (2026-10-27):** theme studio (preset picker, light/dark editing, export/import `.iboardtheme`, photo pipeline to exact pixel size, `ThemeStore` writes theme to the App Group); 18 theme tests; on-screen, PhotosPicker and the keyboard reading photo files without Full Access NOT tested; photo target heights assumed.
 - [ ] **M8-03 Haptics & sound packs** — Depends: M1-05.
 - [ ] **M8-04 Landscape layouts (F13)** — Depends: M1-02.
 - [ ] **M8-05 Accessibility of themes** — Reduce Transparency/Contrast/Bold Text. Depends: M8-01.
@@ -641,13 +648,16 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M9 — Emoji & clipboard (F8, F9)
 - [~] **M9-01 Emoji panel** (memory-safe). Depends: M0-03, M1-03.
   **Partial (2026-10-27):** `Packages/IBoardEmoji`: CLDR/Unicode data (0.43 MB generated), categories, recents, skin-tone memory, kaomoji, UIKit panel behind canImport; not linked into the keyboard; panel memory NOT measured. `docs/EMOJI_DATA.md`.
+  **Update (2026-10-27):** emoji panel wired into the keyboard (long-press 123 opens it); +8.2 MB while open on the simulator (budget +10), but ~8 MB stayed resident after close (33.6 vs ~25 MB) — investigate allocator retention; memory-warning path untested.
 - [~] **M9-02 Emoji search & prediction** — Depends: M9-01, M2-04.
   **Partial (2026-10-27):** `EmojiSearchIndex` + `predict(afterWord:)` over en/hi CLDR + ~200 Hinglish keywords: release p95 0.011 ms on macOS (index build 32 ms); 21 tests; not wired into the keyboard; index build cost on an iPhone 12 unmeasured.
+  **Update (2026-10-27):** wired: typing `pizza` shows 🍕 in the strip and tap inserts; full-results view after Return NOT tested.
 - [ ] **M9-03 Clipboard manager** — Depends: M0-05, M1-06.
 
 ### M10 — Companion app (F16, F17)
 - [ ] **M10-01 Onboarding** — Depends: M6-04.
-- [ ] **M10-02 Settings for all features** — Depends: features shipped so far.
+- [~] **M10-02 Settings for all features** — Depends: features shipped so far.
+  **Partial (2026-10-27):** `IBoardSettings` v3 (haptic intensity, flick hints, autocorrect level, double-space period, smart punctuation, swipe on/off, incognito default, spelling variant from locale, Duo split flags, emoji suggestions) + `SettingsView`; 35 core tests; on-screen NOT tested; the keyboard does not read the new fields yet.
 - [~] **M10-03 Dictionary manager** — Depends: M3-07.
   **Partial (2026-10-27):** dictionary manager screens (search/sort/add/forget/pin over the shared snapshot, queued edits labelled 'queued', empty state when Full Access is off); builds; on-screen NOT tested.
 - [~] **M10-04 Typing insights (F16)** — Depends: M3-02.
@@ -756,6 +766,7 @@ license here; never vendor non-open-source skills.
 | R-07 | Duo fold invisible to extensions (P-14) → can't react to folding live. | Rule-based split (D-20); duplicate FB25187339; adopt API when available. |
 | R-08 | Gesture conflicts (flick vs swipe) feel unpredictable. | Recorded-trace tests; tunable thresholds; flicks can be disabled. |
 | R-09 | App Review rejects due to Full Access messaging or Shortcuts onboarding. | Follow 4.4.1 strictly; core works without Full Access; no app launching from keyboard. |
+| R-11 | Debug-build macOS timing tests (e.g. `ReaderBenchmarks`) fail intermittently under machine load and pass alone. | Treat as load-sensitive; consider asserting only in release (M0-12 follow-up). |
 | R-10 | `adjustTextPosition` units differ by host. **Measured (P-24): UTF-16 units in Notes/Messages; WhatsApp unreliable.** | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
 | Q-01 | ~~Physical base iPhone 12?~~ **Answered 2026-10-26:** yes — "Shubham’s iPhone", iPhone13,2, iOS 27.0 (24A437), Developer Mode on, paired over Wi-Fi (UDID `00008101-0014596A1E01001E`). | Use for every 👤 perf gate; agents can deploy with `xcrun devicectl` when it's reachable. |
 | Q-02 | ~~Public GitHub repo name/owner.~~ **Answered:** `shubhamsinghshubham777/iBoard`, public (D-30). **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
@@ -774,6 +785,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · round 6 (chips/selection/emoji, Hinglish data + code-switch, settings + theme studio) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 35, Layout 40, Engine 227 (one run had a load-sensitive `ReaderBenchmarks` failure, passes alone — R-11), OTP 11, Theme 18, UI 185, Sync 8, Emoji 21, LexiconBuilder 7; `scripts/build.sh` green. Simulator evidence for code chip, name chip, Shift+space selection, emoji panel and search. Next for agents: bundle Hinglish into the keyboard + read the new settings fields, theme rendering in IBoardUI, emoji memory retention, M6-05 clipboard fallback, M6-04 onboarding + signed shortcut. Needs the owner/device: M1-09 perf gate, haptic/sound feel, Duo screenshots (M0-10).
 
 - **2026-10-27 · M0-06 done ·** Owner-assisted device spike finished: Message + Email automations run the background intent (log read from the App Group via devicectl: code, sender and body length only). Findings: Email filters must match the real sender (my first three test mails came from the connector's account, not the one in the filter); restart delays the first run until Shortcuts is opened. Next for onboarding (M6-04): describe the setup screens (Library > Automation > + > Automation chip > Communication), banner, restart note. Test-mail caveat: the Gmail connector sends as shubham@ayrindigital.com.
 
