@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — CRASH fix + QA merged
+CRASH: likely cause of the Full Access keyboard death fixed — `requestSupplementaryLexicon` callback now `@Sendable` (UIKit may call it off-main; same trap as the 2026-10-26 logs); NOT reproduced, no .ips for the failed run; migration/two-writer/corrupt-store tests added and pass. Needs the owner's phone retest. QA: full suite green; 7 new UI tests pass on iPhone 12 and iPhone Duo sims (onboarding, settings incl. sync screen, theme studio, dictionary); `scripts/test.sh` accepts any SIM_NAME; CI `ios-ui-tests` job added (not yet run on GitHub). Remaining warnings (KeyboardViewController main-actor isolation, `UIScreen.main` in EmojiPanelView) are listed in docs/agent-reports/qa.md.
+
 ### 2026-10-27 — DECOUPLE merged; D-29 confirmed on device
 The keyboard extension no longer links CloudKit or any sync code (new app-only package `IBoardPersonalSync`; extension binary −777 KB, 0 IBoardSync symbols, `scripts/audit-privacy.sh` EXT-SYNC check). D-29 confirmed: the owner sees the Allow Full Access switch (off by default). OPEN BUG: with Full Access ON the keyboard died <0.5 s after launch on the iPhone 12 (no .ips yet; hypothesis: first local→App Group migration in EngineHost, marked NOT TESTED) — CRASH agent investigating.
 
