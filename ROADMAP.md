@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — QUICKSET merged
+Owner confirmed on the iPhone 12 with Full Access on: keyboard stable, typing, swipe and emoji panel work. Emoji long-press popup redesigned (SF Symbols, native-style plate); gear opens an in-keyboard Quick Settings panel (haptic pack, number row, autocorrect level, swipe, incognito, landscape side keys, link to iOS Settings) with extension-local overrides merged over app settings (written back to the App Group with Full Access); app toggle for landscape side keys; main-actor and `UIScreen.main` warnings cleaned. Build + `scripts/test.sh --no-ui` + privacy audit pass; Debug build installed on the phone; panel/popup look and text-replacement expansion unverified on device. Rule kept: the keyboard never opens the app (D-01).
+
 ### 2026-10-27 — CRASH fix + QA merged
 CRASH: likely cause of the Full Access keyboard death fixed — `requestSupplementaryLexicon` callback now `@Sendable` (UIKit may call it off-main; same trap as the 2026-10-26 logs); NOT reproduced, no .ips for the failed run; migration/two-writer/corrupt-store tests added and pass. Needs the owner's phone retest. QA: full suite green; 7 new UI tests pass on iPhone 12 and iPhone Duo sims (onboarding, settings incl. sync screen, theme studio, dictionary); `scripts/test.sh` accepts any SIM_NAME; CI `ios-ui-tests` job added (not yet run on GitHub). Remaining warnings (KeyboardViewController main-actor isolation, `UIScreen.main` in EmojiPanelView) are listed in docs/agent-reports/qa.md.
 
