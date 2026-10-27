@@ -2,7 +2,7 @@
 
 ## Before upload
 - [ ] All Duo/real-device passes done (M11-05, M1-09 perf gates on iPhone 12); owner bug list retested on phone.
-- [ ] Merge SYNC work; re-run `scripts/audit-privacy.sh`; update entitlements, manifests, and privacy label if iCloud is enabled.
+- [x] SYNC merged; container `iCloud.app.iBoard` and entitlement are in `iBoard/iBoard.entitlements`. Re-run `scripts/audit-privacy.sh` before each upload.
 - [x] Full Access copy reconciled (RequestsOpenAccess true, optional features listed in the policy, About and review notes).
 - [ ] Set a real `IBOARD_BUNDLE_PREFIX`/`IBOARD_APP_GROUP` and team in Config/Local.xcconfig; register the App Group and App IDs (app + keyboard) in the developer portal.
 - [ ] Bump version/build; Release archive: `xcodebuild archive -scheme iBoard -configuration Release`.
@@ -19,6 +19,7 @@
 - [ ] Privacy label: Data Not Collected.
 - [ ] Screenshots: 6.9" and 6.5" iPhone. Name, subtitle, description, keywords, category, age rating, What's New are drafted in `docs/APP_STORE_LISTING.md`.
 - [ ] Review notes drafted in `docs/APP_STORE_LISTING.md` (4.4.1 explanation); add contact info.
-- [ ] iCloud/CloudKit capability and container `iCloud.app.iBoard` must be added to the app entitlements and portal before sync works; then re-run `scripts/audit-privacy.sh`.
+- [ ] Deploy the CloudKit schema for `iCloud.app.iBoard` to Production in CloudKit Dashboard before release (entitlement already present).
 - [ ] Submit for review; choose release mode.
 - [ ] Public repo: confirm Apache-2.0 LICENSE, README, CONTRIBUTING, third-party licenses; scrub secrets/UDIDs (docs/HANDOFF.md has device UDIDs); tag the release; announce.
+- [ ] Companion app on iPhone Duo / iPad: verified compact layout on the Duo outer-display simulator (see docs/agent-reports/appduo3.md); owner to eyeball on hardware.
