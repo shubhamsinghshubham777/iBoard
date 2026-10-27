@@ -1,23 +1,8 @@
 #!/usr/bin/env bash
-# iBoard pre-commit: hosted CI runners have no iOS 27 simulator, so the simulator tests run here instead.
-#  - always: static privacy audit (fast)
-#  - when staged files include Swift / project / entitlement / script changes: scripts/test.sh --no-ui
-#    (every package's `swift test`, then xcodebuild build + iBoardTests on an iOS 27 simulator)
-# Skip once (e.g. WIP commit): IBOARD_SKIP_HOOK=1 git commit ...   (or git commit --no-verify)
-# Install: scripts/install-hooks.sh
+# iBoard pre-commit: fast static privacy audit only. The simulator tests run in the pre-push hook
+# (hosted CI has no iOS 27 simulator). Skip once: IBOARD_SKIP_HOOK=1 git commit ... (or --no-verify).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-
-if [ "${IBOARD_SKIP_HOOK:-0}" = 1 ]; then
-  echo "pre-commit: skipped (IBOARD_SKIP_HOOK=1)"; exit 0
-fi
-
+if [ "${IBOARD_SKIP_HOOK:-0}" = 1 ]; then echo "pre-commit: skipped (IBOARD_SKIP_HOOK=1)"; exit 0; fi
 echo "pre-commit: privacy audit"
 scripts/audit-privacy.sh
-
-if git diff --cached --name-only --diff-filter=ACMRD | grep -qE '\.(swift|yml|entitlements|plist|xcprivacy|iblex|iblm)$|^scripts/(test|build)\.sh$|Package\.swift$'; then
-  echo "pre-commit: code changed, running scripts/test.sh --no-ui (use IBOARD_SKIP_HOOK=1 to skip)"
-  scripts/test.sh --no-ui
-else
-  echo "pre-commit: no code changes staged, tests skipped"
-fi

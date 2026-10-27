@@ -75,10 +75,10 @@ instead), and never touches the owner's physical device while it is being tested
 Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately as described
 in [SECURITY.md](SECURITY.md), not in public issues.
 
-## Pre-commit hook (local simulator tests)
+## Git hooks (local simulator tests)
 
 GitHub-hosted runners ship Xcode 26 and have no iOS 27 simulator, so CI cannot run the app's simulator tests
-(`ios-build-test` only builds; the test step skips itself there). Run `scripts/install-hooks.sh` once per clone: the
-pre-commit hook then runs the privacy audit on every commit and, when Swift/project/entitlement files are staged,
-`scripts/test.sh --no-ui` (all package tests plus the app's unit tests on an iOS 27 simulator). Skip a WIP commit with
-`IBOARD_SKIP_HOOK=1 git commit ...`.
+(`ios-build-test` only builds; the test step skips itself there). Run `scripts/install-hooks.sh` once per clone:
+the **pre-commit** hook runs the (fast) privacy audit, and the **pre-push** hook runs `scripts/test.sh --no-ui`
+(all package tests plus the app's unit tests on an iOS 27 simulator) when the pushed commits change Swift, project,
+entitlement or script files. Docs-only pushes skip the tests. Skip once with `IBOARD_SKIP_HOOK=1 git push ...`.

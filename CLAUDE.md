@@ -29,5 +29,5 @@ scripts/test.sh --no-ui     # same, skipping UI tests
 
 `build.sh` copies `Config/Local.xcconfig.example` to `Config/Local.xcconfig` if missing and runs `xcodegen generate`
 only when `project.yml` is newer than the pbxproj. Set `DERIVED_DATA=<dir>` to change the build dir (default
-`build/DerivedData`); `test.sh` also honours `SIM_NAME` to pick a simulator. CI: `.github/workflows/ci.yml` (hosted runners have no iOS 27 simulator, so simulator tests run in the local pre-commit
+`build/DerivedData`); `test.sh` also honours `SIM_NAME` to pick a simulator. CI: `.github/workflows/ci.yml` (hosted runners have no iOS 27 simulator, so simulator tests run in the local pre-push
 hook: `scripts/install-hooks.sh`; skip once with `IBOARD_SKIP_HOOK=1`).

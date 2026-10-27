@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# iBoard pre-push: hosted CI runners have no iOS 27 simulator, so the full local test run happens here.
+# Runs `scripts/test.sh --no-ui` (every package's `swift test`, then xcodebuild build + iBoardTests on an iOS 27
+# simulator) when the commits being pushed change Swift / project / entitlement / script files; docs-only pushes skip it.
+# Skip once: IBOARD_SKIP_HOOK=1 git push ... (or --no-verify).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+if [ "${IBOARD_SKIP_HOOK:-0}" = 1 ]; then echo "pre-push: skipped (IBOARD_SKIP_HOOK=1)"; exit 0; fi
+
+zero=0000000000000000000000000000000000000000
+code='\.(swift|yml|entitlements|plist|xcprivacy|iblex|iblm)$|^scripts/(test|build|audit-privacy)\.sh$|Package\.swift$'
+need=0
+while read -r _ local_sha _ remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue                       # branch deletion
+  if [ "$remote_sha" = "$zero" ]; then range="$local_sha"; base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+    [ -n "$base" ] && range="$base..$local_sha"
+  else range="$remote_sha..$local_sha"; fi
+  if git diff --name-only "$range" 2>/dev/null | grep -qE "$code"; then need=1; fi
+done
+
+if [ "$need" = 1 ]; then
+  echo "pre-push: code changed, running scripts/test.sh --no-ui (IBOARD_SKIP_HOOK=1 to skip)"
+  scripts/test.sh --no-ui
+else
+  echo "pre-push: no code changes in the pushed commits, tests skipped"
+fi
