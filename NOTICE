@@ -20,3 +20,10 @@ Language data attributions will be listed in docs/DATA_SOURCES.md.
 - Packages/IBoardEmoji/Sources/IBoardEmoji/Resources/emoji.json — generated from Unicode emoji-test.txt (Emoji 18.0)
   and CLDR 49 annotations (en, hi) from https://github.com/unicode-org/cldr-json. Copyright (c) Unicode, Inc.
   Unicode License v3 (SPDX Unicode-3.0), full text in Packages/IBoardEmoji/LICENSE-UNICODE.txt; details in docs/EMOJI_DATA.md.
+
+- Data/hinglish/ (lexicon.iblex, lm.iblm, clusters.tsv) — romanized Hindi (Hinglish) word list and 3-gram model, built
+  by Tools/HinglishData from the Leipzig Corpora Collection Hindi news 2019/2020 (CC BY 4.0; Goldhahn, Eckart,
+  Quasthoff, LREC 2012), AI4Bharat Aksharantar Hindi pairs (CC BY / CC0; includes rows from Google Dakshina,
+  CC BY-SA 4.0; Madhani et al. 2022, Roark et al. 2020) and project-authored CC0 lists. The derived data files are
+  released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); see Data/hinglish/LICENSE.md and
+  docs/HINGLISH.md. The code stays Apache-2.0.
