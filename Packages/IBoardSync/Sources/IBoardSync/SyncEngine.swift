@@ -21,15 +21,19 @@ public actor SyncEngine {
     private let crypto: SyncCrypto
     public let deviceID: String
     private let now: @Sendable () -> Date
+    private let maxShardBytes: Int
+    private let tombstoneRetention: TimeInterval
     public private(set) var enabled = false
     public private(set) var status: SyncStatus = .off
     private var lastSync: Date?
 
-    public init(store: SyncStore, crypto: SyncCrypto, deviceID: String, now: @escaping @Sendable () -> Date = { Date() }) {
+    public init(store: SyncStore, crypto: SyncCrypto, deviceID: String, now: @escaping @Sendable () -> Date = { Date() },
+                maxShardBytes: Int = SyncSharding.defaultMaxShardBytes, tombstoneRetentionDays: Double = 180) {
         self.store = store; self.crypto = crypto; self.deviceID = deviceID; self.now = now
+        self.maxShardBytes = maxShardBytes; self.tombstoneRetention = tombstoneRetentionDays * 86_400
     }
 
-    public var shardName: String { "shard-\(deviceID)-0" }
+    public var shardName: String { SyncSharding.name(device: deviceID, index: 0) }
 
     public func setEnabled(_ on: Bool) {
         enabled = on
@@ -48,15 +52,29 @@ public actor SyncEngine {
             }
             var merged = local
             var skipped = 0
-            for shard in try await store.fetchAllShards() {
+            let fetched = try await store.fetchAllShards()
+            let ownShards = fetched.filter { $0.device == deviceID }
+            for shard in fetched {
                 guard shard.schemaVersion <= SyncState.currentSchemaVersion,
                       let plain = try? crypto.open(shard.payload, bindingTo: shard.recordName),
                       let remote = try? SyncState.decode(plain) else { skipped += 1; continue }
                 merged = merged.merged(with: remote)
             }
-            let sealed = try crypto.seal(try merged.encoded(), bindingTo: shardName)
-            try await store.save(SyncShard(recordName: shardName, device: deviceID,
-                                           schemaVersion: merged.schemaVersion, payload: sealed, updatedAt: now()))
+            let cutoffMs = UInt64(max(0, now().timeIntervalSince1970 - tombstoneRetention) * 1000)
+            merged = merged.compacted(tombstonesOlderThan: cutoffMs)
+            let parts = try SyncSharding.split(merged, maxBytes: maxShardBytes)
+            for (i, part) in parts.enumerated() {
+                let name = SyncSharding.name(device: deviceID, index: i)
+                let sealed = try crypto.seal(try part.encoded(), bindingTo: name)
+                try await store.save(SyncShard(recordName: name, device: deviceID,
+                                               schemaVersion: part.schemaVersion, payload: sealed, updatedAt: now()))
+            }
+            // Shrunk: blank out leftover higher-index shards from earlier uploads (tiny empty payloads).
+            for old in ownShards where (SyncSharding.index(of: old.recordName, device: deviceID) ?? -1) >= parts.count {
+                let sealed = try crypto.seal(try SyncState().encoded(), bindingTo: old.recordName)
+                try await store.save(SyncShard(recordName: old.recordName, device: deviceID,
+                                               schemaVersion: SyncState.currentSchemaVersion, payload: sealed, updatedAt: now()))
+            }
             lastSync = now()
             status = .idle(lastSync: lastSync)
             return SyncOutcome(merged: merged, skippedShards: skipped, uploaded: true)

@@ -5,7 +5,9 @@ import Foundation
 @Suite struct SyncEngineTests {
     let keyData = SyncCrypto.generateKeyData()
     func engine(_ store: InMemorySyncStore, device: String, key: Data? = nil) -> SyncEngine {
-        SyncEngine(store: store, crypto: SyncCrypto(keyData: key ?? keyData), deviceID: device)
+        // Clock near the tiny test stamps so tombstone compaction (real-time based) does not drop them.
+        SyncEngine(store: store, crypto: SyncCrypto(keyData: key ?? keyData), deviceID: device,
+                   now: { Date(timeIntervalSince1970: 1) })
     }
     func state(_ device: String, _ words: [String: UInt64], now: UInt64 = 1000) -> SyncState {
         var s = SyncState()
