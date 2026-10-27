@@ -1,6 +1,6 @@
 # App Store listing draft (M13-06). Prepared, not submitted.
 
-Placeholders: replace `<PAGES_URL>` with the published GitHub Pages URL of `docs/site` before submitting.
+Pages URL is the owner GitHub Pages site (confirm Pages is enabled).
 
 ## Metadata
 - **Name (max 30):** iBoard: Private Keyboard
@@ -8,9 +8,9 @@ Placeholders: replace `<PAGES_URL>` with the published GitHub Pages URL of `docs
 - **Category:** Utilities (secondary: Productivity)
 - **Age rating:** 4+ (no objectionable content; no user-generated content shared)
 - **Price:** Free, no in-app purchases
-- **Privacy policy URL:** `<PAGES_URL>/privacy.html`
-- **Support URL:** `<PAGES_URL>/support.html`
-- **Marketing URL (optional):** `<PAGES_URL>/`
+- **Privacy policy URL:** `https://shubhamsinghshubham777.github.io/iBoard/privacy.html`
+- **Support URL:** `https://shubhamsinghshubham777.github.io/iBoard/support.html`
+- **Marketing URL (optional):** `https://shubhamsinghshubham777.github.io/iBoard/`
 - **Copyright:** 2026 Shubham Singh
 - **Privacy label:** Data Not Collected. Tracking: No.
 
