@@ -250,6 +250,32 @@ struct TraitVariantTests {
         #expect(layout(.numberPad, settings: LayoutSettings(emojiKey: true)).firstKey(.emoji) == nil)
     }
 
+    @Test func commaAndEmojiAreOneKeyAndTheSpaceBarGrows() {
+        let separate = layout(settings: LayoutSettings(punctuationKeys: true))
+        let merged = layout(settings: LayoutSettings(punctuationKeys: true, emojiKey: true))
+        #expect(merged.firstKey(.commaEmoji) != nil)
+        #expect(merged.firstKey(.emoji) == nil)
+        #expect(merged.firstKey(.symbol(",")) == nil) // no separate comma key
+        #expect(merged.firstKey(.symbol(".")) != nil)
+        let c = merged.firstKey(.commaEmoji)!, toggle = merged.firstKey(.layerSwitch(.numbers))!, space = merged.firstKey(.space)!
+        #expect(c.frame.minX > toggle.frame.maxX && c.frame.maxX <= space.frame.minX)
+        #expect(space.frame.width > separate.firstKey(.space)!.frame.width + merged.metrics.tailKeyWidth - 1)
+        // Globe too: 123, globe, comma/emoji in order.
+        let g = layout(traits: LayoutTraits(needsInputModeSwitchKey: true), settings: LayoutSettings(punctuationKeys: true, emojiKey: true))
+        let xs = [g.firstKey(.layerSwitch(.numbers))!, g.firstKey(.globe)!, g.firstKey(.commaEmoji)!].map(\.frame.minX)
+        #expect(xs == xs.sorted())
+        // Emoji key off: a plain comma key, as before. Punctuation off: the plain emoji key.
+        #expect(layout(settings: LayoutSettings(punctuationKeys: true)).firstKey(.symbol(",")) != nil)
+        let noPunct = layout(settings: LayoutSettings(emojiKey: true))
+        #expect(noPunct.firstKey(.emoji) != nil && noPunct.firstKey(.commaEmoji) == nil)
+        // Number layers keep the emoji key; URL / email keyboards keep it too (no comma key there).
+        #expect(layout(.numbers, settings: LayoutSettings(punctuationKeys: true, emojiKey: true)).firstKey(.emoji) != nil)
+        for kb in [KeyboardKind.url, .emailAddress] {
+            let l = layout(traits: LayoutTraits(keyboardKind: kb), settings: LayoutSettings(punctuationKeys: true, emojiKey: true))
+            #expect(l.firstKey(.emoji) != nil && l.firstKey(.commaEmoji) == nil)
+        }
+    }
+
     @Test func compactChromeGivesBiggerKeysAndAShorterStrip() {
         let plain = layout(), tight = layout(settings: LayoutSettings(compact: true))
         #expect(tight.stripFrame.height < plain.stripFrame.height)

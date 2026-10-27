@@ -106,7 +106,7 @@ public final class KeyGridView: UIView {
             decorate(l)
             l.contentsScale = scale
             l.backgroundColor = color(forKey: i, pressed: false)
-            l.contents = glyphs.image(for: glyphSpec(for: key.identity))
+            l.contents = glyphs.image(for: glyphSpec(for: key.identity, keyWidth: key.frame.width))
             l.opacity = Self.dimmed(key.identity, returnKeyEnabled) ? 0.4 : 1
             l.isHidden = keysHidden
         }
@@ -143,7 +143,7 @@ public final class KeyGridView: UIView {
         CATransaction.setDisableActions(true)
         for (i, key) in layout.keys.enumerated() {
             switch key.identity {
-            case .letter: keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
+            case .letter: keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity, keyWidth: key.frame.width))
             case .shift:
                 keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
                 keyLayers[i].backgroundColor = color(forKey: i, pressed: highlighted[i])
@@ -291,11 +291,11 @@ public final class KeyGridView: UIView {
         return ret.frame.width < layout.metrics.sideKeyWidth * 0.8
     }
 
-    func glyphSpec(for identity: KeyIdentity) -> GlyphSpec? {
+    func glyphSpec(for identity: KeyIdentity, keyWidth: CGFloat = 0) -> GlyphSpec? {
         switch identity {
         case .letter(let s):
             if showsFlickHints, let hint = KeyFlick.hint(for: identity) {
-                return .hinted(shift == .off ? s : s.uppercased(), hint: hint, upper: shift != .off)
+                return .hinted(shift == .off ? s : s.uppercased(), hint: hint, upper: shift != .off, width: Int((keyWidth * 4).rounded()))
             }
             return .text(shift == .off ? s : s.uppercased(), .letter(upper: shift != .off), onAction: false)
         case .symbol(let s): return .text(s, .symbol, onAction: false)
@@ -320,6 +320,7 @@ public final class KeyGridView: UIView {
             return .symbol("phone.fill", onAction: false)
         case .globe: return .symbol("globe", onAction: false)
         case .emoji: return .symbol("face.smiling", onAction: false)
+        case .commaEmoji: return .text(",", .symbol, onAction: false)
         }
     }
 
@@ -357,9 +358,16 @@ public final class KeyGridView: UIView {
                 let e = KeyElement(accessibilityContainer: self)
                 e.accessibilityLabel = info.label
                 e.accessibilityValue = info.value
+                e.accessibilityHint = info.hint
                 e.accessibilityTraits = KeyAccessibility.traits(for: key.identity, shift: shift, returnEnabled: returnKeyEnabled)
                 e.accessibilityUserInputLabels = KeyAccessibility.inputLabels(for: key.identity, shift: shift, returnEnabled: returnKeyEnabled)
-                if case .emoji = key.identity, !emojiKeyActions.isEmpty {
+                if case .commaEmoji = key.identity {
+                    // "Emoji" first (the long press), then the same extras as the plain emoji key.
+                    let names = ["Emoji"] + emojiKeyActions
+                    e.accessibilityCustomActions = names.enumerated().map { idx, name in
+                        UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onEmojiKeyAction?(idx - 1); return true }
+                    }
+                } else if case .emoji = key.identity, !emojiKeyActions.isEmpty {
                     e.accessibilityCustomActions = emojiKeyActions.enumerated().map { idx, name in
                         UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onEmojiKeyAction?(idx); return true }
                     }
@@ -432,8 +440,47 @@ enum GlyphRole: Hashable {
 enum GlyphSpec: Hashable {
     case text(String, GlyphRole, onAction: Bool)
     /// A letter with its faint up-flick character in the top-right corner.
-    case hinted(String, hint: String, upper: Bool)
+    /// `width` is the key width in quarter points (the bitmap is exactly as wide as the key, so the hint's inset from the
+    /// key's top-right corner is the same for every key whatever the letter's width).
+    case hinted(String, hint: String, upper: Bool, width: Int)
     case symbol(String, onAction: Bool)
+}
+
+/// Where the faint hint character (1..0, @ # $ ...) of a letter key sits: a fixed box at a fixed inset from the key's
+/// top-right corner, and each glyph's INK (not its advance box or font ascent) is centred in that box, so digits, quotes
+/// and punctuation of different shapes all land on the same centre point.
+enum HintPlacement {
+    static let size = CGSize(width: 8, height: 8)
+    static let rightInset: CGFloat = 3
+    static let topInset: CGFloat = 2
+    static let alpha: CGFloat = 0.4
+    static let pointSize: CGFloat = 9
+
+    static func font(bold: Bool) -> UIFont {
+        UIFont.monospacedSystemFont(ofSize: pointSize, weight: bold ? .semibold : .regular)
+    }
+
+    /// The box in the key's coordinate space (origin top-left).
+    static func box(keyWidth: CGFloat) -> CGRect {
+        CGRect(x: keyWidth - rightInset - size.width, y: topInset, width: size.width, height: size.height)
+    }
+
+    /// Top-left point to draw `hint` at so its ink bounds are centred in `box(keyWidth:)`.
+    static func drawOrigin(for hint: String, font: UIFont, keyWidth: CGFloat) -> CGPoint {
+        let box = box(keyWidth: keyWidth)
+        let units = Array(hint.utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: units.count)
+        let ct = font as CTFont
+        guard !units.isEmpty, CTFontGetGlyphsForCharacters(ct, units, &glyphs, units.count) else {
+            let w = (hint as NSString).size(withAttributes: [.font: font]).width
+            return CGPoint(x: box.midX - w / 2, y: box.midY - font.lineHeight / 2)
+        }
+        var rect = CGRect.zero
+        CTFontGetBoundingRectsForGlyphs(ct, .horizontal, glyphs, &rect, glyphs.count)
+        // `rect` is y-up around the baseline origin. Ink centre = (x + rect.midX, baseline - rect.midY).
+        let baseline = box.midY + rect.midY
+        return CGPoint(x: box.midX - rect.midX, y: baseline - font.ascender)
+    }
 }
 
 /// Renders each glyph once into a small bitmap (tight vertical box) and hands out the `CGImage`. Lives on the main
@@ -446,6 +493,7 @@ final class GlyphCache {
     private var scale: CGFloat = 3
     private var keyHeight: CGFloat = 43
     private var images: [GlyphSpec: CGImage] = [:]
+    private var boldText = false
 
     /// Native baseline sits 28 pt below the tile top on a 43 pt tile (measured, native-metrics.json glyph table).
     private static let baselineRatio: CGFloat = 28.0 / 43.0
@@ -467,6 +515,8 @@ final class GlyphCache {
 
     func image(for spec: GlyphSpec?) -> CGImage? {
         guard let spec else { return nil }
+        let bold = UIAccessibility.isBoldTextEnabled
+        if bold != boldText { boldText = bold; images.removeAll(keepingCapacity: true) }
         if let hit = images[spec] { return hit }
         let img = render(spec)
         images[spec] = img
@@ -501,24 +551,23 @@ final class GlyphCache {
                 (text as NSString).draw(at: CGPoint(x: (width - textSize.width) / 2, y: baselineY - ascent), withAttributes: attrs)
             }
             return image.cgImage
-        case .hinted(let text, let hint, let upper):
+        case .hinted(let text, let hint, let upper, let quarterWidth):
             let font = font(upper ? tokens.uppercaseLetterFontSize : tokens.letterFontSize)
-            let hintFont = UIFont.systemFont(ofSize: 9, weight: .regular)
             let color = UIColor(cgColor: tokens.keyLabel.cgColor)
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
-            let hintAttrs: [NSAttributedString.Key: Any] = [.font: hintFont, .foregroundColor: color.withAlphaComponent(0.4)]
             let textSize = (text as NSString).size(withAttributes: attrs)
-            let hintSize = (hint as NSString).size(withAttributes: hintAttrs)
-            // Side margin of the centred letter is at least the hint's width, so the hint never overlaps the glyph.
-            let width = ceil(textSize.width + hintSize.width * 2 + 6)
+            let width = quarterWidth > 0 ? CGFloat(quarterWidth) / 4 : ceil(textSize.width) + 2 * (HintPlacement.size.width + HintPlacement.rightInset)
             let height = keyHeight // full key height so the hint can sit near the top edge
             let baselineY = keyHeight * Self.baselineRatio
+            let hintFont = HintPlacement.font(bold: UIAccessibility.isBoldTextEnabled)
+            let hintAttrs: [NSAttributedString.Key: Any] = [.font: hintFont, .foregroundColor: color.withAlphaComponent(HintPlacement.alpha)]
+            let hintOrigin = HintPlacement.drawOrigin(for: hint, font: hintFont, keyWidth: width)
             let format = UIGraphicsImageRendererFormat()
             format.scale = scale
             format.opaque = false
             return UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { _ in
                 (text as NSString).draw(at: CGPoint(x: (width - textSize.width) / 2, y: baselineY - font.ascender), withAttributes: attrs)
-                (hint as NSString).draw(at: CGPoint(x: width - hintSize.width - 1, y: 2), withAttributes: hintAttrs)
+                (hint as NSString).draw(at: hintOrigin, withAttributes: hintAttrs)
             }.cgImage
         case .symbol(let name, let onAction):
             let config = UIImage.SymbolConfiguration(pointSize: name == "globe" ? 20 : 19, weight: weight.symbolWeight)

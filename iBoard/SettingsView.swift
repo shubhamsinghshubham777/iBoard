@@ -58,12 +58,14 @@ struct SettingsView: View {
                 Picker("Long-press time", selection: $settings.longPressDelay) {
                     ForEach(LongPressDelay.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                 }
-                Text("How long to hold a key before its alternates appear. Choose Long if you trigger them by accident.")
+                Text("How long to hold a key before its alternates (or, on the comma key, the emoji panel) appear. Choose Long if you trigger them by accident.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Layout") {
                 Toggle("Number row", isOn: $settings.numberRow)
                 Toggle("Comma and period keys", isOn: $settings.punctuationKeys)
+                Text("The comma key is also the emoji key: tap for a comma, hold for emoji. Quick settings and clipboard history are on the 123 layer's emoji key (hold it).")
+                    .font(.footnote).foregroundStyle(.secondary)
                 Toggle("Landscape side keys", isOn: $settings.landscapeSideKeys)
                 Text("In landscape, adds a column of punctuation keys on each side of the letters.").font(.footnote).foregroundStyle(.secondary)
                 Toggle("Show hint symbols on keys", isOn: $settings.flickHints)

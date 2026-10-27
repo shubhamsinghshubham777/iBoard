@@ -13,6 +13,8 @@ public enum KeyAccessibility {
         public var value: String?
         /// True for keys that type a character; VoiceOver then uses the keyboard-key trait.
         public var typesCharacter: Bool
+        /// Spoken usage hint ("Touch and hold for emoji") or nil.
+        public var hint: String? = nil
     }
 
     /// Voice Control names ("tap delete", "tap enter"): the first is the visible label; extras are common spoken synonyms.
@@ -27,6 +29,7 @@ public enum KeyAccessibility {
         case .space: return [base, "spacebar"]
         case .globe: return [base, "globe", "switch keyboard"]
         case .emoji: return [base, "emoji keyboard"]
+        case .commaEmoji: return [base, "emoji", "emoji keyboard"]
         case .layerSwitch(let k):
             switch k {
             case .letters: return [base, "ABC"]
@@ -90,6 +93,8 @@ public enum KeyAccessibility {
             return Info(label: "next keyboard", value: nil, typesCharacter: false)
         case .emoji:
             return Info(label: "emoji", value: nil, typesCharacter: false)
+        case .commaEmoji:
+            return Info(label: "comma", value: nil, typesCharacter: true, hint: "Touch and hold, or use the Emoji action, to open the emoji keyboard")
         }
     }
 

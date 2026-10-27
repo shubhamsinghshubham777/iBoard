@@ -208,7 +208,9 @@ final class KeyboardViewController: UIInputViewController {
         wireQuickSettings()
         grid.onEmojiKeyAction = { [weak self] index in
             guard let self else { return }
-            // Same choices as the key's long press, for VoiceOver users: [Clipboard history,] Quick settings.
+            // -1: the merged comma / emoji key's own "Emoji" action (its long press).
+            if index < 0 { self.feedback(.action); self.openEmoji(); return }
+            // Same choices as the plain emoji key's long press, for VoiceOver users: [Clipboard history,] Quick settings.
             let names = self.emojiKeyActionNames
             guard index < names.count else { return }
             self.feedback(.action)

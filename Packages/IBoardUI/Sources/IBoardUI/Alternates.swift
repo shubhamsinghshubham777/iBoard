@@ -56,6 +56,12 @@ public enum KeyAlternates {
     ]
     private static let suffixes: [String] = [".com", ".in", ".org", ".net", ".edu", ".co"]
 
+    /// True when holding the key does something: an alternates row, or (merged comma / emoji key) the emoji panel.
+    public static func hasLongPress(_ identity: KeyIdentity) -> Bool {
+        if case .commaEmoji = identity { return true }
+        return longPressOptions(for: identity) != nil
+    }
+
     /// What a long press offers: for letters the key's hint symbol (its number / symbol, drawn faintly on the key) comes
     /// first, then the accented forms; other keys offer their `options`. nil: nothing to offer.
     public static func longPressOptions(for identity: KeyIdentity, uppercase: Bool = false, clipboardEntry: Bool = false) -> [String]? {

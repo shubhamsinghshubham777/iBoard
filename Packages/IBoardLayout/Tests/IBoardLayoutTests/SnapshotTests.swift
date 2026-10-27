@@ -90,6 +90,8 @@ struct SnapshotTests {
             make("globe-numbers", .numbers, LayoutTraits(needsInputModeSwitchKey: true)),
             make("number-row", .letters, LayoutTraits(), LayoutSettings(numberRow: true)),
             make("punctuation-keys", .letters, LayoutTraits(), LayoutSettings(punctuationKeys: true)),
+            make("comma-emoji-merged", .letters, LayoutTraits(), LayoutSettings(punctuationKeys: true, emojiKey: true)),
+            make("comma-emoji-merged-globe", .letters, LayoutTraits(needsInputModeSwitchKey: true), LayoutSettings(punctuationKeys: true, emojiKey: true)),
             make("return-send", .letters, LayoutTraits(returnKey: .send)),
             make("numbers-inr", .numbers, LayoutTraits(), LayoutSettings(currency: .inr)),
             make("height-1.4", .letters, LayoutTraits(), LayoutSettings(heightScale: 1.4)),

@@ -153,7 +153,7 @@ public struct KeyboardInputMachine: Sendable {
         orderCounter &+= 1
         slots[free] = Slot(touchID: id, keyIndex: hit.keyIndex, order: orderCounter, isActive: true, isCommitted: false)
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
-        if KeyAlternates.longPressOptions(for: layout.keys[hit.keyIndex].identity) != nil {
+        if KeyAlternates.hasLongPress(layout.keys[hit.keyIndex].identity) {
             slots[free].longPressAt = time + longPressDelay
         }
 
@@ -190,9 +190,9 @@ public struct KeyboardInputMachine: Sendable {
         if let from = slots[i].slideFrom, let point, let hit = layout.hit(at: point), kind != from {
             let identity = layout.keys[hit.keyIndex].identity
             switch identity {
-            case .letter, .symbol:
+            case .letter, .symbol, .commaEmoji:
                 slots[i].slideFrom = nil
-                if let text = identity.insertionText { emit(.insert(text)) }
+                if let text = identity.insertionText ?? (identity == .commaEmoji ? "," : nil) { emit(.insert(text)) }
                 kind = from
                 emit(.layerChanged(from))
             default: break
@@ -226,6 +226,13 @@ public struct KeyboardInputMachine: Sendable {
             slots[i].longPressAt = .infinity
             guard k >= 0 else { continue }
             slots[i].isCommitted = true
+            if layout.keys[k].identity == .commaEmoji {
+                // Long press on the merged comma / emoji key: open the emoji panel (no comma typed on release).
+                emit(.highlight(keyIndex: k, isOn: false))
+                slots[i].keyIndex = -1
+                emit(.openEmoji)
+                continue
+            }
             slots[i].isAlternates = true
             emit(.highlight(keyIndex: k, isOn: false))
             slots[i].keyIndex = -1
@@ -300,6 +307,8 @@ public struct KeyboardInputMachine: Sendable {
             emit(.advanceKeyboard)
         case .emoji:
             emit(.openEmoji)
+        case .commaEmoji:
+            emit(.insert(",")) // a tap is a comma; the long press (see `tick`) opens the emoji panel
         case .delete:
             emit(.deleteBackward)
             deleteTouchID = slots[slot].touchID

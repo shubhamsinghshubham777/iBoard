@@ -391,3 +391,41 @@ private struct Driver {
     d.up(1)
     #expect(d.sink.nonHighlight == [.openEmoji])
 }
+
+private func mergedLayout() -> KeyboardLayout {
+    LayoutEngine.layout(containerSize: CGSize(width: 390, height: 260), traits: LayoutTraits(), kind: .letters,
+                        settings: LayoutSettings(punctuationKeys: true, emojiKey: true))
+}
+
+@Test func commaEmojiKeyTapTypesACommaOnTouchUp() {
+    var d = Driver(mergedLayout())
+    d.down(1, .commaEmoji)
+    #expect(d.sink.inserts.isEmpty)
+    d.up(1, t: 0.1)
+    #expect(d.sink.inserts == [","])
+    #expect(!d.sink.events.contains(.openEmoji))
+}
+
+@Test func commaEmojiKeyLongPressOpensEmojiAndTypesNothing() {
+    var d = Driver(mergedLayout())
+    d.m.longPressDelay = 0.45
+    d.down(1, .commaEmoji)
+    d.tick(0.3)
+    #expect(!d.sink.events.contains(.openEmoji))
+    d.tick(0.5)
+    #expect(d.sink.events.filter { $0 == .openEmoji }.count == 1)
+    d.up(1, t: 0.7)
+    #expect(d.sink.inserts.isEmpty)
+    #expect(d.sink.events.filter { $0 == .openEmoji }.count == 1)
+    #expect(d.m.activeTouchCount == 0)
+}
+
+@Test func commaEmojiKeyHonoursTheConfiguredLongPressDelay() {
+    var d = Driver(mergedLayout())
+    d.m.longPressDelay = 0.8
+    d.down(1, .commaEmoji)
+    d.tick(0.6)
+    #expect(!d.sink.events.contains(.openEmoji))
+    d.tick(0.85)
+    #expect(d.sink.events.contains(.openEmoji))
+}

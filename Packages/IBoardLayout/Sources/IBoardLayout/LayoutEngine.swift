@@ -243,6 +243,14 @@ private struct Placer {
         }
     }
 
+    /// The comma key and the emoji key are one key (`.commaEmoji`: tap = ",", long press = emoji panel) on the letters
+    /// layer whenever both are enabled. Not on the URL / email keyboards (their middle row has no comma), and not on the
+    /// numbers layers (they keep the plain emoji key; the comma is in their key rows).
+    func mergesCommaWithEmoji(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings) -> Bool {
+        kind == .letters && settings.emojiKey && settings.punctuationKeys
+            && traits.keyboardKind != .url && traits.keyboardKind != .emailAddress
+    }
+
     private mutating func buildBottomRow(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings, row: Int) {
         let g = m.columnGap
         let sideW = m.sideKeyWidth
@@ -251,7 +259,7 @@ private struct Placer {
         // Left group: 123/ABC, plus the globe (when the system asks for it) and the emoji key, splitting the same width.
         var leftKeys: [KeyIdentity] = [.layerSwitch(toggleTarget)]
         if traits.needsInputModeSwitchKey { leftKeys.append(.globe) }
-        if settings.emojiKey { leftKeys.append(.emoji) }
+        if settings.emojiKey { leftKeys.append(mergesCommaWithEmoji(kind: kind, traits: traits, settings: settings) ? .commaEmoji : .emoji) }
         let each = (sideW - g * CGFloat(leftKeys.count - 1)) / CGFloat(leftKeys.count)
         for (i, id) in leftKeys.enumerated() { add(id, x: m.contentLeft + CGFloat(i) * (each + g), w: each, row: row) }
         let midLeft = m.contentLeft + sideW + g
@@ -276,8 +284,13 @@ private struct Placer {
             add(.symbol("@"), x: midLeft + spaceW + g, w: tail, row: row)
             add(.symbol("."), x: midLeft + spaceW + 2 * g + tail, w: tail, row: row)
         } else if isLetters && settings.punctuationKeys {
-            add(.symbol(","), x: midLeft, w: tail, row: row)
-            add(.space, x: midLeft + tail + g, w: midRight - midLeft - 2 * (tail + g), row: row)
+            if mergesCommaWithEmoji(kind: kind, traits: traits, settings: settings) {
+                // The comma lives on the merged comma/emoji key in the left group: the space bar takes its width.
+                add(.space, x: midLeft, w: midRight - midLeft - (tail + g), row: row)
+            } else {
+                add(.symbol(","), x: midLeft, w: tail, row: row)
+                add(.space, x: midLeft + tail + g, w: midRight - midLeft - 2 * (tail + g), row: row)
+            }
             add(.symbol("."), x: midRight - tail, w: tail, row: row)
         } else {
             add(.space, x: midLeft, w: midRight - midLeft, row: row)
@@ -370,7 +383,7 @@ private struct Placer {
         let fw = m.functionKeyWidth
         var left = [SItem(id: .layerSwitch(toggleTarget), width: fw)]
         if traits.needsInputModeSwitchKey { left.append(SItem(id: .globe, width: fw)) }
-        if settings.emojiKey { left.append(SItem(id: .emoji, width: fw)) }
+        if settings.emojiKey { left.append(SItem(id: mergesCommaWithEmoji(kind: kind, traits: traits, settings: settings) ? .commaEmoji : .emoji, width: fw)) }
         var right: [SItem] = []
         let ret = SItem(id: .returnKey(traits.returnKey), width: nil)
         let isLetters = kind == .letters
@@ -381,7 +394,8 @@ private struct Placer {
             left.append(SItem(id: .space, width: nil))
             right = [SItem(id: .symbol("@"), width: m.tailKeyWidth), SItem(id: .symbol("."), width: m.tailKeyWidth), ret]
         } else if isLetters && settings.punctuationKeys {
-            left += [SItem(id: .symbol(","), width: m.tailKeyWidth), SItem(id: .space, width: nil)]
+            if !mergesCommaWithEmoji(kind: kind, traits: traits, settings: settings) { left.append(SItem(id: .symbol(","), width: m.tailKeyWidth)) }
+            left.append(SItem(id: .space, width: nil))
             right = [SItem(id: .symbol("."), width: m.tailKeyWidth), ret]
         } else {
             left.append(SItem(id: .space, width: nil))

@@ -25,6 +25,13 @@ import IBoardLayout
         #expect(KeyAccessibility.info(for: .returnKey(.send), shift: .off, returnEnabled: false).value == "dimmed")
         #expect(KeyAccessibility.info(for: .globe, shift: .off).label == "next keyboard")
     }
+    @Test func commaEmojiKeyIsACommaWithAnEmojiHint() {
+        let info = KeyAccessibility.info(for: .commaEmoji, shift: .off)
+        #expect(info.label == "comma" && info.typesCharacter)
+        #expect(info.hint?.contains("emoji") == true)
+        let names = KeyAccessibility.inputLabels(for: .commaEmoji, shift: .off)
+        #expect(names.first == "comma" && names.contains("emoji"))
+    }
     @Test func emptyStripSlotIsNotAnElement() {
         #expect(KeyAccessibility.stripLabel(slotIndex: 0, text: "") == nil)
         #expect(KeyAccessibility.stripLabel(slotIndex: 1, text: "hello") == "hello")

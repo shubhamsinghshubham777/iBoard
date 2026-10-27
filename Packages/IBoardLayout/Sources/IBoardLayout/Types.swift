@@ -269,6 +269,8 @@ public enum KeyIdentity: Hashable, Sendable, Codable {
     case globe
     /// Opens the emoji panel (the host decides what that means).
     case emoji
+    /// The merged comma / emoji key: a tap types ",", a long press opens the emoji panel.
+    case commaEmoji
 
     /// Stable name used in snapshots and tests.
     public var snapshotName: String {
@@ -283,6 +285,7 @@ public enum KeyIdentity: Hashable, Sendable, Codable {
         case .returnKey(let r): "return:\(r.rawValue)"
         case .globe: "globe"
         case .emoji: "emoji"
+        case .commaEmoji: "commaEmoji"
         }
     }
 
