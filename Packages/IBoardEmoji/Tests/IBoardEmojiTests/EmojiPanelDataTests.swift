@@ -119,3 +119,48 @@ func physFootprintBytes() -> Int {
     s.dropCaches()
 }
 #endif
+
+@Suite("Continuous emoji list")
+struct EmojiSectionsTests {
+    private func sample() -> EmojiCatalog {
+        func e(_ s: String, _ g: Int) -> EmojiEntry {
+            EmojiEntry(emoji: s, group: g, name: s, keywordsEN: [], keywordsHI: [], keywordsHinglish: [], tones: [])
+        }
+        return EmojiCatalog(groups: ["Smileys", "People", "Empty", "Food"], entries: [e("😀", 0), e("😃", 0), e("🧑", 1), e("🍔", 3)])
+    }
+
+    @Test func recentsFirstThenEveryNonEmptyGroup() {
+        let s = EmojiSections(catalog: sample(), recentsCount: 2)
+        #expect(s.sections.map(\.title) == ["Recently used", "Smileys", "People", "Food"])
+        #expect(s.sections.map(\.count) == [2, 2, 1, 1])
+        #expect(s.sectionIndex(forGroup: nil) == 0)
+        #expect(s.sectionIndex(forGroup: 3) == 3)
+        #expect(s.sectionIndex(forGroup: 2) == nil)
+    }
+
+    @Test func noRecentsSectionWhenEmpty() {
+        let s = EmojiSections(catalog: sample(), recentsCount: 0)
+        #expect(s.sections.first?.title == "Smileys")
+        #expect(s.sectionIndex(forGroup: nil) == nil)
+    }
+
+    @Test func currentSectionFollowsTheOffset() {
+        let tops = [0.0, 300, 700, 1200]
+        #expect(EmojiSections.currentSection(offsetY: 0, sectionTops: tops) == 0)
+        #expect(EmojiSections.currentSection(offsetY: 299, sectionTops: tops) == 1) // within 1 pt of the header
+        #expect(EmojiSections.currentSection(offsetY: 650, sectionTops: tops) == 1)
+        #expect(EmojiSections.currentSection(offsetY: 5000, sectionTops: tops) == 3)
+    }
+
+    @Test func savedOffsetIsClamped() {
+        #expect(EmojiSections.clampedOffset(-20, contentHeight: 1000, viewportHeight: 200) == 0)
+        #expect(EmojiSections.clampedOffset(500, contentHeight: 1000, viewportHeight: 200) == 500)
+        #expect(EmojiSections.clampedOffset(5000, contentHeight: 1000, viewportHeight: 200) == 800)
+        #expect(EmojiSections.clampedOffset(10, contentHeight: 100, viewportHeight: 200) == 0)
+    }
+
+    @Test func flatSearchSectionHasNoHeader() {
+        let s = EmojiSections(flat: 7)
+        #expect(s.sections == [EmojiSections.Section(title: "", group: nil, count: 7)])
+    }
+}

@@ -15,6 +15,7 @@ final class EmojiHost {
     enum Mode: Equatable { case closed, panel, search, results }
 
     static let prefsKey = "iboard.emoji.prefs"
+    static let scrollKey = "iboard.emoji.scrollOffset"
 
     private(set) var mode: Mode = .closed
     private let store = EmojiStore()
@@ -88,6 +89,9 @@ final class EmojiHost {
         p.onInsert = { [weak self] text in self?.onInsert?(text) }
         p.onPreferencesChange = { [weak self] new in self?.prefs = new; self?.savePrefs() }
         p.onClose = { [weak self] in self?.close() }
+        // One continuous list: remember how far the user scrolled (a plain number, extension-local).
+        p.restoredScrollOffset = UserDefaults.standard.object(forKey: Self.scrollKey) as? Double
+        p.onScrollOffsetSettled = { UserDefaults.standard.set($0, forKey: Self.scrollKey) }
         p.isHidden = mode == .search
         parent.addSubview(p)
         panel = p
