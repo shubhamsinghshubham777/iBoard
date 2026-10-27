@@ -713,7 +713,10 @@ final class KeyboardViewController: UIInputViewController {
     /// Asks the system for Text Replacements and contact names (once per appearance; cheap). The callback may arrive off
     /// the main thread (P-25), so it only copies plain strings.
     private func requestSystemLexicon() {
-        requestSupplementaryLexicon { [weak self] lexicon in
+        // `@Sendable` keeps the closure nonisolated: UIKit calls it on a background queue (with Full Access the request
+        // goes over XPC), and a closure formed here would otherwise inherit @MainActor and trap in
+        // `_dispatch_assert_queue_fail` (same crash class as the earlier `lexicon()` / `pasteTest()` probes).
+        requestSupplementaryLexicon { @Sendable [weak self] lexicon in
             let entries = lexicon.entries.map { SystemLexiconEntry(userInput: $0.userInput, documentText: $0.documentText) }
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
