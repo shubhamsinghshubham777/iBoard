@@ -563,6 +563,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** engine side done: Swift 6 `EngineActor`, sequence-number cancellation (stale dropped, 40-request burst test), `Suggestions` (3 slots + reserved phrase slot + autocorrect proposal). Strip wiring in the keyboard is NOT done.
   **Update (2026-10-27):** wired into the keyboard: `TypingCoordinator` + `EngineHost` (bundled 219-word synthetic lexicon, off-main load), strip shows suggestions, autocorrect + backspace restore, SmartPunctuation and PersonalLearner events; simulator-verified (keystroke→suggestions p95 ≈2 ms on the Mac sim, 24–25 MB), nothing learned in an email field. Not done: personal model into suggestions, strip taps live, Full Access mode, device. `docs/KEYBOARD_WIRING.md`.
   **Update (2026-10-27):** EngineActor now has public `Suggestions`/`SuggestionSlot` initialisers, `setPersonal`/`refreshPersonal(from:)`, phrase chip, `applyTouchModel`, and transposition/deletion/insertion edits in the TapDecoder (189 engine tests); IBoardUI still uses its mirror types and `EngineHost` has not adopted `refreshPersonal`/`applyTouchModel` yet.
+  **Update (2026-10-27):** EngineHost now uses the public engine API (mirror types removed, `refreshPersonal`, touch model, `previousWords`); queued app commands applied on appear and insight counters recorded (extension-local without Full Access).
 - [x] **M2-05 Conservative autocorrect** — Policy, revert-on-backspace, never-correct list, literal slot, respects
   `autocorrectionType`. Depends: M2-04.
   **Result (2026-10-27):** engine-side conservative autocorrect policy (posterior ≥0.97, 0.995 for valid words; autocorrectionType/spellCheckingType respected; backspace restore; never-correct after 2 restores, in memory only) — 119 engine tests green; not wired into the keyboard.
@@ -603,9 +604,13 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M5 — Gestures & editing (F5)
 - [~] **M5-01 Gesture arbiter** — Implement the F5 conflict matrix with recorded-trace tests. Depends: M4-01.
   **Partial (2026-10-27):** pure `GestureArbiter` + `GestureThresholds` implementing the F5 matrix; 24 matrix tests and 500 synthetic swipe words with no false flick/selection; NOT wired into the keyboard (a vertical flick crossing a key still becomes a swipe) and no recorded traces yet. `docs/SWIPE_UX.md`.
-- [ ] **M5-02 Spacebar cursor** — Speed-scaled movement, vertical line jumps, grapheme-correct offsets. Depends: M5-01, M0-08.
-- [ ] **M5-03 Backspace swipe-delete** — Preview in strip, cancel. Depends: M5-01.
-- [ ] **M5-04 Key flicks** — Up/down, secondary glyph rendering setting. Depends: M5-01.
+  **Update (2026-10-27):** arbiter now runs before a swipe trail starts (vertical flicks no longer become swipes); the 'released on a likely word' override is not wired (`likelyWord` always false).
+- [~] **M5-02 Spacebar cursor** — Speed-scaled movement, vertical line jumps, grapheme-correct offsets. Depends: M5-01, M0-08.
+  **Partial (2026-10-27):** spacebar cursor: drag >12 pt, speed-scaled, grapheme→UTF-16 offsets (P-24), line jumps on hard breaks; fake-proxy tests (emoji, ZWJ, flags, skin tones, combining marks, Devanagari conjuncts) + simulator: a 36 pt drag moved the caret 4 chars with no space typed. Not tested: real hosts with emoji/Devanagari, vertical jumps, device.
+- [~] **M5-03 Backspace swipe-delete** — Preview in strip, cancel. Depends: M5-01.
+  **Partial (2026-10-27):** backspace swipe-delete: drag >20 pt previews words, release deletes, drag back cancels; simulator: a left drag deleted the preceding word. Caveat: backspace still deletes one character on touch-down, so a swipe-delete also removes that character; strip preview rendering not verified.
+- [~] **M5-04 Key flicks** — Up/down, secondary glyph rendering setting. Depends: M5-01.
+  **Partial (2026-10-27):** key flicks (up = digit/symbol, down = first alternate), simulator-verified `#` on S↑ and `à` on A↓; faint hint glyphs behind a keyboard-local flag (`iboard.local.flickHints`, off) because `IBoardSettings` has no field yet.
 - [ ] **M5-05 Shift + space selection** — Virtual selection, preview, action row, host-selection support. Depends: M5-02.
 
 ### M6 — OTP & smart chips (F6, F7)
@@ -634,8 +639,10 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M8-05 Accessibility of themes** — Reduce Transparency/Contrast/Bold Text. Depends: M8-01.
 
 ### M9 — Emoji & clipboard (F8, F9)
-- [ ] **M9-01 Emoji panel** (memory-safe). Depends: M0-03, M1-03.
-- [ ] **M9-02 Emoji search & prediction** — Depends: M9-01, M2-04.
+- [~] **M9-01 Emoji panel** (memory-safe). Depends: M0-03, M1-03.
+  **Partial (2026-10-27):** `Packages/IBoardEmoji`: CLDR/Unicode data (0.43 MB generated), categories, recents, skin-tone memory, kaomoji, UIKit panel behind canImport; not linked into the keyboard; panel memory NOT measured. `docs/EMOJI_DATA.md`.
+- [~] **M9-02 Emoji search & prediction** — Depends: M9-01, M2-04.
+  **Partial (2026-10-27):** `EmojiSearchIndex` + `predict(afterWord:)` over en/hi CLDR + ~200 Hinglish keywords: release p95 0.011 ms on macOS (index build 32 ms); 21 tests; not wired into the keyboard; index build cost on an iPhone 12 unmeasured.
 - [ ] **M9-03 Clipboard manager** — Depends: M0-05, M1-06.
 
 ### M10 — Companion app (F16, F17)
@@ -649,10 +656,14 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** privacy, licenses and data-attribution screens (static, no network) in `iBoard/AboutViews.swift`; on-screen NOT tested.
 
 ### M11 — iPhone Duo (F18)
-- [ ] **M11-01 Outer display tuning** — Depends: M0-10, M1-09.
-- [ ] **M11-02 Inner portrait wide layout** — Depends: M0-10.
-- [ ] **M11-03 Inner landscape split + split strip + pinch toggle** — Depends: M11-02, M4-03.
-- [ ] **M11-04 Laptop "fill to fold" snap** — Depends: M11-03, M1-07.
+- [~] **M11-01 Outer display tuning** — Depends: M0-10, M1-09.
+  **Partial (2026-10-27):** outer-display layout tuning (height factor 0.88, key caps 40/46) — ESTIMATED, pure layout, no Duo measurement (M0-10 open).
+- [~] **M11-02 Inner portrait wide layout** — Depends: M0-10.
+  **Partial (2026-10-27):** inner-portrait wide layout (full width, key cap 56, number row on) — ESTIMATED.
+- [~] **M11-03 Inner landscape split + split strip + pinch toggle** — Depends: M11-02, M4-03.
+  **Partial (2026-10-27):** inner-landscape split (two halves, centre gap ≥27 pt fold band, hit regions continue across the gap, invariant test that nothing lies in the band); strip split and pinch toggle not wired in the keyboard — ESTIMATED. `LayoutSettings.centreGap` now live.
+- [~] **M11-04 Laptop "fill to fold" snap** — Depends: M11-03, M1-07.
+  **Partial (2026-10-27):** laptop fill-to-fold layout (half inner landscape height, no split, number row, key cap 72); the arrow/edit column is reserved space only and the snap handle is not wired — ESTIMATED.
 - [ ] **M11-05 Device Hub pose verification** — All poses × orientations; screenshots in `docs/reference/duo/`.
   Depends: M11-04.
 - [ ] **M11-06 Companion app Duo pass** — Run `app-resizability` skill; fix findings. Depends: M10-02.
@@ -763,6 +774,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · round 5 (keyboard gestures, emoji, Duo layout) ·** The first attempt stopped on a usage limit (2:20 am reset) leaving uncommitted partial work; continuation agents finished inside the same worktrees. Verification after merge: `swift test` green — Core 32, Layout 40, Engine 189, OTP 11, Theme 12, UI 159, Sync 8, Emoji 21; `scripts/build.sh` green. A timing benchmark (`ReaderBenchmarks.prefixCompletions`) failed once under machine load and passed on rerun — treat the macOS benchmarks as load-sensitive. Simulator evidence: flicks, spacebar cursor, backspace swipe-delete. All Duo numbers are ESTIMATED (M0-10 open). Next for agents: wire emoji panel + search into the keyboard, `IBoardSettings` field for flick hints, Shift+space selection (M5-05), M7 Hinglish data, M8 theme rendering/studio, M6-03 code chip + M6-05/06; owner/device: M1-09 perf gate, OTP restart/Email checks, M0-10, haptics/sound feel.
 
 - **2026-10-27 · round 4 (engine gaps, swipe UX + arbiter, companion app screens) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 32, Layout 23, Engine 189, OTP 11, Theme 12, UI 119, Sync 8; `scripts/build.sh` green; swipe agent used an iPhone 12 simulator (swipe trail, `All `/`Ask ` inserts, whole-word backspace seen). Rule note: the app agent added `- package: IBoardEngine` to project.yml (needed to link the dictionary decoder). Next integration tasks for an agent: adopt the new public engine API in IBoardUI/EngineHost (drop mirror types, `refreshPersonal`, `applyTouchModel`), wire GestureArbiter (M5-04) and queued app commands in the keyboard, record insight counters. Still needs the owner/device: perf gate M1-09, M0-06 restart/Email checks, M0-10 Duo.
 
