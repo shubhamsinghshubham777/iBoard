@@ -15,6 +15,7 @@
 		291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
 		34D04E5D8DEC1E865E4C45C3 /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
 		36BBDAC124F650A1167A6920 /* DevicePerfSoakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C1FBDB96E6E119BD98E0DC3 /* DevicePerfSoakTests.swift */; };
+		3A195B021EAA0840B898537C /* IBoardPersonalSync in Frameworks */ = {isa = PBXBuildFile; productRef = 8063EE06E1DAF67B4579D2D1 /* IBoardPersonalSync */; };
 		487214379D09AB14642893EF /* iBoardKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F4CAB1AD063D828AA750FEF /* IBoardEmoji in Frameworks */ = {isa = PBXBuildFile; productRef = AC2927195535D287CBC0F86C /* IBoardEmoji */; };
 		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
@@ -94,22 +95,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +122,7 @@
 		12DDC771F6CEAAF72D0841AF /* IBoardCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardCore; path = Packages/IBoardCore; sourceTree = SOURCE_ROOT; };
 		13743E00E9C0E53BCC14BE8D /* IBoardEmoji */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardEmoji; path = Packages/IBoardEmoji; sourceTree = SOURCE_ROOT; };
 		14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardUITests.swift; sourceTree = "<group>"; };
+		181E68BA102B215BFF6EB3A2 /* IBoardPersonalSync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardPersonalSync; path = Packages/IBoardPersonalSync; sourceTree = SOURCE_ROOT; };
 		23C311DADFD5AB90CD0C8A04 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		27A203E87E0867C30AF959FB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				B4C5143AD95D645A595D9954 /* IBoardTheme in Frameworks */,
 				291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */,
 				27A5947B36DA6FD687606603 /* IBoardSync in Frameworks */,
+				3A195B021EAA0840B898537C /* IBoardPersonalSync in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,6 +283,7 @@
 				F9ED241EFC6047F1A191EDF2 /* IBoardEngine */,
 				F0C4552A210A9E81FABBE884 /* IBoardLayout */,
 				F3E1E2AE1791F3BB0D39310C /* IBoardOTP */,
+				181E68BA102B215BFF6EB3A2 /* IBoardPersonalSync */,
 				526A102B0807C026FA5926C6 /* IBoardSync */,
 				DD5AB664BB14DEFF640D46AA /* IBoardTheme */,
 				1203E236665B6D0499F27E15 /* IBoardUI */,
@@ -400,6 +404,7 @@
 				261EEFEA2D4EF829F24DE453 /* IBoardTheme */,
 				BEA058F77D8001DCC3C01C35 /* IBoardOTP */,
 				AE9B871F17BDE87D31F5D2D2 /* IBoardSync */,
+				8063EE06E1DAF67B4579D2D1 /* IBoardPersonalSync */,
 			);
 			productName = iBoard;
 			productReference = D4A29BC0E785F7DA06C54B57 /* iBoard.app */;
@@ -473,6 +478,7 @@
 				DC9D3495AE6117E7934F1F48 /* XCLocalSwiftPackageReference "Packages/IBoardEngine" */,
 				BFCD2F6BE8B632031FBE1055 /* XCLocalSwiftPackageReference "Packages/IBoardLayout" */,
 				6D62A48DB26CF91AD4820DD5 /* XCLocalSwiftPackageReference "Packages/IBoardOTP" */,
+				909A27D176DF506A625B6770 /* XCLocalSwiftPackageReference "Packages/IBoardPersonalSync" */,
 				EF0C0C411B056942E50604B2 /* XCLocalSwiftPackageReference "Packages/IBoardSync" */,
 				D144EEC28BC0367A9870D3F3 /* XCLocalSwiftPackageReference "Packages/IBoardTheme" */,
 				BE9EEA958B21CCB46B054161 /* XCLocalSwiftPackageReference "Packages/IBoardUI" */,
@@ -913,6 +919,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/IBoardOTP;
 		};
+		909A27D176DF506A625B6770 /* XCLocalSwiftPackageReference "Packages/IBoardPersonalSync" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/IBoardPersonalSync;
+		};
 		AC729E04098F0658C31FE434 /* XCLocalSwiftPackageReference "Packages/IBoardCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/IBoardCore;
@@ -967,6 +977,10 @@
 		652B1E47E9E596FE161F1A79 /* IBoardEngine */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = IBoardEngine;
+		};
+		8063EE06E1DAF67B4579D2D1 /* IBoardPersonalSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IBoardPersonalSync;
 		};
 		8AAAAC9AA464BAE807625340 /* IBoardEngine */ = {
 			isa = XCSwiftPackageProductDependency;

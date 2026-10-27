@@ -1,6 +1,7 @@
 import SwiftUI
 import Security
 import IBoardSync
+import IBoardPersonalSync
 import IBoardEngine
 
 /// Opt-in iCloud sync settings (M12-02/03). The keyboard never syncs; only this app talks to CloudKit, only after the

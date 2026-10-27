@@ -1,5 +1,6 @@
 import Foundation
 import IBoardSync
+import IBoardEngine
 
 // Connects the personal model to iCloud sync (M12-03). Pure functions over `PersonalModelState` and `SyncState`, plus
 // one async driver for the app. Nothing here is linked from keyboard code paths.

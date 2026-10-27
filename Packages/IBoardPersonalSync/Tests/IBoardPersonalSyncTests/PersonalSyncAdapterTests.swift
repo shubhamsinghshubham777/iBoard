@@ -1,7 +1,8 @@
 import Testing
 import Foundation
 import IBoardSync
-@testable import IBoardEngine
+@testable import IBoardPersonalSync
+import IBoardEngine
 
 @Suite struct PersonalSyncAdapterTests {
     struct Device {

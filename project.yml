@@ -22,6 +22,7 @@ packages:
   IBoardTheme: { path: Packages/IBoardTheme }
   IBoardUI: { path: Packages/IBoardUI }
   IBoardSync: { path: Packages/IBoardSync }
+  IBoardPersonalSync: { path: Packages/IBoardPersonalSync }
 targets:
   iBoard:
     type: application
@@ -34,6 +35,7 @@ targets:
       - package: IBoardTheme
       - package: IBoardOTP
       - package: IBoardSync
+      - package: IBoardPersonalSync
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX)
