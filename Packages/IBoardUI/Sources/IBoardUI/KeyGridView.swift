@@ -357,7 +357,8 @@ public final class KeyGridView: UIView {
                 let e = KeyElement(accessibilityContainer: self)
                 e.accessibilityLabel = info.label
                 e.accessibilityValue = info.value
-                e.accessibilityTraits = [.keyboardKey]
+                e.accessibilityTraits = KeyAccessibility.traits(for: key.identity, shift: shift, returnEnabled: returnKeyEnabled)
+                e.accessibilityUserInputLabels = KeyAccessibility.inputLabels(for: key.identity, shift: shift, returnEnabled: returnKeyEnabled)
                 if case .emoji = key.identity, !emojiKeyActions.isEmpty {
                     e.accessibilityCustomActions = emojiKeyActions.enumerated().map { idx, name in
                         UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onEmojiKeyAction?(idx); return true }

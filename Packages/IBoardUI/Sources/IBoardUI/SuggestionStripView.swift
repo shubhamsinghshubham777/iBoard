@@ -233,6 +233,7 @@ public final class SuggestionStripView: UIView {
                 e.accessibilityLabel = label
                 e.accessibilityHint = hint
                 e.accessibilityTraits = [.button]
+                e.accessibilityUserInputLabels = [label]
                 e.accessibilityFrameInContainerSpace = rect
                 let c = CGPoint(x: rect.midX, y: rect.midY)
                 e.onActivate = { [weak self] in self?.onAccessibilityActivate?(c) }
@@ -289,6 +290,25 @@ public final class SuggestionStripView: UIView {
                 out.append(e)
             }
             return out
+        }
+        set {}
+    }
+
+    /// Rotor "Suggestions": flick up/down to walk only the suggestion slots (skips banners, action cells, search field).
+    public override var accessibilityCustomRotors: [UIAccessibilityCustomRotor]? {
+        get {
+            let rotor = UIAccessibilityCustomRotor(name: "Suggestions") { [weak self] predicate in
+                guard let self else { return nil }
+                let slots = (self.accessibilityElements as? [StripElement])?.filter { $0.accessibilityHint == "Suggestion" || $0.accessibilityHint == "Best suggestion" } ?? []
+                guard !slots.isEmpty else { return nil }
+                let forward = predicate.searchDirection == .next
+                let cur = predicate.currentItem.targetElement as? StripElement
+                let idx = cur.flatMap { c in slots.firstIndex { $0.accessibilityLabel == c.accessibilityLabel } }
+                let next: Int = idx.map { forward ? $0 + 1 : $0 - 1 } ?? (forward ? 0 : slots.count - 1)
+                guard slots.indices.contains(next) else { return nil }
+                return UIAccessibilityCustomRotorItemResult(targetElement: slots[next], targetRange: nil)
+            }
+            return [rotor]
         }
         set {}
     }

@@ -30,3 +30,23 @@ import IBoardLayout
         #expect(KeyAccessibility.stripLabel(slotIndex: 1, text: "hello") == "hello")
     }
 }
+
+@Suite struct KeyVoiceControlTests {
+    @Test func inputLabelsStartWithTheVisibleLabel() {
+        let ids: [KeyIdentity] = [.letter("a"), .symbol("."), .delete, .shift, .space, .globe, .emoji, .layerSwitch(.numbers),
+                                  .layerSwitch(.letters), .layerSwitch(.symbols)] + ReturnKeyKind.allCases.map { .returnKey($0) }
+        for id in ids {
+            let labels = KeyAccessibility.inputLabels(for: id, shift: .off)
+            #expect(!labels.isEmpty)
+            if case .letter = id { continue }
+            #expect(labels.first == KeyAccessibility.info(for: id, shift: .off).label)
+        }
+    }
+    @Test func voiceControlSynonyms() {
+        #expect(KeyAccessibility.inputLabels(for: .delete, shift: .off).contains("backspace"))
+        #expect(KeyAccessibility.inputLabels(for: .returnKey(.default), shift: .off).contains("enter"))
+        #expect(KeyAccessibility.inputLabels(for: .returnKey(.send), shift: .off).contains("return"))
+        #expect(KeyAccessibility.inputLabels(for: .layerSwitch(.numbers), shift: .off).contains("123"))
+        #expect(KeyAccessibility.inputLabels(for: .letter("Q"), shift: .once) == ["q"])
+    }
+}
