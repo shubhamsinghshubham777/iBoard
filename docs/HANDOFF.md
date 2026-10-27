@@ -117,3 +117,25 @@ perf gate, M4-04/M2-07 real eval sets.
   reproduce the occasional empty suggestion strip (see BUGFIX_NOTES round 4); search-results polish.
 - Next roadmap task: M1-09 (perf gate, needs owner device numbers). Not built: autocorrect-target underline, GIF/stickers, per-key
   gradients (needs budget check), per-app themes, Settings toggles that need App Group plumbing.
+
+
+## 9. Handoff 2026-10-27 (evening) — supersedes §1/§7/§8 where they conflict
+- `main` holds everything (HEAD = latest `[CI]` commit); **no agents in flight**; all agent worktrees/branches deleted. Owner granted
+  **full autonomy** ("do whatever it takes to complete the roadmap and make it production ready"); they still must do Apple-account
+  steps themselves. D-29: Full Access is requested (`RequestsOpenAccess: true`), confirmed on the owner's phone (off by default).
+- Device: owner's iPhone 12 `00008101-0014596A1E01001E` has the latest **Debug** build (keyboard stable with Full Access; typing, swipe,
+  emoji verified by the owner). iCloud container `iCloud.app.iBoard` + entitlement are set; first sync succeeded. Install with
+  `xcodebuild -project iBoard.xcodeproj -scheme iBoard -configuration Debug -destination id=<udid> -derivedDataPath build/DeviceDD -allowProvisioningUpdates build`
+  then `xcrun devicectl device install app --device <udid> build/DeviceDD/Build/Products/Debug-iphoneos/iBoard.app` (needs the phone unlocked/trusted).
+- Process: parallel worktree agents with disjoint file ownership, no agent edits ROADMAP.md (they write `docs/agent-reports/*.md`; the
+  coordinator merges + updates the roadmap). Hooks: run `scripts/install-hooks.sh` (pre-commit = privacy audit, pre-push = `scripts/test.sh --no-ui`);
+  hosted CI has Xcode 26 / no iOS 27 simulator, so it only builds and runs package tests (simulator tests skip there).
+- Fixed this session: Full Access launch crash (likely `requestSupplementaryLexicon` callback off-main, now `@Sendable`; not reproduced
+  — if it recurs pull `systemCrashLogs` and JetsamEvent files), sync code removed from the extension (audit check EXT-SYNC), CI.
+- **Open work (owner-independent):** swipe accuracy for the sloppy profile (F3), real-finger swipe traces/recorder for M4-04, Duo
+  pose verification M11-05 (Device Hub simulator screenshots came back black — try again/other approach), M11-06 split layout seen on a Duo
+  sim, M13-01 remaining a11y (Switch/Voice Control, rotor, emoji), M8-03 sound packs impossible in an extension (P-23), M6-04/M10-01 OTP shortcut
+  signing/self-test on device, M12 two-device merge + Keychain key sharing + size limits, per-app themes/GIF/stickers (backlog), strict-concurrency warnings.
+- **Needs the owner:** device perf run (docs/perf/README.md → `scripts/device-perf.sh pull`; unblocks M1-09/M13-02), device pass over all `[~]`
+  keyboard features, App Store Connect (privacy URL = https://shubhamsinghshubham777.github.io/iBoard/privacy.html, support URL `/support.html`,
+  review-notes contact, screenshots), TestFlight (M13-05), submission + public launch (M13-06): see `docs/RELEASE_CHECKLIST.md`.

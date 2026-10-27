@@ -68,20 +68,20 @@
 
 | Milestone | Goal | Status |
 |---|---|---|
-| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (M0-01, -02, -11, -12, -14 done) |
-| **M1** Keyboard shell & layout engine | A fast, native-looking keyboard that types letters | Not started |
-| **M2** Language engine v1 (English) | Suggestions, conservative autocorrect, smart punctuation | Not started |
-| **M3** Learning & personal model | Learns words/phrases, adaptive touch model, incognito | Not started |
-| **M4** Swipe typing | Gesture typing that uses the personal model | Not started |
-| **M5** Gestures & editing | Spacebar cursor, backspace swipe, key flicks, Shift+space select | Not started |
-| **M6** OTP & smart chips | Codes from SMS/Email/clipboard, personal-info chips | Not started |
-| **M7** Hinglish | Romanized Hindi mixed with English, same session | Not started |
-| **M8** Themes, feel & landscape | Theme studio, translucency, haptics/sounds, landscape layouts | Not started |
-| **M9** Emoji & clipboard | Emoji panel/search/prediction, clipboard manager | Not started |
-| **M10** Companion app | Onboarding, settings, dictionary manager, typing insights | Not started |
-| **M11** iPhone Duo | Outer/inner layouts, auto split, laptop snap | Not started |
-| **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Not started |
-| **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Not started |
+| **M0** Foundations & spikes | Toolchain, project structure, de-risk every platform unknown | In progress (spikes done except M0-10 Duo measurements) |
+| **M1** Keyboard shell & layout engine | A fast, native-looking keyboard that types letters | Built; M1-09 perf gate needs the owner's device run (no numbers yet) |
+| **M2** Language engine v1 (English) | Suggestions, conservative autocorrect, smart punctuation | Built; real-typing F2 not demonstrated |
+| **M3** Learning & personal model | Learns words/phrases, adaptive touch model, incognito | Built; device pass pending (forget menu, UILexicon) |
+| **M4** Swipe typing | Gesture typing that uses the personal model | Built; F3 met on synthetic traces for careful/normal, sloppy just short; real traces needed (M4-04) |
+| **M5** Gestures & editing | Spacebar cursor, backspace swipe, key flicks, Shift+space select | Built; device pass pending |
+| **M6** OTP & smart chips | Codes from SMS/Email/clipboard, personal-info chips | Built; OTP shortcuts need device verification; clipboard code chip tap-only |
+| **M7** Hinglish | Romanized Hindi mixed with English, same session | Built; eval run (tap meets F2, swipe near F3 on synthetic data) |
+| **M8** Themes, feel & landscape | Theme studio, translucency, haptics/sounds, landscape layouts | Built (theme studio, haptic packs, landscape side keys, a11y wiring); device pass pending |
+| **M9** Emoji & clipboard | Emoji panel/search/prediction, clipboard manager | Built (emoji, clipboard history panel); device pass pending |
+| **M10** Companion app | Onboarding, settings, dictionary manager, typing insights | Built (onboarding, settings, dictionary, insights, privacy/licences) |
+| **M11** iPhone Duo | Outer/inner layouts, auto split, laptop snap | Layout logic built; Duo poses NOT verified (M11-05) |
+| **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Engine + CloudKit + app screen built; first device sync OK (2026-10-27); two-device merge untested |
+| **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Accessibility partial, privacy/App Review audit drafted; perf soak + TestFlight/submission open |
 
 **Current blockers:** none. **Owner-reported bugs (device test, 2026-10-27):** fixed on branch `fix/owner-bugs`, simulator-verified only, bug 8 partial — see `docs/BUGFIX_NOTES.md` (was: 123 long-press opens emoji, spacebar wrap-down, resize flicker, swipe typing types nothing because only a 219-word English fixture is bundled, trail redesign, caps lock, emoji panel revamp, backspace swipe-delete preview).
 
@@ -656,7 +656,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** theme studio (preset picker, light/dark editing, export/import `.iboardtheme`, photo pipeline to exact pixel size, `ThemeStore` writes theme to the App Group); 18 theme tests; on-screen, PhotosPicker and the keyboard reading photo files without Full Access NOT tested; photo target heights assumed.
 - [~] **M8-03 Haptics & sound packs** — Depends: M1-05.
   Update 2026-10-27: haptic packs built (hapticPack in IBoardSettings; app picker missing); sound packs impossible in an extension (P-23).
-- [ ] **M8-04 Landscape layouts (F13)** — Depends: M1-02.
+- [~] **M8-04 Landscape layouts (F13)** — Depends: M1-02.
 - [~] **M8-05 Accessibility of themes** — Reduce Transparency/Contrast/Bold Text. Depends: M8-01.
   Update 2026-10-27: observers + skin tests already existed; not re-checked on device.
 
