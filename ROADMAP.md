@@ -554,7 +554,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [~] **M1-08 Minimal companion app** — Enable-keyboard instructions, test text field, settings stub that the keyboard
   reads (per M0-05 results). Depends: M0-05.
   **Partial (2026-10-26):** App (enable-keyboard steps, test field, settings screens), versioned `IBoardSettings` + App Group `SettingsStore` in IBoardCore (12 tests green), keyboard reads the haptics flag; builds. Not run on a device/simulator yet — verify the keyboard actually sees an app-written setting.
-- [ ] **M1-09 Perf gate** — Meet §6 touch and memory budgets on iPhone 12 with the static keyboard. Depends: M1-05, M0-13.
+- [~] **M1-09 Perf gate** — Meet §6 touch and memory budgets on iPhone 12 with the static keyboard. Depends: M1-05, M0-13.
 
 ### M2 — Language engine v1, English (F2)
 - [x] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
@@ -807,6 +807,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ---
 
 ## 15. Progress log
+
+### 2026-10-27 — First on-device perf numbers (automated run): timings pass, MEMORY FAILS in the emoji panel
+`scripts/device-perf.sh auto` drives Notes on the iPhone 12 with the real keyboard (Release + IBOARD_PERF, 270 pt layout): idle, 100 chars, 10 swipes, emoji panel (open, scroll, 10 s), 20 show/hide cycles. Typing timings (p50/p95) vs budget: touchDownToHighlight 0.3/0.5 ms (16.7), touchUpToInsert 0.9/4.1 ms (20), keystrokeToSuggestions 5.6/10.2 ms (25), n=87-132, all PASS. swipeLiftToCandidate, coldStart, warmShow NOT measured (absent from the hook output). **Memory FAIL: peak 75.9 MB vs 30 target / 40 hard cap, 9 memory warnings**: ~27 MB while typing/swiping (within target), then 39 -> 64 -> 75.9 MB during the emoji panel, the extension was killed and restarted, the new process reached 53.8 MB after 6 more appears. Same pattern in an earlier run (62-76 MB); the earlier Debug drive peaked at 24.4 MB, so it is a regression or the cost of the current emoji panel (32 pt emoji, one continuous list). 75.9 MB is at the jetsam ceiling (P-21, 76-80 MB). No new crash logs. Height: all 20 show/hide cycles showed full height (pixel check, resolution ~1.1 s, can't see sub-second lateness). `--soak` (M13-02) not run. M1-09 stays `[~]` (fails memory); fix the emoji panel before the soak. Report: docs/agent-reports/perfauto6.md, evidence in docs/perf/evidence/perfauto6/.
 
 ### 2026-10-27 — Keyboard height: applied before first frame; default 270 pt (phone portrait)
 Owner reported the keyboard often opened short and took up to 3 s to reach full height. Cause: the height constraint started at a placeholder and the real height was applied from the first layout pass, after the host had presented. Fix: apply the cached/computed height in `viewWillAppear` (cache keyed by width + traits + settings in extension-local defaults) and re-assert it at 0.05-2 s after appearing; owner confirmed on device that it works. Then the owner chose a taller default: phone portrait 270 pt (295 tried, owner found it too large; was 251 pt as rendered, 260 reference): `LayoutMetrics.phonePortraitDefaultHeight`, rows scale with it; landscape/Duo unchanged; number row layout (314) unchanged. Layout snapshots regenerated, tests updated; Layout/UI package tests, `scripts/build.sh`, `scripts/test.sh --no-ui` pass. Not yet seen on the phone at 295; the perf agent's automated run (worktree-agent-a121083f834c54ebd) is stopped with uncommitted work.
