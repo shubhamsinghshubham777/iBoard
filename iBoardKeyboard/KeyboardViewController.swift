@@ -129,6 +129,12 @@ final class KeyboardViewController: UIInputViewController {
         handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
         view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
+        // F12: pinch toggles the Duo split for the current orientation. Must not steal or delay key touches.
+        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+        pinch.cancelsTouchesInView = false
+        pinch.delaysTouchesBegan = false
+        pinch.delaysTouchesEnded = false
+        view.addGestureRecognizer(pinch)
         emoji.onInsert = { [weak self] text in
             guard let self else { return }
             self.coordinator.insertDirect(text)
@@ -330,9 +336,13 @@ final class KeyboardViewController: UIInputViewController {
         debugStatusInFlight = true
         let status = engineStatus, mode = personalMode, learner = personalStore
         let emojiLine = emoji.debugLine
+        let t = currentTraits()
+        let ls = currentLayoutSettings()
+        let sz = screenSize ?? .zero
+        let displayLine = "display: \(t.displayClass.rawValue) \(t.orientation.rawValue) \(Int(sz.width))x\(Int(sz.height)) view \(Int(view.bounds.width))x\(Int(view.bounds.height)) split=\(ls.isSplit(for: t.orientation)) fill=\(ls.fillToFold)"
         let chipLine = "chips: codes \(freshCodes.count) consumed \(consumedCodeIDs.count) info \(personalInfo.isEmpty ? "none" : "set")"
         Task { [weak self] in
-            var lines = [status, chipLine, emojiLine]
+            var lines = [status, displayLine, chipLine, emojiLine]
             if let learner {
                 let st = await learner.store.stats()
                 let learning = await learner.isLearning
@@ -505,10 +515,13 @@ final class KeyboardViewController: UIInputViewController {
 
     private func currentTraits() -> LayoutTraits {
         let proxy = textDocumentProxy
+        let duo = displayClass
         return LayoutTraits(
-            displayClass: .phone,
-            // A keyboard is always wider than tall, so bounds can't tell; iPhone landscape has a compact height class.
-            orientation: traitCollection.verticalSizeClass == .compact ? .landscape : .portrait,
+            displayClass: duo,
+            // A keyboard is always wider than tall, so view bounds can't tell. iPhone landscape has a compact height
+            // class; on the Duo displays the screen shape decides (D-20, no device names).
+            orientation: duo != .phone ? DisplayMetrics.orientation(screenSize: screenSize ?? view.bounds.size)
+                : (traitCollection.verticalSizeClass == .compact ? .landscape : .portrait),
             keyboardKind: KeyboardKind(proxy.keyboardType ?? .default),
             returnKey: ReturnKeyKind(proxy.returnKeyType ?? .default),
             needsInputModeSwitchKey: needsInputModeSwitchKey
@@ -542,15 +555,50 @@ final class KeyboardViewController: UIInputViewController {
         chipTimer = nil
     }
 
-    private var heightKey: String {
-        HeightKey.make(displayClass: DisplayClass.phone.rawValue, orientation: currentTraits().orientation.rawValue)
+    /// The screen the keyboard is on, in its current orientation (rotates with the interface). Display metrics only.
+    private var screenSize: CGSize? {
+        guard let window = view.window else { return nil }
+        let size = window.screen.bounds.size
+        return size.width > 0 && size.height > 0 ? size : nil
     }
+
+    /// Phone / Duo outer / Duo inner from screen metrics (`DisplayMetrics`); `.phone` until the view is in a window.
+    private var displayClass: DisplayClass {
+        #if DEBUG
+        // Simulator aid: pretend to be a Duo display on a phone simulator (extension defaults `iBoard.debug.displayClass`).
+        if let raw = UserDefaults.standard.string(forKey: "iBoard.debug.displayClass"), let c = DisplayClass(rawValue: raw) { return c }
+        #endif
+        guard let size = screenSize else { return .phone }
+        return DisplayMetrics.displayClass(screenSize: size)
+    }
+
+    private var heightKey: String {
+        let t = currentTraits()
+        return HeightKey.make(displayClass: t.displayClass.rawValue, orientation: t.orientation.rawValue)
+    }
+
+    private let duoLocal = DuoLocalStore()
+    /// Laptop pose: height snapped to the fold while the handle is dragged (persisted when the drag ends).
+    private var liveFillToFold: Bool?
 
     /// Layout settings from the app (App Group) overridden by what the user did in the keyboard (F11, F1).
     private func currentLayoutSettings() -> LayoutSettings {
-        var ls = LayoutSettings()
-        ls.numberRow = overrides.numberRow ?? settings.numberRow
+        let traits = currentTraits()
+        // Display-class defaults (Duo inner: number row in portrait, split in landscape), then the app's values.
+        var ls = LayoutSettings.defaults(for: traits)
+        ls.numberRow = overrides.numberRow ?? (settings.numberRow || ls.numberRow)
         ls.heightScale = CGFloat(liveScale ?? overrides.heightScale(forKey: heightKey) ?? settings.heightScale(forKey: heightKey))
+        if traits.displayClass == .duoInner {
+            // F12: the pinch (extension-local) wins, then what the app saved explicitly, then the D-20 default.
+            let blob = UserDefaults(suiteName: SettingsStore.appGroup)?.data(forKey: SettingsStore.key)
+            ls.splitPortrait = DuoSplitPolicy.resolve(
+                local: duoLocal.split(for: .portrait),
+                app: DuoSplitPolicy.explicitAppValue(blob: blob, key: "duoSplitPortrait"), fallback: ls.splitPortrait)
+            ls.splitLandscape = DuoSplitPolicy.resolve(
+                local: duoLocal.split(for: .landscape),
+                app: DuoSplitPolicy.explicitAppValue(blob: blob, key: "duoSplitLandscape"), fallback: ls.splitLandscape)
+            ls.fillToFold = traits.orientation == .landscape && (liveFillToFold ?? duoLocal.fillToFold)
+        }
         return ls
     }
 
@@ -564,18 +612,47 @@ final class KeyboardViewController: UIInputViewController {
             return LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         }
         // Dragging up grows the keyboard (it is bottom-anchored).
-        liveScale = ResizeMath.scale(forHeight: dragStartHeight - dy, height0: h(0), height1: h(1))
+        let proposed = dragStartHeight - dy
+        if traits.displayClass == .duoInner, traits.orientation == .landscape, let screen = screenSize {
+            // Laptop pose (D-20, F18): snap to half the inner landscape height and fill to the fold.
+            let snap = DuoGeometry.snappedHeight(proposed: proposed, innerLandscapeHeight: min(screen.width, screen.height))
+            if liveFillToFold != snap.snapped {
+                liveFillToFold = snap.snapped
+                lastLayoutKey = nil
+            }
+            if snap.snapped { relayoutIfNeeded(); return }
+        }
+        liveScale = ResizeMath.scale(forHeight: proposed, height0: h(0), height1: h(1))
         relayoutIfNeeded()
     }
 
     private func endDrag() {
-        if let s = liveScale { overrides.setHeightScale(s, forKey: heightKey) }
+        if let fill = liveFillToFold { duoLocal.setFillToFold(fill) }
+        liveFillToFold = nil
+        if let s = liveScale, !currentLayoutSettings().fillToFold { overrides.setHeightScale(s, forKey: heightKey) }
         liveScale = nil
         relayoutIfNeeded()
     }
 
+    /// Spread = split, pinch together = merged (like the iPad keyboard); remembered per orientation, extension-local.
+    @objc private func handlePinch(_ g: UIPinchGestureRecognizer) {
+        guard g.state == .ended else { return }
+        let traits = currentTraits()
+        guard traits.displayClass == .duoInner, layoutKind == .letters, !emoji.isOpen,
+              let on = DuoSplitPolicy.decision(forPinchScale: g.scale) else { return }
+        // The two fingers were on keys: drop any half-made key press / swipe without inserting.
+        machine?.cancelAll { _ in }
+        swipeCapture.cancel()
+        resetArbiter()
+        grid.trail.clear()
+        grid.clearHighlights()
+        duoLocal.setSplit(on, for: traits.orientation)
+        lastLayoutKey = nil
+        relayoutIfNeeded()
+    }
+
     private func toggleNumberRow() {
-        overrides.setNumberRow(!(overrides.numberRow ?? settings.numberRow))
+        overrides.setNumberRow(!currentLayoutSettings().numberRow)
         lastLayoutKey = nil
         relayoutIfNeeded()
     }
@@ -592,11 +669,18 @@ final class KeyboardViewController: UIInputViewController {
         guard key != lastLayoutKey else { return }
         lastLayoutKey = key
 
-        let want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
+        var want = LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
+        if ls.fillToFold, layoutKind == .letters, let screen = screenSize {
+            // Preferred height does not apply in the laptop pose: the host uses the fold height.
+            want = DuoGeometry.fillToFoldHeight(innerLandscapeHeight: min(screen.width, screen.height))
+        }
         if abs((heightConstraint?.constant ?? 0) - want) > 0.5 { heightConstraint?.constant = want }
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
         strip.frame = layout.stripFrame
+        // Duo split: the strip's three slots stay out of the fold band (container -> strip-local coordinates).
+        strip.segments = layout.stripSegments.count == 2
+            ? layout.stripSegments.map { $0.offsetBy(dx: -layout.stripFrame.minX, dy: 0) } : []
         emoji.updateFrame(emojiFrame)
         coordinator.setLayout(layout)
         startEngineLoad(layout: layout)
@@ -623,7 +707,7 @@ final class KeyboardViewController: UIInputViewController {
             if phase == .ended || phase == .cancelled {
                 stripTouchID = nil
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
-                    let slot = Int((point.x - strip.frame.minX) / (strip.frame.width / CGFloat(SuggestionStripView.slotCount)))
+                    let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
                     if emoji.isOpen {
                         emoji.tapStrip(slot: slot)
                         feedback()
