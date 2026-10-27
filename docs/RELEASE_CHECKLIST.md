@@ -22,3 +22,4 @@
 - [ ] iCloud/CloudKit capability and container `iCloud.app.iBoard` must be added to the app entitlements and portal before sync works; then re-run `scripts/audit-privacy.sh`.
 - [ ] Submit for review; choose release mode.
 - [ ] Public repo: confirm Apache-2.0 LICENSE, README, CONTRIBUTING, third-party licenses; scrub secrets/UDIDs (docs/HANDOFF.md has device UDIDs); tag the release; announce.
+- [ ] Companion app on iPhone Duo / iPad: verified compact layout on the Duo outer-display simulator (see docs/agent-reports/appduo3.md); owner to eyeball on hardware.
