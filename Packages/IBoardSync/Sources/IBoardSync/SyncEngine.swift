@@ -12,13 +12,15 @@ public struct SyncOutcome: Sendable, Equatable {
     /// Undecryptable, invalid or newer-schema shards that were ignored.
     public var skippedShards: Int
     public var uploaded: Bool
+    /// Shards existed but none could be decrypted: the encryption key is missing/different on this device.
+    public var keyMismatch: Bool = false
 }
 
 /// App-side sync. Opt-in: every call is a no-op while `enabled == false`. The keyboard never links or calls this.
 /// Protocol: download all shards -> decrypt + validate -> merge with local -> upload only this device's shard.
 public actor SyncEngine {
     private let store: SyncStore
-    private let crypto: SyncCrypto
+    private var crypto: SyncCrypto
     public nonisolated let deviceID: String
     private let now: @Sendable () -> Date
     private let maxShardBytes: Int
@@ -34,6 +36,9 @@ public actor SyncEngine {
     }
 
     public var shardName: String { SyncSharding.name(device: deviceID, index: 0) }
+
+    /// Swap the key (after rotation or key recovery). Next sync re-uploads this device's shards under it.
+    public func setCrypto(_ c: SyncCrypto) { crypto = c }
 
     public func setEnabled(_ on: Bool) {
         enabled = on
@@ -77,7 +82,8 @@ public actor SyncEngine {
             }
             lastSync = now()
             status = .idle(lastSync: lastSync)
-            return SyncOutcome(merged: merged, skippedShards: skipped, uploaded: true)
+            let undecryptable = !fetched.isEmpty && skipped == fetched.count
+            return SyncOutcome(merged: merged, skippedShards: skipped, uploaded: true, keyMismatch: undecryptable)
         } catch {
             status = .failed(Self.describe(error))
             return SyncOutcome(merged: local, skippedShards: 0, uploaded: false)

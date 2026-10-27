@@ -114,4 +114,33 @@ import IBoardEngine
         _ = await sync(&a, ms: 1_700_000_003_000)
         #expect(a.memory.state.count("u:alpha") == 2)
     }
+
+    @Test func deleteCloudDataThenResyncRepopulatesWithoutDoubleCounting() async throws {
+        var a = await device("A"), b = await device("B")
+        for _ in 0..<2 { await a.store.learn(word: "namaste", increment: 1) }
+        _ = await sync(&a, ms: 1_700_000_001_000)
+        _ = await sync(&b, ms: 1_700_000_002_000)
+        let before = await b.store.uses(of: "namaste")
+        await a.engine.disable(deleteCloudData: true)
+        #expect(await cloud.rawShards().isEmpty)
+        // B (still enabled) re-uploads; A re-enables and converges; nothing is counted twice.
+        _ = await sync(&b, ms: 1_700_000_003_000)
+        await a.engine.setEnabled(true)
+        _ = await sync(&a, ms: 1_700_000_004_000)
+        #expect(await b.store.uses(of: "namaste") == before)
+        #expect(a.memory.state.count("u:namaste") == 2)
+    }
+
+    @Test func wrongKeyDeviceNeverAppliesRemoteDataAndFlagsMismatch() async throws {
+        var a = await device("A")
+        await a.store.learn(word: "secretword", increment: 1)
+        _ = await sync(&a, ms: 1_700_000_001_000)
+        let store = PersonalStore(storage: InMemoryPersonalStorage(), clock: clock)
+        let engine = SyncEngine(store: cloud, crypto: SyncCrypto(keyData: SyncCrypto.generateKeyData()), deviceID: "B",
+                                now: { Date(timeIntervalSince1970: 1_700_000_000) })
+        await engine.setEnabled(true)
+        let r = await PersonalSyncAdapter.run(store: store, engine: engine, memory: PersonalSyncMemory(), nowMs: 1_700_000_002_000)
+        #expect(r.outcome.keyMismatch)
+        #expect(await store.uses(of: "secretword") == 0)
+    }
 }

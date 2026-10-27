@@ -16,7 +16,8 @@ public enum SyncSharding {
 
     /// Rough JSON size of one counter key with its slots.
     static func cost(key: String, slots: [String: CounterSlot]) -> Int {
-        key.utf8.count + 16 + slots.reduce(0) { $0 + $1.key.utf8.count + 90 }
+        // The device id appears twice per slot in JSON (map key and stamp.device); fixed overhead measured ~75 bytes.
+        key.utf8.count + 16 + slots.reduce(0) { $0 + 2 * $1.key.utf8.count + 100 }
     }
 
     /// Always returns at least one piece. A single key larger than the budget (impossible within validation limits)
