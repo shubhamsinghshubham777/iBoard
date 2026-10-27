@@ -215,6 +215,8 @@ final class KeyboardViewController: UIInputViewController {
         guard machine != nil, layoutKind == .letters else { return }
         // Manual caps lock stays unless the field forces all caps / the field changed to a mode without it.
         if machine!.shift == .capsLock && input.traits.autoCap != .allCharacters { return }
+        // A shift the user just tapped stays until a letter uses it (a late textDidChange must not undo it).
+        if machine!.shift == .once && shiftManual { return }
         applyingAutoShift = true
         machine!.setShift(coordinator.autoShift(context: textDocumentProxy.documentContextBeforeInput)) {
             [grid] in if case .shiftChanged(let s) = $0 { grid.setShift(s) }

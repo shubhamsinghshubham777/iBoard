@@ -103,7 +103,7 @@ public final class KeyGridView: UIView {
             l.cornerRadius = new.metrics.cornerRadius * CGFloat(skin.cornerRadiusScale)
             decorate(l)
             l.contentsScale = scale
-            l.backgroundColor = isAction[i] ? actionFill : fill
+            l.backgroundColor = color(forKey: i, pressed: false)
             l.contents = glyphs.image(for: glyphSpec(for: key.identity))
             l.opacity = Self.dimmed(key.identity, returnKeyEnabled) ? 0.4 : 1
             l.isHidden = keysHidden
@@ -137,7 +137,10 @@ public final class KeyGridView: UIView {
         CATransaction.setDisableActions(true)
         for (i, key) in layout.keys.enumerated() {
             switch key.identity {
-            case .letter, .shift: keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
+            case .letter: keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
+            case .shift:
+                keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
+                keyLayers[i].backgroundColor = color(forKey: i, pressed: highlighted[i])
             default: break
             }
         }
@@ -202,7 +205,18 @@ public final class KeyGridView: UIView {
         }
     }
 
+    /// Shift key tile: neutral when off, the pressed grey while shift is on for one letter, blue-tinted for caps lock,
+    /// so the state reads at a glance (the glyph alone is easy to miss).
+    private static let capsLockFill = CGColor(srgbRed: 0.04, green: 0.52, blue: 1, alpha: 0.38)
+
     private func color(forKey i: Int, pressed: Bool) -> CGColor {
+        if let layout, i < layout.keys.count, case .shift = layout.keys[i].identity {
+            switch shift {
+            case .capsLock: return Self.capsLockFill
+            case .once: return fillPressed
+            case .off: break
+            }
+        }
         if isAction[i] { return pressed ? actionFillPressed : actionFill }
         return pressed ? fillPressed : fill
     }

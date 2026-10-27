@@ -157,6 +157,44 @@ private struct Driver {
     #expect(d.m.shift == .off)
 }
 
+@Test func doubleTapWhileAutoCapitalisedLocksCaps() {
+    var d = Driver(shift: .once) // sentence start: auto-capitalisation already set shift
+    d.tap(.shift, touch: 1, t: 0)
+    #expect(d.m.shift == .off)
+    d.tap(.shift, touch: 2, t: 0.25)
+    #expect(d.m.shift == .capsLock)
+}
+
+@Test func holdingShiftCapitalisesLettersTypedMeanwhile() {
+    var d = Driver()
+    d.down(1, .shift, t: 0)
+    d.tap(.letter("a"), touch: 2, t: 0.3)
+    d.tap(.letter("b"), touch: 3, t: 0.5)
+    #expect(d.sink.inserts == ["A", "B"])
+    d.up(1, t: 0.8)
+    d.tap(.letter("c"), touch: 4, t: 1.5)
+    #expect(d.sink.inserts == ["A", "B", "c"])
+    #expect(d.m.shift == .off)
+}
+
+@Test func holdingShiftOnAutoCapitalisedStartStillCapitalises() {
+    var d = Driver(shift: .once)
+    d.down(1, .shift, t: 0) // toggles auto shift off, but the key is held
+    d.tap(.letter("h"), touch: 2, t: 0.3)
+    d.up(1, t: 0.6)
+    d.tap(.letter("i"), touch: 3, t: 1)
+    #expect(d.sink.inserts == ["H", "i"])
+}
+
+@Test func shiftHeldWithLetterIsNotADoubleTapForCapsLock() {
+    var d = Driver()
+    d.down(1, .shift, t: 0)
+    d.tap(.letter("a"), touch: 2, t: 0.1)
+    d.up(1, t: 0.2)
+    d.tap(.shift, touch: 3, t: 0.3)
+    #expect(d.m.shift == .once)
+}
+
 @Test func externalShiftIsAppliedAndReported() {
     var d = Driver()
     let s = d.sink

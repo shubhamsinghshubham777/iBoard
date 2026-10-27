@@ -63,7 +63,7 @@ public struct DeleteRepeatPolicy: Sendable, Equatable {
 public struct KeyboardInputMachine: Sendable {
     public static let maxTouches = 6
     /// Two shift taps within this many seconds make caps lock.
-    public static let doubleTapShiftWindow: TimeInterval = 0.35
+    public static let doubleTapShiftWindow: TimeInterval = 0.4
 
     private struct Slot: Sendable {
         var touchID = 0
@@ -75,6 +75,8 @@ public struct KeyboardInputMachine: Sendable {
         /// When the long press fires (infinity: this key has no alternates / already fired).
         var longPressAt: TimeInterval = .infinity
         var isAlternates = false
+        /// This touch is on the shift key (see `isShiftHeld`).
+        var isShiftKey = false
     }
 
     public private(set) var layout: KeyboardLayout
@@ -106,6 +108,8 @@ public struct KeyboardInputMachine: Sendable {
         }
         return d
     }
+    /// A finger is down on the shift key: letters typed meanwhile are capitals (one-handed typing).
+    public var isShiftHeld: Bool { slots.contains { $0.isActive && $0.isShiftKey } }
     public var activeTouchCount: Int { slots.reduce(0) { $0 + ($1.isActive ? 1 : 0) } }
 
     // MARK: Host-driven state
@@ -240,6 +244,7 @@ public struct KeyboardInputMachine: Sendable {
         if deleteTouchID == slots[i].touchID { deleteTouchID = -1 }
         slots[i].isActive = false
         slots[i].isAlternates = false
+        slots[i].isShiftKey = false
         slots[i].longPressAt = .infinity
         slots[i].keyIndex = -1
     }
@@ -262,7 +267,11 @@ public struct KeyboardInputMachine: Sendable {
     private mutating func perform(identity: KeyIdentity, slot: Int, time: TimeInterval, emit: (KeyEvent) -> Void) {
         switch identity {
         case .letter(let s):
-            emit(.insert(shift == .off ? s : s.uppercased()))
+            // A held shift key capitalises even when the tap toggled auto-capitalisation off, and a letter typed
+            // with it is not the first half of a caps-lock double tap.
+            let held = isShiftHeld
+            if held { lastShiftTap = -.infinity }
+            emit(.insert(shift == .off && !held ? s : s.uppercased()))
             if shift == .once { shift = .off; emit(.shiftChanged(.off)) }
         case .symbol(let s), .domainSuffix(let s):
             emit(.insert(s))
@@ -278,6 +287,7 @@ public struct KeyboardInputMachine: Sendable {
             deleteStart = time
             deleteNext = time + deletePolicy.initialDelay
         case .shift:
+            slots[slot].isShiftKey = true
             tapShift(time: time, emit: emit)
         case .layerSwitch(let target):
             guard target != kind else { return }
@@ -294,16 +304,17 @@ public struct KeyboardInputMachine: Sendable {
 
     private mutating func tapShift(time: TimeInterval, emit: (KeyEvent) -> Void) {
         let next: ShiftState
-        switch shift {
-        case .off:
-            next = .once
-            lastShiftTap = time
-        case .once:
-            next = time - lastShiftTap <= Self.doubleTapShiftWindow ? .capsLock : .off
+        if shift != .capsLock, time - lastShiftTap <= Self.doubleTapShiftWindow {
+            // Second tap in the window: caps lock, also when the first tap only switched auto-capitalisation off.
+            next = .capsLock
             lastShiftTap = -.infinity
-        case .capsLock:
-            next = .off
-            lastShiftTap = -.infinity
+        } else {
+            switch shift {
+            case .off: next = .once
+            case .once: next = .off
+            case .capsLock: next = .off
+            }
+            lastShiftTap = shift == .capsLock ? -.infinity : time
         }
         shift = next
         emit(.shiftChanged(next))
