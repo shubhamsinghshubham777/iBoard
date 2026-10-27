@@ -81,6 +81,8 @@ public struct SwipeCandidate: Sendable, Equatable {
     public var language: Double
     /// True when the personal model contributed to `language`.
     public var usedPersonal: Bool
+    /// Lexicon the word and `wordID` belong to (always `.primary` without a secondary language).
+    public var side: LexiconSide = .primary
 }
 
 public struct SwipeDecodeResult: Sendable, Equatable {

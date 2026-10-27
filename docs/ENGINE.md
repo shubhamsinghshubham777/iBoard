@@ -133,6 +133,41 @@ false-correction rate, recall) and a test that prints the report against the F2 
 lexicon, decoder and generator share the same Gaussian model, so the numbers are optimistic regression guards, not
 evidence for F2 acceptance on real typing. The test asserts only loose floors (precision >= 90%, false rate <= 2%).
 
+## Code-switching: English + Hinglish (M7-02, M7-03)
+
+Source: `CodeSwitch.swift`; data and licences: `docs/HINGLISH.md`. Everything is opt-in and backward compatible: without a
+`SecondaryLanguage` (lexicon + optional LM) the decoders, `EngineActor` and `Suggestions` behave as before (the existing
+189 tests pass unchanged).
+
+- **Both lexicons searched.** `TapDecoder` runs the beam search once per lexicon (same touch evidence), `SwipeDecoder`
+  walks both tries. Word ids are per lexicon, so `TapCandidate`, `SwipeCandidate` and `SuggestionSlot` carry a
+  `side` (`.primary` English, `.secondary` Hinglish). A word present in both lexicons (`meeting`, `to`, `me`) is
+  merged by text and keeps its better score; ties go to the primary side. Completions come from both sides.
+- **Language-context score.** `CodeSwitch.context` turns the previous words into log-odds of the second language:
+  a word found in only one lexicon is evidence for it (+/- `tokenEvidence` 1.1 nats, decayed 0.65 per step over the last 4
+  words), words in both or neither are neutral; the personal model adds a lean (`CodeSwitch.personalBias`: the
+  usage-weighted share of its 400 top words found only in one lexicon, shrunk toward 50/50, capped at 1.5 nats; computed once
+  per `setPersonal`, nothing typed is stored). The odds, capped at +/-3, become a log-prior `log P(side | context)` that is
+  added to every candidate's LM term (weighted by `lmWeight * priorWeight`). Each side also uses its own n-gram context
+  (ids of the previous words in that lexicon). Words in neither lexicon (out-of-vocabulary literals) are charged the
+  more likely side's prior, so the literal is not penalised for language.
+- **M7-03 protection.** A typed word that is a valid secondary-lexicon word is never auto-corrected into a word that exists
+  only in the primary lexicon: `TapDecodeResult.autocorrect` is nil and `literalProtected` is true (also in the
+  `EngineActor` personal blend). The strip still lists the English word as a suggestion; corrections into Hinglish words
+  and corrections of non-words are unaffected; `CodeSwitchParameters.protectSecondaryWords = false` turns it off. Consequence
+  to know: short Hinglish forms that are also typos of English words (`ne`, `ho`, `ka`) are never rewritten to English.
+- **Literal always listed.** When the candidate list is cut at `maxCandidates`, the literal now replaces the last entry if it
+  would have fallen off (before, a valid but low-scoring literal could vanish and the caller then saw an unknown word).
+  Single-language output changes only in that edge case.
+- **Not done / caveats.** `EngineHost` and the keyboard do not load the Hinglish artifacts yet. The 64-word next-word
+  prediction pool is per lexicon, as before. Calibration across languages is by the prior only: each lexicon is normalised
+  on its own and a side with a known context is scored by its n-grams while the other falls back to unigrams, so
+  weights (`tokenEvidence`, `priorWeight`) need tuning on the M7-04 eval set; the numbers here are not accuracy evidence.
+- **Latency** (macOS release, `DualBenchmarks`, English proxy = 150k synthetic pseudo-words + real 56k-word Hinglish
+  lexicon + LMs, 0.3 key-size noise): tap keystroke p95 0.033 ms dual vs 0.016 ms English only (budget 25 ms); swipe lift to
+  candidate p95 0.87 ms dual vs 0.60 ms (budget 60 ms), adversarial 10-15 key wander p95 1.5 ms. With the 12k bench fixture:
+  0.027 / 0.40 / 0.54 ms. A real English lexicon and an iPhone 12 were not available: host numbers only.
+
 ## Measured (macOS host, Apple Silicon, not a device)
 
 See the M2-02 / M2-03 progress-log entries for numbers. Benchmarks are in `ReaderBenchmarks` and

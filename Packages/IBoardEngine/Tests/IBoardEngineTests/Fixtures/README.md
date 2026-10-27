@@ -15,3 +15,7 @@ lexicon-builder --sources bench/sources.json --out out --min-ngram-count 2     #
   Only for latency measurement; it is not a language model.
 - All inputs are synthetic and CC0-1.0; no third-party corpus is vendored (`licenses.json` is the builder's manifest).
 - The `.iblex` / `.iblm` files are deterministic builder output; regenerate them only when the format version changes.
+- `hinglish-small/`: 151 synthetic Hinglish words (made-up counts) and 50 phrases for the code-switch tests (M7-02);
+  deliberately without `go`, `so`, `no`, `all`, `has` so English-only neighbours of Hinglish words exist. Built like `small/`
+  (`lexicon-builder --sources hinglish-small/sources.json --out out --min-ngram-count 2`). The real Hinglish artifacts are in
+  `Data/hinglish/` (not a test resource; tests read them from the checkout and skip when absent).

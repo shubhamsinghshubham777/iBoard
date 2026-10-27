@@ -1,0 +1,460 @@
+# Project-authored casual Hinglish forms and variant clusters (CC0-1.0; see ../README.md and docs/HINGLISH.md).
+# Columns (TAB separated): native (Devanagari, used to look up the news frequency, or "-") <TAB>
+#   spellings "roman:percent,roman:percent,..." (first = canonical; percents are the share of the word's uses) <TAB>
+#   optional absolute count, used as a floor when the news corpus under-represents casual chat.
+# A cluster is one native word with its spellings: nahi / nhi / nahin / nai.
+है	hai:62,h:18,he:10,hae:6,hay:4	900000
+हैं	hain:58,hai:18,hn:12,hen:8,h:4	400000
+था	tha:82,thaa:9,thha:5,ta:4	300000
+थी	thi:80,thee:9,thii:6,ti:5	200000
+थे	the:88,thay:6,te:6	150000
+हो	ho:88,hoo:7,hoh:5
+होगा	hoga:84,hogaa:9,hga:7
+होगी	hogi:80,hogii:9,hgi:11
+हूँ	hoon:50,hun:28,hu:17,hoo:5	150000
+हूं	hoon:50,hun:28,hu:17,hoo:5	150000
+नहीं	nahi:48,nhi:30,nahin:12,nai:6,ni:4	500000
+नही	nahi:52,nhi:32,nai:8,nahin:5,ni:3	200000
+क्या	kya:78,kyaa:10,kia:7,kyah:5	500000
+क्यों	kyun:46,kyu:32,kyon:16,kyo:6	150000
+कैसे	kaise:80,kese:10,kaisey:6,kaisay:4	150000
+कैसा	kaisa:84,kesa:16
+कैसी	kaisi:84,kesi:16
+कहाँ	kahan:52,kaha:26,kahaan:14,kahaa:8	150000
+कहां	kahan:52,kaha:26,kahaan:14,kahaa:8	150000
+कब	kab:90,kb:10	120000
+कौन	kaun:58,kon:34,koun:8	120000
+कितना	kitna:84,kitnaa:16
+कितने	kitne:88,kitney:12
+कितनी	kitni:88,kitnee:12
+और	aur:80,or:14,aor:6	400000
+पर	par:62,pe:28,per:10	300000
+में	mein:46,me:32,mai:14,men:8	500000
+मैं	main:46,mai:26,mein:10,me:18	300000
+से	se:90,sey:10	400000
+को	ko:92,koo:8	300000
+का	ka:90,kaa:6,kah:4	400000
+की	ki:90,kee:7,kii:3	400000
+के	ke:90,kay:6,kai:4	400000
+ने	ne:92,nay:8	300000
+तो	to:70,toh:30	300000
+भी	bhi:70,bhee:14,bi:16	300000
+ही	hi:66,hee:18,hii:10,hy:6	200000
+जो	jo:95,joo:5	150000
+यह	yeh:52,ye:36,yah:12	200000
+ये	ye:58,yeh:36,yey:6	200000
+वह	woh:42,wo:36,vo:16,voh:6	150000
+वो	wo:44,woh:34,vo:16,voh:6	200000
+इस	is:70,iss:30
+उस	us:70,uss:30
+हम	hum:78,ham:22	150000
+तुम	tum:88,tm:12	150000
+आप	aap:74,ap:26	250000
+मैंने	maine:66,mene:26,mainey:8
+तुमने	tumne:82,tumhne:12,tmne:6
+उसने	usne:90,usney:10
+हमने	humne:58,hamne:42
+मेरा	mera:88,meraa:12	150000
+मेरी	meri:88,merii:12	150000
+मेरे	mere:90,merey:10	150000
+तेरा	tera:90,teraa:10
+तेरी	teri:90,teree:10
+तेरे	tere:92,terey:8
+तुम्हारा	tumhara:52,tumara:32,tmhara:16
+तुम्हारी	tumhari:52,tumari:32,tmhari:16
+तुम्हारे	tumhare:52,tumare:32,tmhare:16
+हमारा	hamara:58,humara:37,hamaara:5
+हमारी	hamari:58,humari:37,hamaaree:5
+हमारे	hamare:58,humare:37,hamaare:5
+उसका	uska:85,uskaa:15
+उसकी	uski:85,uskee:15
+उसके	uske:85,uskey:15
+उनका	unka:85,unkaa:15
+उनके	unke:85,unkey:15
+अपना	apna:85,apnaa:15
+अपनी	apni:85,apnee:15
+अपने	apne:85,apney:15
+मुझे	mujhe:66,mjhe:16,mujhey:10,mje:8	200000
+तुझे	tujhe:72,tujhey:14,tje:14
+तुम्हें	tumhe:56,tumhein:26,tmhe:18
+उसे	use:80,usse:20
+उन्हें	unhe:62,unhein:38
+हमें	hume:56,hamein:30,humein:14
+मुझको	mujhko:80,mjhko:20
+तुमको	tumko:84,tmko:16
+उसको	usko:90,usse:10
+कुछ	kuch:84,kuchh:10,kuc:6	300000
+सब	sab:92,sub:8	200000
+बहुत	bahut:58,bohot:20,bohut:10,bhot:6,bahot:6	250000
+अच्छा	accha:40,achha:30,acha:25,achchha:5	150000
+अच्छी	acchi:40,achhi:30,achi:25,achchhi:5
+अच्छे	acche:40,achhe:30,ache:25,achchhe:5
+बुरा	bura:96,buraa:4
+ठीक	theek:48,thik:32,thk:10,tik:6,thek:4	150000
+सही	sahi:80,sahee:12,shi:8	120000
+गलत	galat:90,galt:10
+बस	bas:92,bus:8	150000
+अब	ab:92,abb:8	150000
+फिर	phir:50,fir:44,phirr:6	150000
+अभी	abhi:78,abhee:10,abi:12	150000
+कल	kal:94,kall:6	120000
+आज	aaj:55,aj:35,aajj:10	150000
+आजकल	aajkal:70,ajkal:30
+जब	jab:95,jub:5
+तब	tab:95,tub:5
+तक	tak:92,tuk:8
+साथ	saath:52,sath:42,saat:6
+लिए	liye:60,liy:20,lie:15,liyay:5	150000
+लिये	liye:60,liy:20,lie:20
+वाला	wala:50,vala:20,walaa:15,wal:15
+वाली	wali:50,vali:25,walee:25
+वाले	wale:50,vale:25,walay:25
+अगर	agar:88,agr:12
+या	ya:92,yaa:8	150000
+कि	ki:88,ke:12	150000
+क्योंकि	kyunki:46,kyuki:30,kyonki:16,kyoki:8
+मगर	magar:82,mgr:18
+लेकिन	lekin:72,lekn:16,laykin:12
+सिर्फ	sirf:80,srf:20
+सिर्फ़	sirf:80,srf:20
+बिल्कुल	bilkul:70,bikul:20,bilkl:10
+ज़रूर	zaroor:40,zarur:30,jarur:20,jaroor:10
+जरूर	zaroor:40,zarur:30,jarur:20,jaroor:10
+शायद	shayad:80,shayd:20
+कभी	kabhi:78,kabhee:12,kbhi:10
+हमेशा	hamesha:62,humesha:26,hmesha:12
+अक्सर	aksar:90,aksr:10
+ज़्यादा	zyada:60,jyada:30,jada:10
+ज्यादा	zyada:60,jyada:30,jada:10
+कम	kam:92,kum:8
+थोड़ा	thoda:86,thodaa:14
+थोड़ी	thodi:86,thodee:14
+बड़ा	bada:90,badaa:10
+बड़ी	badi:90,badee:10
+छोटा	chhota:50,chota:50
+नया	naya:90,nayaa:10
+नई	nayi:44,nai:30,naee:26
+पुराना	purana:86,puraana:14
+करना	karna:84,krna:16	200000
+करो	karo:84,kro:16
+करता	karta:84,krta:16
+करती	karti:84,krti:16
+करते	karte:84,krte:16
+करूँगा	karunga:70,krunga:30
+करूंगा	karunga:70,krunga:30
+करेगा	karega:84,krega:16
+करेगी	karegi:84,kregi:16
+करेंगे	karenge:80,krenge:20
+कर	kar:70,kr:30	250000
+किया	kiya:86,kia:14	150000
+कीजिए	kijiye:66,kijie:34
+करें	karen:46,kare:36,krein:18
+करके	karke:76,krke:24
+कराना	karana:80,karaana:20
+गया	gaya:84,gya:16	200000
+गयी	gayi:50,gai:30,gyi:20
+गई	gayi:50,gai:30,gyi:20	150000
+गए	gaye:56,gye:26,gaey:18	120000
+गये	gaye:56,gye:26,gaey:18
+जाना	jana:70,jaana:30
+जा	ja:90,jaa:10
+जाओ	jao:70,jaao:30
+जाता	jata:70,jaata:30
+जाती	jati:70,jaati:30
+जाते	jate:70,jaate:30
+जाऊँगा	jaunga:64,jaaunga:36
+जाऊंगा	jaunga:64,jaaunga:36
+जाएगा	jayega:56,jaega:30,jaayega:14
+जाएगी	jayegi:56,jaegi:30,jaayegi:14
+जाएंगे	jayenge:56,jaenge:30,jaayenge:14
+जाने	jane:70,jaane:30
+आना	aana:70,ana:30
+आ	aa:84,a:16	150000
+आओ	aao:76,ao:24
+आया	aaya:66,aya:34
+आयी	aayi:56,ayi:26,aai:18
+आई	aayi:56,ayi:26,aai:18
+आए	aaye:56,aye:26,aae:18
+आता	aata:66,ata:34
+आती	aati:66,ati:34
+आते	aate:66,ate:34
+आएगा	ayega:50,aayega:36,aega:14
+आएगी	ayegi:50,aayegi:36,aegi:14
+आऊँगा	aaunga:60,aunga:40
+आऊंगा	aaunga:60,aunga:40
+देना	dena:90,denaa:10
+दो	do:92,doo:8	200000
+दे	de:92,dey:8	150000
+दिया	diya:84,dia:16
+दिखाओ	dikhao:70,dikhaao:30
+देखना	dekhna:84,dekhnaa:16
+देख	dekh:92,dekhh:8
+देखो	dekho:90,dekhoo:10
+देखा	dekha:90,dekhaa:10
+देखते	dekhte:90,dekhtey:10
+बोलना	bolna:90,bolnaa:10
+बोल	bol:94,boll:6
+बोलो	bolo:90,boloo:10
+बोला	bola:90,bolaa:10
+कहना	kehna:50,kahna:50
+कहो	kaho:50,keho:50
+कहा	kaha:90,kaaha:10
+कहता	kehta:50,kahta:50
+कहती	kehti:50,kahti:50
+कहते	kehte:50,kahte:50
+कहेगा	kahega:50,kehega:50
+बताना	batana:80,bataana:20
+बता	bata:90,bataa:10
+बताओ	batao:70,bataao:30
+बताया	bataya:70,bataaya:30
+चलना	chalna:86,chlna:14
+चल	chal:90,chl:10	150000
+चलो	chalo:80,chlo:20	100000
+चला	chala:90,chalaa:10
+चलते	chalte:90,chlte:10
+रहा	raha:76,rha:24	250000
+रही	rahi:70,rhi:30	200000
+रहे	rahe:70,rhe:30	200000
+रहना	rehna:50,rahna:50
+रहता	rehta:50,rahta:50
+रहती	rehti:50,rahti:50
+रहेगा	rahega:50,rhega:50
+रहेंगे	rahenge:50,rhenge:50
+लेना	lena:92,lenaa:8
+ले	le:92,ley:8	150000
+लो	lo:94,loo:6
+लिया	liya:84,lia:16
+लेकर	lekar:70,lekr:30
+खाना	khana:80,khaana:20	150000
+खा	kha:90,khaa:10
+खाओ	khao:80,khaao:20
+खाया	khaya:80,khaaya:20
+खाते	khate:80,khaate:20
+पीना	peena:50,pina:50
+पी	pi:84,pee:16
+सोना	sona:84,sonaa:16
+सो	so:92,soo:8
+सोया	soya:80,soyaa:20
+उठ	uth:92,uthh:8
+बैठ	baith:80,beth:20
+बैठो	baitho:80,betho:20
+मिलना	milna:90,milnaa:10
+मिल	mil:94,mill:6
+मिलो	milo:90,miloo:10
+मिला	mila:90,milaa:10
+मिली	mili:90,milee:10
+मिलेगा	milega:80,milegaa:20
+मिलेगी	milegi:80,milegee:20
+मिलेंगे	milenge:80,milengay:20
+पता	pata:50,pta:40,patta:10	200000
+पूछ	puch:60,poochh:20,pooch:20
+सुन	sun:94,sunn:6
+सुनो	suno:88,sunoo:12
+सुना	suna:90,sunaa:10
+सुनाओ	sunao:70,sunaao:30
+समझ	samajh:62,smjh:20,samjh:18
+समझा	samjha:62,samajha:30,smjha:8
+समझो	samjho:62,samajho:30,smjho:8
+समझना	samajhna:60,samjhna:40
+समझे	samjhe:60,samajhe:30,smjhe:10
+लिख	likh:92,likhh:8
+लिखा	likha:92,likhaa:8
+पढ़	padh:82,pad:18
+पढ़ना	padhna:84,padna:16
+पढ़ाई	padhai:60,padai:30,padhaai:10
+भेज	bhej:94,bhejj:6
+भेजो	bhejo:90,bhejoo:10
+भेजा	bheja:90,bhejaa:10
+रुक	ruk:94,rukk:6
+रुको	ruko:90,rukoo:10
+छोड़	chhod:50,chod:50
+छोड़ो	chhodo:50,chodo:50
+चाहिए	chahiye:62,chahie:20,chahiey:10,chaiye:8	200000
+चाहता	chahta:78,chahtaa:12,chata:10
+चाहती	chahti:78,chahtee:12,chati:10
+चाहते	chahte:78,chahtey:12,chate:10
+चाहे	chahe:80,chaahe:20
+सकता	sakta:78,skta:22
+सकती	sakti:78,skti:22
+सकते	sakte:78,skte:22
+पड़ता	padta:80,padtaa:20
+पड़ेगा	padega:80,padegaa:20
+लगता	lagta:80,lgta:20
+लगा	laga:90,lagaa:10
+लगी	lagi:90,lagee:10
+लग	lag:94,lagg:6
+होता	hota:84,hotaa:16
+होती	hoti:84,hotee:16
+होते	hote:84,hotey:16
+हुआ	hua:70,huaa:30
+हुई	hui:70,huee:20,huii:10
+हुए	hue:70,huye:20,huey:10
+हुये	hue:70,huye:20,huey:10
+पहले	pehle:50,pahle:50
+पहला	pehla:50,pahla:50
+पहली	pehli:50,pahli:50
+बाद	baad:60,bad:40
+बाहर	bahar:80,baahar:20
+अंदर	andar:80,andr:20
+ऊपर	upar:80,oopar:20
+नीचे	niche:60,neeche:40
+आगे	aage:60,age:40
+पीछे	peeche:50,piche:50
+यहाँ	yahan:56,yaha:26,yahaan:18
+यहां	yahan:56,yaha:26,yahaan:18
+वहाँ	wahan:52,waha:26,vahan:22
+वहां	wahan:52,waha:26,vahan:22
+जहाँ	jahan:58,jaha:30,jahaan:12
+इधर	idhar:90,idher:10
+उधर	udhar:90,udher:10
+घर	ghar:94,ghr:6	150000
+काम	kaam:60,kam:36,kaaam:4	200000
+दोस्त	dost:90,dosth:10	100000
+दोस्तों	doston:90,dostoon:10
+पैसा	paisa:70,paisaa:30
+पैसे	paise:70,paisay:30	100000
+पानी	pani:60,paani:40
+रात	raat:60,rat:40
+दिन	din:94,dinn:6	150000
+सुबह	subah:50,subha:30,subh:20
+शाम	shaam:50,sham:50
+समय	samay:80,samai:20
+बात	baat:62,bat:38	150000
+बातें	baatein:50,batein:40,baten:10
+लोग	log:94,logg:6	150000
+लड़का	ladka:80,ladkaa:20
+लड़की	ladki:80,ladkee:20
+भाई	bhai:84,bhaai:16	100000
+बहन	behen:44,bahan:34,behan:22
+माँ	maa:70,ma:30	100000
+मां	maa:70,ma:30
+पापा	papa:92,paapa:8	100000
+मम्मी	mummy:60,mumma:25,mommy:15
+बेटा	beta:90,betaa:10
+बेटी	beti:90,betee:10
+प्यार	pyar:56,pyaar:36,pyr:8	100000
+दिल	dil:94,dill:6	100000
+जान	jaan:66,jan:34
+ज़िंदगी	zindagi:60,zindgi:20,jindagi:20
+जिंदगी	zindagi:60,zindgi:20,jindagi:20
+दुनिया	duniya:90,duniyaa:10
+भगवान	bhagwan:62,bhagvan:38
+नाम	naam:56,nam:44
+शहर	shehar:50,sahar:50
+गाँव	gaon:50,gaanv:50
+कमरा	kamra:90,kamraa:10
+गाड़ी	gaadi:60,gadi:40
+खेल	khel:94,khell:6
+सपना	sapna:90,sapnaa:10
+सच	sach:92,such:8
+झूठ	jhoot:60,jhuth:40
+मज़ा	maza:60,mazaa:40
+मजा	maza:60,mazaa:40
+मुश्किल	mushkil:80,mushkl:20
+आसान	aasan:60,asan:40
+मदद	madad:80,madat:20
+शुक्रिया	shukriya:80,shukriyaa:20	60000
+धन्यवाद	dhanyavad:80,dhanyawad:20	60000
+माफ़	maaf:70,maf:30
+माफ	maaf:70,maf:30
+नमस्ते	namaste:86,namastey:14	60000
+अरे	are:70,arey:30	100000
+यार	yaar:80,yar:20	100000
+हाँ	haan:50,han:26,ha:14,hn:10	300000
+हां	haan:50,han:26,ha:14,hn:10	300000
+ना	na:92,naa:8	200000
+जी	ji:86,jee:14	150000
+वाह	wah:50,waah:50
+ओह	oh:60,ohh:40
+एक	ek:92,ak:8	300000
+तीन	teen:70,tin:30
+चार	char:60,chaar:40
+पाँच	paanch:50,panch:50
+छह	chhe:50,che:50
+सात	saat:60,sat:40
+आठ	aath:60,ath:40
+नौ	nau:60,no:40
+दस	das:94,dus:6
+सौ	sau:70,so:30
+हज़ार	hazaar:50,hazar:50
+लाख	lakh:80,lakhh:20
+साल	saal:66,sal:34
+महीना	mahina:80,mahinaa:20
+हफ्ता	hafta:80,haftaa:20
+घंटा	ghanta:80,ghantaa:20
+कोई	koi:76,koe:12,koee:12	200000
+किसी	kisi:84,kisee:16
+किसको	kisko:90,kiski:10
+किसने	kisne:90,kisney:10
+ऐसा	aisa:62,esa:38
+ऐसे	aise:62,ese:38
+ऐसी	aisi:62,esi:38
+वैसे	waise:50,vaise:30,wese:20
+इसलिए	isliye:62,isiliye:20,isliy:18
+तभी	tabhi:80,tbhi:20
+जैसे	jaise:62,jese:38
+जैसा	jaisa:62,jesa:38
+सबसे	sabse:80,sbse:20
+बाकी	baaki:50,baki:50
+पूरा	pura:50,poora:50
+पूरी	puri:50,poori:50
+सारा	sara:50,saara:50
+सारे	sare:50,saare:50
+अकेला	akela:80,akelaa:20
+अकेले	akele:80,akelay:20
+खुश	khush:80,khus:20
+दुखी	dukhi:70,dukhee:30
+परेशान	pareshan:60,pareshaan:40
+गुस्सा	gussa:70,gusa:30
+डर	dar:80,darr:20
+सुंदर	sundar:80,sunder:20
+प्यारा	pyara:60,pyaara:40
+पागल	pagal:84,paagal:16
+मस्त	mast:94,mastt:6
+बढ़िया	badhiya:50,badiya:36,badhia:14
+कमाल	kamaal:50,kamal:50
+शादी	shadi:60,shaadi:40
+खुद	khud:92,khudd:8
+इंतज़ार	intezaar:40,intezar:30,intjar:30
+इंतजार	intezaar:40,intezar:30,intjar:30
+याद	yaad:60,yad:40
+भूल	bhool:50,bhul:50
+भूलना	bhoolna:50,bhulna:50
+उम्मीद	umeed:50,ummeed:50
+ख्याल	khayal:60,khyal:40
+खयाल	khayal:60,khyal:40
+रखना	rakhna:86,rkhna:14
+रख	rakh:90,rkh:10
+रखो	rakho:90,rkho:10
+रखा	rakha:90,rkha:10
+बनाना	banana:70,bnana:30
+बना	bana:84,bna:16
+बनो	bano:90,bno:10
+बन	ban:92,bn:8
+लाना	lana:70,laana:30
+ला	la:90,laa:10
+लाओ	lao:70,laao:30
+लाया	laya:70,laaya:30
+उतना	utna:80,utnaa:20
+इतना	itna:80,itnaa:20
+इतने	itne:80,itney:20
+उतने	utne:80,utney:20
+मिलते	milte:90,miltey:10
+खेलना	khelna:90,khelnaa:10
+रोना	rona:90,ronaa:10
+रो	ro:94,roo:6
+हँसना	hasna:84,hansna:16
+हंसना	hasna:84,hansna:16
+सीखना	seekhna:50,sikhna:50
+बुलाना	bulana:70,bulaana:30
+बुला	bula:84,bulaa:16
+भागना	bhagna:70,bhaagna:30
+भाग	bhaag:50,bhag:50
+सोचना	sochna:84,sochnaa:16
+सोच	soch:92,sochh:8
+मारना	marna:84,maarna:16
+मार	maar:60,mar:40
+डालना	dalna:80,daalna:20
+डाल	daal:60,dal:40
+पकड़	pakad:84,pkd:16
+पकड़ना	pakadna:84,pkdna:16

@@ -1,0 +1,559 @@
+# Project-authored casual Hinglish / code-switched chat phrases (CC0-1.0). sentence<TAB>weight (1 = rare, 10 = very common).
+# Lowercase, Roman script, no punctuation. Every adjacent word pair and triple becomes an n-gram.
+kya haal hai	10
+kya kar raha hai	10
+kya kar rahe ho	10
+kya kar rahi ho	8
+kaise ho	10
+kaisa hai	8
+kaise ho aap	8
+main theek hoon	9
+main theek hun	8
+sab theek hai	9
+thik hai	10
+theek hai bhai	9
+theek hai yaar	8
+ok theek hai	9
+nahi yaar	9
+nhi yaar	9
+nahi pata	8
+pata nahi	10
+pta nhi	9
+mujhe nahi pata	8
+mujhe pata hai	7
+mujhe nahi chahiye	6
+mujhe bhi chahiye	6
+mujhe lagta hai	7
+mujhe kuch nahi chahiye	5
+kuch nahi	9
+kuch bhi	7
+kuch nahi hua	5
+kuch to hai	4
+kab aa rahe ho	8
+kab milte hain	6
+kab milenge	8
+kahan ho tum	9
+kahan ho	10
+kahan jana hai	7
+kahan ja raha hai	7
+kahan ja rahe ho	7
+kab tak aaoge	6
+abhi aata hoon	8
+abhi aa raha hoon	9
+abhi nahi	8
+abhi busy hoon	8
+abhi call karta hoon	8
+abhi call karunga	8
+abhi bhejta hoon	6
+thodi der me	7
+thodi der baad	8
+thoda wait karo	6
+ek minute ruko	7
+ruko ruko	4
+call me	6
+call karo	9
+call kar na	6
+call mat karna	5
+phone karo	7
+phone nahi utha raha	4
+phone off hai	6
+phone switch off hai	5
+mera phone kho gaya	4
+message karo	6
+msg kar dena	6
+message bhej diya	6
+photo bhej do	7
+pic bhej na	5
+video call karte hain	5
+whatsapp pe baat karte hain	5
+whatsapp kar dena	5
+kal meeting hai	9
+kal office jana hai	8
+kal milte hain	9
+kal subah call karunga	6
+kal exam hai	8
+kal party hai	6
+kal chalte hain	6
+aaj office nahi gaya	5
+aaj kya plan hai	8
+aaj raat ko milte hain	6
+aaj party hai	7
+aaj late ho jaunga	6
+aaj ka plan kya hai	6
+office me kaam hai	6
+office se nikal gaya	5
+office pahunch gaya	6
+meeting me hoon	8
+meeting khatam hui	5
+meeting ke baad call karta hoon	6
+main meeting me hoon	8
+main busy hoon	8
+main aa raha hoon	10
+main aa gaya	8
+main nikal gaya	7
+main ghar pe hoon	7
+main ghar aa gaya	6
+main so raha hoon	5
+main kal aunga	6
+main bata dunga	6
+main kar dunga	8
+main dekh leta hoon	6
+main check karta hoon	6
+main baad me baat karta hoon	6
+tum kya kar rahe ho	8
+tum kahan ho	8
+tum kab aaoge	6
+tum bhi aao	6
+tum aao na	6
+tum chalo	5
+tumhe kya chahiye	6
+tumhe pata hai	6
+tumhara naam kya hai	6
+tera naam kya hai	5
+tera kya haal hai	5
+tu kya kar raha hai	7
+tu kahan hai	7
+tu aa ja	5
+tu chal	5
+aap kaise hain	8
+aap kahan hain	7
+aap kya kar rahe hain	6
+aap bataiye	5
+aap ka naam kya hai	5
+aapka din achha ho	5
+sir kal aaunga	4
+sir meeting hai	4
+sir ek request hai	3
+bhai kya hua	9
+bhai ek kaam tha	7
+bhai tu kahan hai	7
+bhai sun na	8
+bhai please help karo	6
+yaar kya kar raha hai	8
+yaar mujhe bata	6
+yaar tu bhi na	6
+yaar bahut mushkil hai	5
+yaar maza aa gaya	6
+are yaar	9
+arre yaar	7
+are bhai	7
+are nahi	6
+are wah	4
+wah bhai wah	5
+bahut achha	8
+bahut accha hai	8
+bahut badhiya	7
+bahut mast hai	7
+bahut bore ho raha hoon	5
+bahut thak gaya hoon	6
+bahut der ho gayi	7
+bahut der se wait kar raha hoon	5
+bahut zyada traffic hai	5
+bahut kaam hai	8
+bahut tension hai	5
+bahut dhanyavad	3
+bahut shukriya	4
+thank you bhai	7
+thank you so much	6
+thanks yaar	7
+thanks bro	5
+thank you sir	5
+sorry yaar	8
+sorry bhai	6
+sorry late ho gaya	6
+sorry mujhe nahi pata tha	4
+good morning bhai	6
+good morning sir	5
+good night yaar	6
+good night sweet dreams	4
+good night bhai	5
+happy birthday bhai	6
+happy birthday yaar	5
+happy birthday to you	4
+shubh ratri	4
+subah ho gayi	4
+kal raat ko	5
+kal raat nahi so paya	3
+raat ko call karta hoon	5
+raat ko baat karte hain	5
+khana kha liya	8
+khana khaya kya	6
+khana ban gaya	5
+khana khane chalte hain	5
+chai pilo	4
+chai peene chalte hain	4
+paani pi lo	4
+ghar kab aaoge	6
+ghar pahunch gaya	6
+ghar pe sab theek hai	5
+ghar ka kaam	5
+papa ka phone aaya	4
+mummy ne bola	5
+mummy ko call karo	5
+dost ke saath	6
+doston ke saath	6
+dost ki shaadi	4
+mere dost ne bola	4
+mera dost aa raha hai	4
+mera kaam ho gaya	7
+mera kaam khatam	5
+mera number save kar lo	5
+mera naam hai	5
+meri baat suno	6
+meri jaan	5
+mere paas time nahi hai	6
+mere paas paise nahi hain	5
+mere ko nahi pata	5
+mere saath chalo	5
+tere liye	6
+tere saath	6
+tere bina	5
+uske baad	6
+uske saath	5
+uska phone nahi lag raha	4
+usne kaha	6
+usne bola ki	6
+usne mujhe bataya	5
+isliye main nahi aaya	4
+isme koi problem nahi hai	5
+isme kya problem hai	4
+is baar	6
+iss baar nahi	4
+agar tum aa sako to	5
+agar time mile to	5
+agar koi problem ho to bata dena	5
+jaldi aao	6
+jaldi karo	7
+jaldi bhejo	4
+jaldi call karo	5
+der ho gayi	6
+der mat karo	4
+chalo chalte hain	7
+chalo theek hai	6
+chalo bye	5
+chalo baad me baat karte hain	6
+chalo phir milte hain	6
+chal bye	4
+bye bye	5
+phir milte hain	8
+phir baat karte hain	7
+phir se bhejo	4
+phir kya hua	6
+baad me baat karte hain	8
+baad me call karta hoon	7
+baad me bata dunga	6
+baad me dekhte hain	6
+dekhte hain	7
+dekh lenge	4
+dekh lo	5
+dekho yaar	5
+sun na yaar	5
+suno ek baat bataani hai	4
+ek baat bolu	5
+ek kaam karo	6
+ek kaam karte hain	4
+ek minute	6
+ek second ruko	5
+do minute ruko	5
+do din baad	5
+teen baje	5
+subah chaar baje	3
+shaam ko milte hain	6
+shaam ko call karta hoon	5
+kitne baje	7
+kitne baje aa rahe ho	6
+kitne baje milna hai	6
+kitna time lagega	6
+kitna paisa hua	5
+kitne paise chahiye	5
+kitne ka hai	5
+kitna hua	4
+paise bhej do	6
+paise bhej diye	5
+paise transfer kar diye	4
+paise kab doge	4
+payment kar diya	5
+payment ho gaya	5
+upi se bhej do	5
+upi id bhejo	4
+otp bhejo	5
+otp aaya kya	5
+otp nahi aaya	5
+otp bata do	4
+account number bhejo	4
+bank me paise nahi hain	3
+recharge karwa do	4
+recharge khatam ho gaya	3
+net nahi chal raha	5
+internet nahi chal raha hai	5
+wifi connect nahi ho raha	4
+network nahi hai	5
+battery low hai	5
+charge pe laga hai	4
+charger kahan hai	4
+phone charge kar lo	4
+link bhejo	6
+link bhej do	6
+link kholo	3
+mail kar diya	5
+mail check karo	5
+email bhej dena	4
+file bhej do	5
+document bhejo	4
+report bhejo	4
+report ready hai	4
+project ka kaam	5
+project submit kar diya	4
+assignment complete kar liya	4
+exam kaisa gaya	5
+exam ki taiyari	4
+result aa gaya	5
+result kab aayega	4
+class kab hai	5
+class me aao	4
+class cancel ho gayi	3
+college jana hai	5
+college se aa gaya	4
+padhai kar raha hoon	5
+padhai kaisi chal rahi hai	4
+notes bhej do	5
+notes share karo	4
+movie dekhne chalte hain	6
+movie kaisi thi	5
+film dekhi kya	4
+gaana sunao	4
+match dekha kya	4
+cricket match hai	4
+trip pe ja rahe hain	4
+ticket book kar di	5
+train late hai	5
+train kab aayegi	4
+bus miss ho gayi	4
+flight delay ho gayi	3
+traffic me fas gaya	5
+raste me hoon	6
+rasta nahi mil raha	3
+location bhejo	5
+location share karo	5
+kahan pe ho location bhejo	3
+pahunch ke batana	5
+pahunch gaya	6
+pahunch kar message karna	4
+safe pahunch gaya	4
+dhyan rakhna	5
+apna khayal rakhna	6
+khayal rakhna	5
+tabiyat kaisi hai	4
+tabiyat theek nahi hai	4
+bukhar hai	4
+doctor ko dikhao	4
+dawai le lo	4
+aaram karo	4
+neend aa rahi hai	5
+so jao	5
+so ja	3
+jaag raha hoon	4
+uth gaya	4
+uthna hai	3
+tension mat lo	6
+tension mat le	4
+fikar mat karo	5
+koi baat nahi	8
+koi problem nahi	7
+koi nahi	5
+koi tension nahi	4
+kuch problem hai kya	4
+sab set hai	4
+sab kuch theek hai	5
+sab badhiya	4
+sab mast	4
+sahi hai	8
+sahi baat hai	6
+sahi bola	4
+bilkul sahi	5
+bilkul nahi	4
+bilkul theek	4
+zaroor aaunga	4
+zaroor milenge	4
+shayad aa jaunga	4
+shayad nahi	4
+pakka aaunga	4
+pakka nahi hai	3
+bas ek minute	4
+bas ho gaya	4
+bas aata hoon	4
+bas yahi	3
+bas itna hi	3
+bas kar	3
+chhodo yaar	4
+chodo yaar	4
+chod na	3
+jane do	4
+jaane do	3
+mat karo	5
+mat jao	4
+mat bolo	3
+mat bata	3
+mat aana	3
+yeh kya hai	7
+ye kya hai	7
+ye kya hua	6
+yeh sab kya hai	4
+yeh mera hai	4
+ye wala chahiye	4
+wo kya hai	5
+woh kaun hai	6
+wo kaun hai	6
+wo kahan hai	5
+woh kab aayega	4
+wo nahi aaya	5
+wo bhi aayega	4
+kaun hai	8
+kaun aa raha hai	5
+kaun bola	4
+kyun nahi	8
+kyu nhi	8
+kyun nahi aaya	5
+kyu nahi aaya	5
+kyun kiya	4
+kyu kiya	4
+kyon bhai	3
+kyunki mujhe nahi pata tha	3
+kyunki main busy tha	4
+lekin mujhe nahi pata	4
+lekin ab kya karein	4
+lekin koi baat nahi	4
+par mujhe nahi lagta	4
+par wo nahi aaya	3
+aur batao	10
+aur bata	8
+aur kya chal raha hai	9
+aur kya haal hai	8
+aur kaisa hai	6
+aur kaisi hai	5
+aur kuch	6
+aur kuch chahiye	4
+aur sab theek	5
+aur kya khabar hai	5
+kya chal raha hai	9
+kya baat hai	9
+kya baat kar raha hai	5
+kya hua	10
+kya hua bhai	8
+kya hua yaar	7
+kya hoga	6
+kya karun	6
+kya karein	6
+kya karna hai	7
+kya bolun	5
+kya bola	5
+kya bataun	4
+kya dekh raha hai	4
+kya khaya	4
+kya khana hai	5
+kya plan hai	8
+kya lagta hai	5
+kya soch raha hai	4
+kya sahi hai	4
+kya time hua hai	5
+kya time ho raha hai	4
+kya aaj free ho	5
+kya kal free ho	5
+kya tum free ho	5
+kya tu free hai	5
+kya main aa sakta hoon	4
+kya main call kar sakta hoon	4
+kya aap free hain	4
+kya aap bata sakte hain	3
+kya tum mujhe bata sakte ho	4
+kya aap meri madad kar sakte hain	3
+mujhe help chahiye	6
+mujhe madad chahiye	5
+mujhe ek favour chahiye	3
+mujhe time chahiye	4
+mujhe nind aa rahi hai	3
+mujhe bhookh lagi hai	5
+mujhe bhook lagi hai	4
+mujhe pyaas lagi hai	3
+mujhe neend aa rahi hai	5
+mujhe office jana hai	5
+mujhe kal jaldi uthna hai	4
+mujhe samajh nahi aaya	6
+mujhe samajh nahi aa raha	5
+mujhe yaad hai	5
+mujhe yaad nahi hai	5
+mujhe maaf karna	4
+mujhe pasand hai	5
+mujhe pasand nahi hai	4
+mujhe achha laga	5
+mujhe acha nahi laga	4
+mujhe bura laga	4
+mujhe dar lag raha hai	3
+mujhe lagta hai ki	5
+mujhe laga ki	4
+mujhe bataya nahi	3
+mujhe bhi bata	3
+mujhe call karna	4
+mujhe message karna	4
+mujhe wait karna pada	3
+mujhe jaana hai	5
+mujhe jana hai	5
+mujhe aana hai	4
+mujhe kuch kaam hai	4
+mujhe tumse baat karni hai	4
+mujhe tumse milna hai	4
+mujhe tumhari yaad aa rahi hai	4
+i miss you yaar	4
+i love you	5
+love you yaar	4
+miss you bhai	4
+miss you bahut	4
+take care yaar	4
+take care bhai	4
+see you kal	4
+see you soon	4
+talk to you later	3
+talk later	3
+will call you later	3
+call you later	3
+call you in the evening	2
+ok done	7
+ok bhai	7
+ok sir	5
+ok ok	6
+ok thik hai	6
+ok chalo	5
+ok bye	5
+ok cool	4
+done bhai	5
+done yaar	4
+sure bhai	5
+sure yaar	4
+sure sir	4
+great yaar	3
+nice yaar	3
+nice one bhai	3
+awesome yaar	3
+best of luck	4
+all the best	5
+all the best bhai	3
+congratulations bhai	4
+congrats yaar	3
+good job bhai	3
+well done bhai	3
+please yaar	5
+please bhai	4
+please sir	3
+please bata do	4
+please help karo	4
+please reply karo	4
+please call me	4
+please call karo	4
+please jaldi bhejo	3
+please wait karo	3
+please ruko	3
+please mat karo	3
+please samjho	3
+plz bata do	3
+plz call karo	3
+pls reply karo	3

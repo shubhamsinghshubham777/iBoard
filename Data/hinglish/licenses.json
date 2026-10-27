@@ -1,0 +1,41 @@
+{
+  "derivedOutputLicense" : "CC-BY-SA-4.0",
+  "formatVersion" : 1,
+  "shareAlike" : true,
+  "sources" : [
+    {
+      "attribution" : "iBoard project-authored phrases",
+      "id" : "hinglish-authored-ngrams",
+      "kind" : "ngram",
+      "sha256" : "ba1069e516b60606f2ee8775abd153c2d9ec54531cce3ecf8ec5ec5296d618c9",
+      "spdx" : "CC0-1.0",
+      "url" : "https://github.com/shubhamsinghshubham777/iBoard"
+    },
+    {
+      "attribution" : "iBoard project-authored word list",
+      "id" : "hinglish-authored-unigrams",
+      "kind" : "unigram",
+      "sha256" : "aafc3c048b5cdcd3d52f5b2266608b74ae112e81374481cec5dd7a79cd8f5171",
+      "spdx" : "CC0-1.0",
+      "url" : "https://github.com/shubhamsinghshubham777/iBoard"
+    },
+    {
+      "attribution" : "Same sources as hinglish-derived-unigrams",
+      "id" : "hinglish-derived-ngrams",
+      "kind" : "ngram",
+      "sha256" : "54731d7f5fa8cc0a08622eb4317c2ec10be4945aff8791a8b15e67f9fce7a62e",
+      "spdx" : "CC-BY-SA-4.0",
+      "url" : "https://wortschatz.uni-leipzig.de/en/download",
+      "version" : "Leipzig hin_news_2019_300K, hin_news_2020_300K"
+    },
+    {
+      "attribution" : "Romanized from Leipzig Corpora Collection Hindi news 2019/2020 (CC BY 4.0, Goldhahn, Eckart, Quasthoff 2012) frequencies and AI4Bharat Aksharantar Hindi transliteration pairs (CC BY / CC0; rows sourced from Google Dakshina are CC BY-SA 4.0, Roark et al. 2020; Madhani et al. 2022)",
+      "id" : "hinglish-derived-unigrams",
+      "kind" : "unigram",
+      "sha256" : "e53b1e74e67f2bd689dec6dd084bb8e4b9ab7e418137034f06dda223b7dd5381",
+      "spdx" : "CC-BY-SA-4.0",
+      "url" : "https://huggingface.co/datasets/ai4bharat/Aksharantar",
+      "version" : "Aksharantar hin.zip 2022; Leipzig hin_news_2019_300K, hin_news_2020_300K"
+    }
+  ]
+}

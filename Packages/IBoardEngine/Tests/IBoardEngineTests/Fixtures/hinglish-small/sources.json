@@ -1,0 +1,1 @@
+{"sources": [{"id": "synthetic-hinglish-uni", "path": "uni.tsv", "kind": "unigram", "spdx": "CC0-1.0", "attribution": "iBoard test fixture (synthetic Hinglish counts, authored for this repo)"}, {"id": "synthetic-hinglish-ng", "path": "ng.tsv", "kind": "ngram", "spdx": "CC0-1.0", "attribution": "iBoard test fixture (synthetic Hinglish phrases, authored for this repo)"}]}

@@ -1,0 +1,17 @@
+{
+  "authoredClusters": 438,
+  "authoredNgrams": 1483,
+  "authoredUnigrams": 556,
+  "clustersWithVariants": 18018,
+  "nativeWords": 31531,
+  "ngrams": 441651,
+  "options": {
+    "minBigram": 6,
+    "minFreq": 3,
+    "minTrigram": 6,
+    "phraseScale": 150,
+    "topNatives": 40000
+  },
+  "sentences": 600000,
+  "spellings": 55997
+}
