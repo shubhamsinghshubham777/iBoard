@@ -4,7 +4,7 @@
   "authoredUnigrams": 556,
   "clustersWithVariants": 18018,
   "nativeWords": 31531,
-  "ngrams": 441651,
+  "ngrams": 441663,
   "options": {
     "minBigram": 6,
     "minFreq": 3,
@@ -13,5 +13,5 @@
     "topNatives": 40000
   },
   "sentences": 600000,
-  "spellings": 55997
+  "spellings": 55999
 }

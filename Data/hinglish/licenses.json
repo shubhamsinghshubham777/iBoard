@@ -23,7 +23,7 @@
       "attribution" : "Same sources as hinglish-derived-unigrams",
       "id" : "hinglish-derived-ngrams",
       "kind" : "ngram",
-      "sha256" : "54731d7f5fa8cc0a08622eb4317c2ec10be4945aff8791a8b15e67f9fce7a62e",
+      "sha256" : "ee720b033a5c131927db60320b36a9e27ecdbe12e36eca51b3d37b2b26b6f198",
       "spdx" : "CC-BY-SA-4.0",
       "url" : "https://wortschatz.uni-leipzig.de/en/download",
       "version" : "Leipzig hin_news_2019_300K, hin_news_2020_300K"
@@ -32,7 +32,7 @@
       "attribution" : "Romanized from Leipzig Corpora Collection Hindi news 2019/2020 (CC BY 4.0, Goldhahn, Eckart, Quasthoff 2012) frequencies and AI4Bharat Aksharantar Hindi transliteration pairs (CC BY / CC0; rows sourced from Google Dakshina are CC BY-SA 4.0, Roark et al. 2020; Madhani et al. 2022)",
       "id" : "hinglish-derived-unigrams",
       "kind" : "unigram",
-      "sha256" : "e53b1e74e67f2bd689dec6dd084bb8e4b9ab7e418137034f06dda223b7dd5381",
+      "sha256" : "b7a7b8c9eedcf8573aff4f7c06f96d435dc7d22b4566724f30c611d23f6a1dbe",
       "spdx" : "CC-BY-SA-4.0",
       "url" : "https://huggingface.co/datasets/ai4bharat/Aksharantar",
       "version" : "Aksharantar hin.zip 2022; Leipzig hin_news_2019_300K, hin_news_2020_300K"

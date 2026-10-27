@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — Hinglish lexicon: dhanyavaad/dhanyawaad variants
+Owner confirmed contraction swiping feels much better on device. Added `dhanyavaad` and `dhanyawaad` to the धन्यवाद cluster in `Tools/HinglishData/data/common_hinglish.tsv`, rebuilt `Data/hinglish/` with `Tools/HinglishData/build.sh` (diff: a few bytes; lexicon 4,013,360 B). Real traces (402): top-1 89.1 / top-3 98.8, confident-wrong 6 -> 2. Engine `swift test` 260 pass, `scripts/build.sh` and privacy audit OK; full `scripts/test.sh --no-ui` not rerun (data-only change). Remaining real misses: thanks, whats/what's (poor swipes), id vs i'd.
+
 ### 2026-10-27 — M4-04 contraction traces (402 real swipes)
 Owner recorded 201 more swipes (56 contractions; recorder validator had rejected apostrophes, fixed). Scoring now counts the contraction as truth when the prompt is an apostrophe-less spelling that is not a lexicon word (dont -> don't), since the keyboard typing don't is the desired result. Real, all 402: top-1 89.1 / top-3 97.8 (first 201 unchanged at 95.0/98.0; contraction half lower on top-1), train 88.1/97.0, held-out 90.0/98.5, 6 confident-wrong. `contractionPenalty` swept 0/0.25/0.5/1.0 on real data: 0.5 is best, unchanged. Remaining top-3 misses: dhanyavaad x3 (lexicon variant), thanks, whats/what's (rank 34-39, poor swipes), id vs i'd/is (ambiguous). Next: add dhanyavaad variant; consider i'd/id prior. Stays `[~]`.
 

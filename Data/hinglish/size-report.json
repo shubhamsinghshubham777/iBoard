@@ -1,27 +1,27 @@
 {
   "bigrams" : 150006,
-  "bytesPerWord" : 71.3655908242198,
+  "bytesPerWord" : 71.36511549335846,
   "droppedOutOfVocabularyNgrams" : 0,
   "languageModel" : {
-    "bytes" : 2985116,
+    "bytes" : 2985124,
     "sections" : {
       "bigrams" : 1800072,
       "meta" : 8,
       "trigrams" : 960000,
-      "unigramBackoff" : 224940
+      "unigramBackoff" : 224948
     }
   },
   "lexicon" : {
-    "bytes" : 4013244,
+    "bytes" : 4013360,
     "sections" : {
-      "edges" : 1256952,
-      "nodes" : 1885440,
-      "strings" : 420876,
-      "words" : 449880
+      "edges" : 1256984,
+      "nodes" : 1885488,
+      "strings" : 420896,
+      "words" : 449896
     }
   },
-  "totalBytes" : 6998360,
-  "trieNodes" : 157120,
+  "totalBytes" : 6998484,
+  "trieNodes" : 157124,
   "trigrams" : 60000,
-  "words" : 56235
+  "words" : 56237
 }
