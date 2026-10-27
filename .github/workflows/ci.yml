@@ -3,11 +3,63 @@ on:
   push:
     branches: [main]
   pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-test:
+  privacy-audit:
+    # Static tripwire: no logging / network / analytics / stray persistence of typed text (docs/PRIVACY.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/audit-privacy.sh
+
+  swift-packages:
+    # `swift test` in every Packages/* dir and Tools/LexiconBuilder (debug build: timing budgets are report-only, R-11).
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/*/.build
+            Tools/LexiconBuilder/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('Packages/*/Package.swift', 'Tools/LexiconBuilder/Package.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+      - run: scripts/test.sh --packages-only
+
+  swift-release-budgets:
+    # Performance budgets (ROADMAP §6) are enforced only in optimised builds: run the benchmark suites in release.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/IBoardEngine/.build
+            Packages/IBoardEmoji/.build
+          key: spm-release-${{ runner.os }}-${{ hashFiles('Packages/*/Package.swift') }}
+          restore-keys: spm-release-${{ runner.os }}-
+      - name: Engine benchmarks (release, budgets enforced)
+        working-directory: Packages/IBoardEngine
+        run: swift test -c release -Xswiftc -enable-testing --filter Benchmarks
+      - name: Emoji search latency (release)
+        working-directory: Packages/IBoardEmoji
+        run: swift test -c release -Xswiftc -enable-testing --filter searchLatencyP95
+
+  ios-build-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Xcode-resolved SwiftPM packages
+        uses: actions/cache@v4
+        with:
+          path: build/DerivedData/SourcePackages
+          key: xcode-spm-${{ runner.os }}-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}
       - run: brew install xcodegen
       - run: scripts/build.sh
-      - run: scripts/test.sh --no-ui
+      - run: scripts/test.sh --no-ui --xcode-only
