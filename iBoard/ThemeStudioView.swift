@@ -153,22 +153,52 @@ struct ThemeStudioView: View {
     @State private var exporting = false
     @State private var importing = false
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
+    /// Wide windows (iPad, iPhone Duo inner display, Split View) keep the preview beside the editor (M11-06).
     var body: some View {
+        if sizeClass == .regular {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Live preview").font(.headline)
+                    ThemePreviewView(variant: model.variant, appearance: model.appearance, photo: model.previewPhoto)
+                    appearancePicker
+                    previewFooter
+                    Spacer(minLength: 0)
+                }
+                .padding()
+                .frame(minWidth: 320, idealWidth: 420, maxWidth: 480)
+                editor(showPreview: false)
+            }
+        } else {
+            editor(showPreview: true)
+        }
+    }
+
+    private var appearancePicker: some View {
+        Picker("Editing", selection: $model.appearance) {
+            Text("Light").tag(ThemeAppearance.light)
+            Text("Dark").tag(ThemeAppearance.dark)
+        }
+        .pickerStyle(.segmented)
+    }
+
+    @ViewBuilder private var previewFooter: some View {
+        if model.variant.backdrop.kind == .systemMaterial {
+            Text("The real system glass is drawn by iOS inside the keyboard; the preview uses a stand-in.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    private func editor(showPreview: Bool) -> some View {
         Form {
-            Section {
-                ThemePreviewView(variant: model.variant, appearance: model.appearance, photo: model.previewPhoto)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                Picker("Editing", selection: $model.appearance) {
-                    Text("Light").tag(ThemeAppearance.light)
-                    Text("Dark").tag(ThemeAppearance.dark)
-                }
-                .pickerStyle(.segmented)
-            } header: { Text("Live preview") } footer: {
-                if model.variant.backdrop.kind == .systemMaterial {
-                    Text("The real system glass is drawn by iOS inside the keyboard; the preview uses a stand-in.")
-                }
+            if showPreview {
+                Section {
+                    ThemePreviewView(variant: model.variant, appearance: model.appearance, photo: model.previewPhoto)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    appearancePicker
+                } header: { Text("Live preview") } footer: { previewFooter }
             }
 
             Section("Presets") {
