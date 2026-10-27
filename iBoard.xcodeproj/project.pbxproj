@@ -14,6 +14,7 @@
 		27A5947B36DA6FD687606603 /* IBoardSync in Frameworks */ = {isa = PBXBuildFile; productRef = AE9B871F17BDE87D31F5D2D2 /* IBoardSync */; };
 		291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
 		34D04E5D8DEC1E865E4C45C3 /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
+		36BBDAC124F650A1167A6920 /* DevicePerfSoakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C1FBDB96E6E119BD98E0DC3 /* DevicePerfSoakTests.swift */; };
 		487214379D09AB14642893EF /* iBoardKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5F95AF482162ADDE10EE38F /* iBoardKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F4CAB1AD063D828AA750FEF /* IBoardEmoji in Frameworks */ = {isa = PBXBuildFile; productRef = AC2927195535D287CBC0F86C /* IBoardEmoji */; };
 		55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */; };
@@ -42,6 +43,7 @@
 		BD557D3D0C47D09755682163 /* OTPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8842ADAFC09F10311FD66887 /* OTPSetupView.swift */; };
 		C8B8398093194ACC3867C058 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */; };
 		CA048403036AD09EBB58189E /* EmojiHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */; };
+		D179194A9D0E16249D644D4F /* PerfMetricsHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */; };
 		D21F7DCDF18236487C10461E /* AboutViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460B693149FED8759AAD2248 /* AboutViews.swift */; };
 		E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */; };
 		E45E532A680D35E2B3E680BB /* ThemePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1844700032908B476959FE /* ThemePreviewView.swift */; };
@@ -92,22 +94,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +126,7 @@
 		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		29D74A64C1D3FB7BA0CD5D3D /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
 		324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlay.swift; sourceTree = "<group>"; };
+		38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfMetricsHook.swift; sourceTree = "<group>"; };
 		4021068ED546815593C37204 /* DictionaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryStore.swift; sourceTree = "<group>"; };
 		41FF3BA00AC5909C9ABD28E5 /* OTPSelfTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPSelfTest.swift; sourceTree = "<group>"; };
 		460B693149FED8759AAD2248 /* AboutViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViews.swift; sourceTree = "<group>"; };
@@ -137,6 +140,7 @@
 		8842ADAFC09F10311FD66887 /* OTPSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPSetupView.swift; sourceTree = "<group>"; };
 		8A0E463C150FB74CE1E4C489 /* DictionaryTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryTransferView.swift; sourceTree = "<group>"; };
 		8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHost.swift; sourceTree = "<group>"; };
+		8C1FBDB96E6E119BD98E0DC3 /* DevicePerfSoakTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicePerfSoakTests.swift; sourceTree = "<group>"; };
 		90FB5660B13029D53411C374 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTests.swift; sourceTree = "<group>"; };
 		9DD939AC545CBC1667056403 /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
@@ -262,6 +266,7 @@
 		6BDAFBA434AEC18A6DCD4851 /* iBoardUITests */ = {
 			isa = PBXGroup;
 			children = (
+				8C1FBDB96E6E119BD98E0DC3 /* DevicePerfSoakTests.swift */,
 				14EE2E952CC54A57A119B0FA /* iBoardUITests.swift */,
 			);
 			path = iBoardUITests;
@@ -303,6 +308,7 @@
 				6798683345A1E3CBB9BBEB20 /* iBoardKeyboard.entitlements */,
 				A79FA046627E67810DEBBE9E /* Info.plist */,
 				579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */,
+				38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */,
 				ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */,
 			);
 			path = iBoardKeyboard;
@@ -531,6 +537,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				36BBDAC124F650A1167A6920 /* DevicePerfSoakTests.swift in Sources */,
 				55A19C7AB2E6F1CB1FA0F63F /* iBoardUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -553,6 +560,7 @@
 				CA048403036AD09EBB58189E /* EmojiHost.swift in Sources */,
 				B695E57CC3D74AD043134C92 /* EngineHost.swift in Sources */,
 				E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */,
+				D179194A9D0E16249D644D4F /* PerfMetricsHook.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

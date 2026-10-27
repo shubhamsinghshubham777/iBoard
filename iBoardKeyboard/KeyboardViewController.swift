@@ -139,6 +139,9 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        #if DEBUG || IBOARD_PERF
+        PerfMetricsHook.noteAppear()
+        #endif
         settings = SettingsStore().load()
         applySettings()
         theme = themeStore.loadSelected() // Native on any problem (D-07); works without Full Access (P-23)
@@ -218,6 +221,9 @@ final class KeyboardViewController: UIInputViewController {
         h.priority = .required - 1
         h.isActive = true
         heightConstraint = h
+        #if DEBUG || IBOARD_PERF
+        PerfMetricsHook.start()
+        #endif
         #if DEBUG
         debugOverlay = DebugOverlayView.install(in: view)
         debugOverlay?.onToggleIncognito = { [weak self] in self?.toggleIncognito() }
