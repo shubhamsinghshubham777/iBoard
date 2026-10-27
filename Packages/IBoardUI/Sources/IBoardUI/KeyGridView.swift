@@ -41,6 +41,17 @@ public final class KeyGridView: UIView {
         didSet { if showsFlickHints != oldValue, let layout { apply(layout: layout) } }
     }
 
+    /// Hides every key (the emoji panel covers the key area) while the view keeps receiving touches for the strip.
+    public var keysHidden = false {
+        didSet {
+            guard keysHidden != oldValue else { return }
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            for l in keyLayers { l.isHidden = keysHidden }
+            CATransaction.commit()
+        }
+    }
+
     private var tokens = NativeThemeTokens.light
     private var keyLayers: [CALayer] = []
     private var isAction: [Bool] = []
@@ -96,6 +107,7 @@ public final class KeyGridView: UIView {
             l.backgroundColor = isAction[i] ? actionFill : fill
             l.contents = glyphs.image(for: glyphSpec(for: key.identity))
             l.opacity = Self.dimmed(key.identity, returnKeyEnabled) ? 0.4 : 1
+            l.isHidden = keysHidden
         }
         CATransaction.commit()
     }

@@ -64,6 +64,11 @@ final class KeyboardViewController: UIInputViewController {
     private var freshCodes: [StoredCode] = []
     private var chipPlan: [StripChip?] = [nil, nil, nil]
     private var chipTimer: Timer?
+    /// Emoji panel + search (M9-01/M9-02 wired): opened by a long press on the 123 key.
+    private let emoji = EmojiHost()
+    private var emojiPress: DispatchWorkItem?
+    private var emojiPressID = -1
+    private var emojiPressOrigin = CGPoint.zero
     /// Shift + space selection (M5-05): virtual selection while dragging, then the action row; or a real host selection.
     private enum SelectionUI { case none, dragging(VirtualSelection), actions(VirtualSelection), host(HostSelection) }
     private var selectionUI = SelectionUI.none
@@ -125,6 +130,13 @@ final class KeyboardViewController: UIInputViewController {
         handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
         view.addSubview(handle)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
+        emoji.onInsert = { [weak self] text in
+            guard let self else { return }
+            self.coordinator.insertDirect(text)
+            self.feedback()
+            self.scheduleAutoShift()
+        }
+        emoji.onChange = { [weak self] in self?.emojiChanged() }
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
         coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
         coordinator.onInsight = { [weak self] event in
@@ -299,9 +311,10 @@ final class KeyboardViewController: UIInputViewController {
         guard !debugStatusInFlight else { return }
         debugStatusInFlight = true
         let status = engineStatus, mode = personalMode, learner = personalStore
+        let emojiLine = emoji.debugLine
         let chipLine = "chips: codes \(freshCodes.count) consumed \(consumedCodeIDs.count) info \(personalInfo.isEmpty ? "none" : "set")"
         Task { [weak self] in
-            var lines = [status, chipLine]
+            var lines = [status, chipLine, emojiLine]
             if let learner {
                 let st = await learner.store.stats()
                 let learning = await learner.isLearning
@@ -372,6 +385,13 @@ final class KeyboardViewController: UIInputViewController {
     /// The strip shows (highest priority first): the backspace delete preview, chips over suggestions.
     private func renderStrip() {
         if case .deleteWords = dragMode { return } // the delete preview owns the strip until release
+        if let texts = emoji.stripTexts {
+            strip.emphasizedSlots = []
+            strip.bannerText = nil
+            strip.actionTitles = []
+            strip.slotTexts = texts
+            return
+        }
         switch selectionUI {
         case .dragging(let sel):
             strip.actionTitles = []
@@ -397,6 +417,63 @@ final class KeyboardViewController: UIInputViewController {
         }
         strip.emphasizedSlots = emphasized
         strip.slotTexts = texts
+    }
+
+    // MARK: Emoji (M9)
+
+    private var emojiFrame: CGRect {
+        CGRect(x: 0, y: strip.frame.maxY, width: view.bounds.width, height: max(0, view.bounds.height - strip.frame.maxY))
+    }
+
+    private func openEmoji() {
+        guard !emoji.isOpen, strip.frame.height > 0 else { return }
+        machine?.cancelAll { _ in }
+        swipeCapture.cancel()
+        resetArbiter()
+        grid.trail.clear()
+        clearSelection()
+        // The 123 touch-down already switched the layer: back to the letters, which the search uses.
+        if layoutKind != .letters { layoutKind = .letters; lastLayoutKey = nil; relayoutIfNeeded() }
+        grid.clearHighlights()
+        emoji.open(in: view, frame: emojiFrame, interfaceStyle: grid.appearance == .dark ? .dark : .light)
+        view.bringSubviewToFront(strip)
+        view.bringSubviewToFront(handle)
+    }
+
+    private func emojiChanged() {
+        grid.keysHidden = emoji.keysHidden
+        handle.isHidden = emoji.isOpen
+        renderStrip()
+    }
+
+    private func cancelEmojiPress() {
+        emojiPress?.cancel()
+        emojiPress = nil
+        emojiPressID = -1
+    }
+
+    /// Long press on 123 (not on other keys): arms a timer that opens the panel.
+    private func armEmojiPress(id: Int, at point: CGPoint) {
+        guard !emoji.isOpen, let layout = grid.layout, let hit = layout.hit(at: point), hit.keyIndex < layout.keys.count,
+              case .layerSwitch(.numbers) = layout.keys[hit.keyIndex].identity else { return }
+        cancelEmojiPress()
+        emojiPressID = id
+        emojiPressOrigin = point
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.emojiPressID == id else { return }
+                self.cancelEmojiPress()
+                self.openEmoji()
+                self.feedback()
+            }
+        }
+        emojiPress = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45, execute: work)
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        emoji.didReceiveMemoryWarning()
     }
 
     private func showSelectionActions(banner: String) {
@@ -438,6 +515,8 @@ final class KeyboardViewController: UIInputViewController {
         grid.trail.clear()
         coordinator.keyboardWillDisappear()
         selectionUI = .none
+        cancelEmojiPress()
+        emoji.close()
         settleOnDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
@@ -500,6 +579,7 @@ final class KeyboardViewController: UIInputViewController {
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
         strip.frame = layout.stripFrame
+        emoji.updateFrame(emojiFrame)
         coordinator.setLayout(layout)
         startEngineLoad(layout: layout)
         handle.frame = CGRect(x: (size.width - ResizeHandleView.size.width) / 2, y: 0, width: ResizeHandleView.size.width, height: ResizeHandleView.size.height)
@@ -526,6 +606,11 @@ final class KeyboardViewController: UIInputViewController {
                 stripTouchID = nil
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = Int((point.x - strip.frame.minX) / (strip.frame.width / CGFloat(SuggestionStripView.slotCount)))
+                    if emoji.isOpen {
+                        emoji.tapStrip(slot: slot)
+                        feedback()
+                        return
+                    }
                     if strip.isShowingActions {
                         if let i = strip.actionIndex(forLocalX: point.x - strip.frame.minX), let a = SelectionAction(rawValue: i) {
                             performSelectionAction(a)
@@ -547,12 +632,14 @@ final class KeyboardViewController: UIInputViewController {
         case .began:
             perfDown = Perf.begin(.touchDownToHighlight)
             coordinator.trackTouch(id: id, at: point)
+            armEmojiPress(id: id, at: point)
             machine!.touchDown(id: id, at: point, time: time, emit: sink)
-            if let layout = grid.layout {
+            if let layout = grid.layout, !emoji.isOpen {
                 swipeCapture.begin(id: id, at: point, time: time, layout: layout)
                 beginArbiter(id: id, at: point, time: time, layout: layout)
             }
         case .moved:
+            if emojiPressID == id, hypot(point.x - emojiPressOrigin.x, point.y - emojiPressOrigin.y) > 12 { cancelEmojiPress() }
             if arbiterTouchID == id, routeArbiterMove(id: id, to: point, time: time, sink: sink) { break }
             if swipeCapture.tracks(id), let layout = grid.layout {
                 switch swipeCapture.move(id: id, to: point, time: time, layout: layout, allowSwipe: arbiter?.decided == .swipeTyping) {
@@ -571,6 +658,7 @@ final class KeyboardViewController: UIInputViewController {
             coordinator.trackTouch(id: id, at: point)
             machine!.touchMoved(id: id, to: point, emit: sink)
         case .ended:
+            if emojiPressID == id { cancelEmojiPress() }
             if swipeCapture.isSwiping, swipeCapture.tracks(id) {
                 resetArbiter()
                 finishSwipe(id: id, at: point, time: time)
@@ -584,6 +672,7 @@ final class KeyboardViewController: UIInputViewController {
             perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
             coordinator.releaseTouch(id: id)
         case .cancelled:
+            if emojiPressID == id { cancelEmojiPress() }
             if arbiterTouchID == id { cancelDrag() }
             if swipeCapture.tracks(id) {
                 swipeCapture.cancel()
@@ -859,6 +948,15 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Runs inside machine calls: must not touch `machine` (exclusive access).
     private func handle(_ event: KeyEvent) {
+        if emoji.mode == .search {
+            switch event {
+            case .insert(let text): _ = emoji.handleKey(insert: text); feedback(); return
+            case .deleteBackward: _ = emoji.handleDeleteBackward(); feedback(); return
+            case .deleteWord: _ = emoji.handleDeleteWord(); return
+            case .returnKey: _ = emoji.handleReturn(); feedback(); return
+            default: break
+            }
+        }
         switch event {
         case .highlight(let index, let on):
             grid.setHighlighted(index, on)
@@ -898,6 +996,7 @@ final class KeyboardViewController: UIInputViewController {
         case .alternatesEnded(let p):
             handle.isHidden = false
             if let text = strip.end(at: p) {
+                if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)
                 feedback()
                 consumeShiftOnce = true
