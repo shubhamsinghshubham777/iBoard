@@ -19,6 +19,9 @@ public final class SuggestionStripView: UIView {
     /// Slot text (static placeholders until F2 supplies candidates). Ignored while the alternates row shows.
     public var slotTexts: [String] = ["", "", ""] { didSet { relayout() } }
 
+    /// Slots drawn bold (the engine's best reading).
+    public var boldSlots: Set<Int> = [] { didSet { if boldSlots != oldValue { relayout() } } }
+
     /// Slots drawn as a highlighted chip (a prominent one-time code, M6-03).
     public var emphasizedSlots: Set<Int> = [] { didSet { if emphasizedSlots != oldValue { relayout() } } }
 
@@ -98,6 +101,8 @@ public final class SuggestionStripView: UIView {
         bannerLabel.textAlignment = .center
         bannerLabel.font = .systemFont(ofSize: 15)
         bannerLabel.lineBreakMode = .byTruncatingMiddle
+        bannerLabel.adjustsFontSizeToFitWidth = true
+        bannerLabel.minimumScaleFactor = 0.75
         bannerLabel.isHidden = true
         addSubview(bannerLabel)
         for d in dividers { layer.addSublayer(d) }
@@ -186,7 +191,10 @@ public final class SuggestionStripView: UIView {
     }
 
     /// With a banner AND actions the banner takes the left part and the cells share the rest.
-    private func actionsOriginX(_ w: CGFloat) -> CGFloat { bannerText != nil ? w * 0.36 : 0 }
+    private func actionsOriginX(_ w: CGFloat) -> CGFloat { bannerText != nil ? w * bannerShare : 0 }
+
+    /// Share of the strip the banner takes when an action row sits beside it (0.36 for selections, more for tips).
+    public var bannerShare: CGFloat = 0.36 { didSet { if bannerShare != oldValue { relayout() } } }
 
     private func layoutOverlay(w: CGFloat, h: CGFloat) {
         let label = UIColor(cgColor: tokens.keyLabel.cgColor)
@@ -229,11 +237,17 @@ public final class SuggestionStripView: UIView {
         let rects = slotRects(width: w, height: h)
         for (i, l) in slotLabels.enumerated() {
             l.frame = rects[i]
-            l.text = i < slotTexts.count ? slotTexts[i] : ""
+            let newText = i < slotTexts.count ? slotTexts[i] : ""
+            if l.text != newText, !UIAccessibility.isReduceMotionEnabled, alt == nil, !overlay, l.window != nil {
+                // New words fade in instead of snapping (60 ms, only when something is already on screen).
+                let t = CATransition(); t.type = .fade; t.duration = 0.06
+                l.layer.add(t, forKey: "iboard.slotFade")
+            }
+            l.text = newText
             l.isHidden = alt != nil || overlay
             let on = alt == nil && !overlay && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
             l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
-            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : skin.fontWeight.uiWeight)
+            l.font = .systemFont(ofSize: 16, weight: on || boldSlots.contains(i) ? .semibold : skin.fontWeight.uiWeight)
             let chip = chipLayers[i]
             chip.isHidden = skin.stripKind != .chips || alt != nil || overlay || on || (l.text ?? "").isEmpty
             chip.frame = l.frame.insetBy(dx: 3, dy: 5)
@@ -246,7 +260,9 @@ public final class SuggestionStripView: UIView {
         for (i, d) in dividers.enumerated() {
             // No divider across the fold band (between the two runs).
             d.frame = CGRect(x: rects[i].maxX - 0.25, y: h * 0.25, width: 0.5, height: h * 0.5)
-            d.isHidden = alt != nil || overlay || (segments.count == 2 && i == 1)
+            // Separators only between two filled slots (an empty strip stays clean).
+            let filled = i + 1 < slotTexts.count && !slotTexts[i].isEmpty && !slotTexts[i + 1].isEmpty
+            d.isHidden = alt != nil || overlay || (segments.count == 2 && i == 1) || !filled
         }
         guard let alt else { highlightLayer.isHidden = true; return }
         for (i, l) in altLabels.enumerated() where i < alt.options.count {

@@ -35,6 +35,9 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     public var duoSplitLandscape: Bool
     /// Emoji suggestions on the strip (F8).
     public var emojiSuggestions: Bool
+    /// Comma and period keys beside the space bar (hold either for quick punctuation). `(agent)` default on; the
+    /// Native iPhone keyboard has none, so it can be switched off in the app.
+    public var punctuationKeys: Bool
 
     public init(
         version: Int = IBoardSettings.currentVersion, haptics: Bool = true, keyClickSound: Bool = false,
@@ -42,7 +45,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         flickHints: Bool = false, autocorrect: AutocorrectLevel = .conservative, doubleSpacePeriod: Bool = true,
         smartPunctuation: Bool = true, swipeTyping: Bool = true, incognitoByDefault: Bool = false,
         spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
-        duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true
+        duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true
     ) {
         self.version = version
         self.haptics = haptics
@@ -60,6 +63,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.duoSplitPortrait = duoSplitPortrait
         self.duoSplitLandscape = duoSplitLandscape
         self.emojiSuggestions = emojiSuggestions
+        self.punctuationKeys = punctuationKeys
     }
 
     /// Stored height multiplier for a key, clamped; 1 when none.
@@ -75,7 +79,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case version, haptics, keyClickSound, numberRow, heightScales, hapticIntensity, flickHints, autocorrect
         case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
-        case duoSplitPortrait, duoSplitLandscape, emojiSuggestions
+        case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys
     }
 
     /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
@@ -104,6 +108,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.duoSplitPortrait = try c.decodeIfPresent(Bool.self, forKey: .duoSplitPortrait) ?? d.duoSplitPortrait
         self.duoSplitLandscape = try c.decodeIfPresent(Bool.self, forKey: .duoSplitLandscape) ?? d.duoSplitLandscape
         self.emojiSuggestions = try c.decodeIfPresent(Bool.self, forKey: .emojiSuggestions) ?? d.emojiSuggestions
+        self.punctuationKeys = try c.decodeIfPresent(Bool.self, forKey: .punctuationKeys) ?? d.punctuationKeys
     }
 }
 

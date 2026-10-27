@@ -108,6 +108,7 @@ public final class KeyGridView: UIView {
             l.opacity = Self.dimmed(key.identity, returnKeyEnabled) ? 0.4 : 1
             l.isHidden = keysHidden
         }
+        if shift == .capsLock, let i = new.keys.firstIndex(where: { $0.identity == .shift }) { updateCapsBar(on: keyLayers[i], locked: true) }
         CATransaction.commit()
     }
 
@@ -132,6 +133,7 @@ public final class KeyGridView: UIView {
     /// Change shift without touching geometry: only the letter and shift glyphs are swapped.
     public func setShift(_ state: ShiftState) {
         guard state != shift, let layout else { shift = state; return }
+        let old = shift
         shift = state
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -141,6 +143,48 @@ public final class KeyGridView: UIView {
             case .shift:
                 keyLayers[i].contents = glyphs.image(for: glyphSpec(for: key.identity))
                 keyLayers[i].backgroundColor = color(forKey: i, pressed: highlighted[i])
+                updateCapsBar(on: keyLayers[i], locked: state == .capsLock)
+                if state == .once, old == .off, !UIAccessibility.isReduceMotionEnabled {
+                    // One small pulse when shift switches on by itself (sentence start).
+                    let a = CAKeyframeAnimation(keyPath: "transform.scale")
+                    a.values = [1, 1.07, 1]; a.keyTimes = [0, 0.4, 1]; a.duration = 0.22
+                    keyLayers[i].add(a, forKey: "iboard.shiftPulse")
+                }
+            default: break
+            }
+        }
+        CATransaction.commit()
+    }
+
+    /// Caps lock reads from the glyph AND an underline bar under it.
+    private func updateCapsBar(on key: CALayer, locked: Bool) {
+        if locked {
+            capsBar.backgroundColor = tokens.keyLabel.cgColor
+            capsBar.cornerRadius = 1.25
+            capsBar.frame = CGRect(x: key.bounds.midX - 8, y: key.bounds.height - 9, width: 16, height: 2.5)
+            if capsBar.superlayer !== key { key.addSublayer(capsBar) }
+        } else {
+            capsBar.removeFromSuperlayer()
+        }
+    }
+
+    /// A pressed key shrinks a hair (0.96) on top of the colour change: the press reads even under a thumb.
+    private static let pressedTransform = CATransform3DMakeScale(0.96, 0.96, 1)
+
+    private let capsBar = CALayer()
+    private var spaceHintShown = false
+
+    /// Spacebar cursor drag: dim the letters and say what the space bar is doing.
+    public func setCursorMode(_ on: Bool) {
+        guard on != spaceHintShown, let layout else { return }
+        spaceHintShown = on
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (i, key) in layout.keys.enumerated() {
+            switch key.identity {
+            case .letter: keyLayers[i].opacity = on ? 0.3 : 1
+            case .space:
+                keyLayers[i].contents = on ? glyphs.image(for: .text("‹ cursor ›", .function, onAction: false)) : nil
             default: break
             }
         }
@@ -154,6 +198,7 @@ public final class KeyGridView: UIView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         keyLayers[keyIndex].backgroundColor = color(forKey: keyIndex, pressed: on)
+        keyLayers[keyIndex].transform = on ? Self.pressedTransform : CATransform3DIdentity
         CATransaction.commit()
     }
 
@@ -164,6 +209,7 @@ public final class KeyGridView: UIView {
         for i in 0..<highlighted.count where highlighted[i] {
             highlighted[i] = false
             keyLayers[i].backgroundColor = color(forKey: i, pressed: false)
+            keyLayers[i].transform = CATransform3DIdentity
         }
         CATransaction.commit()
     }

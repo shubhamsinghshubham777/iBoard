@@ -28,7 +28,8 @@ public enum KeyAlternates {
         "!": ["¡"],
         "0": ["°"],
         "&": ["§"],
-        ".": ["…"],
+        ".": ["…", "!", "?", ",", ";", ":"],
+        ",": ["!", "?", ";", ":", "-", "(", ")", "…"],
     ]
     private static let suffixes: [String] = [".com", ".in", ".org", ".net", ".edu", ".co"]
 

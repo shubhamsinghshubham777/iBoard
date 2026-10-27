@@ -140,3 +140,22 @@ Verified on an iPhone 12 / iOS 27.0 simulator (axe) unless stated; nothing re-te
 10. **Theme polish**: accent-coloured return key by context (send/search/go), subtle gradient on key tiles, per-app themes.
 11. **Haptics**: distinct light/medium ticks for letters / delete / space; a rising tick pattern while deleting words.
 12. **Onboarding in-keyboard**: first-run coach marks for the gestures (swipe, space drag, backspace swipe), dismissible and never shown again.
+
+---
+# Round 3: UX proposals built (branch `feat/ux-polish`, 2026-10-27)
+Owner asked for all proposals except 5 (live swipe word preview) and 8 (one-handed mode). Simulator-verified (iPhone 12, iOS 27.0, axe) unless noted.
+
+| # | Proposal | Status |
+|---|---|---|
+| 1 | Strip polish | Best word bold; new words fade in (60 ms, off under Reduce Motion); separators only between two filled slots. NOT done: underline on the autocorrect target. |
+| 2 | Key press feedback | Pressed key shrinks to 0.96 on top of the colour change. Not measured against the 1-frame budget on device. |
+| 3 | Caps lock cue | Underline bar under the shift glyph + blue tile (seen), heavy haptic tick on lock, one small pulse when shift turns on by itself. Haptics NOT TESTED (simulator has none). |
+| 4 | Spacebar cursor hint | While dragging the space bar the letters dim to 30% and the space bar reads "‹ cursor ›" (seen). |
+| 6 | Undo autocorrect chip | After a correction the first strip slot shows "↩︎ <typed word>"; one tap restores it (same path and learning signal as backspace). Seen: `teh`→`the`, tap → `teh`. |
+| 7 | Quick punctuation | New setting "Comma and period keys" (default ON, `(agent)` choice; off = Native look). Hold comma or period for `! ? ; : - ( ) …` in the strip. Key layout seen; the long-press row itself NOT exercised. |
+| 9 | Emoji | The "Recently used" section already leads the panel. NOT built: search focus on first keypress (the keys are hidden while the panel is open), GIF/stickers. |
+| 10 | Theme polish | The accent return key by context already exists (Native). NOT built: per-key gradients (one extra layer per key would cost memory/time in the touch path; budget first) and per-app themes. |
+| 11 | Haptics | Letters light, space soft, delete rigid, word delete rising 0.5→1, caps lock heavy, actions medium; scaled by the strength setting. NOT TESTED on device (needs Full Access). |
+| 12 | In-keyboard coach marks | Four short tips in the strip with Next and Skip (also Done on the last); skipping or finishing is remembered (`iBoard.coach.step`, extension-local) and never shown again. The app's guided setup already has a Skip button (top right). Seen: tips advance, Skip ends them. |
+
+Notes: tapping the strip's rightmost few points (x ≥ ~360 pt) in the simulator missed the Skip cell once; Skip worked at x = 345. Not investigated further. To replay the tips: delete `iBoard.coach.step` from the keyboard's defaults (reinstall).

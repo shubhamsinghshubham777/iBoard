@@ -40,6 +40,7 @@ struct SettingsView: View {
             }
             Section("Layout") {
                 Toggle("Number row", isOn: $settings.numberRow)
+                Toggle("Comma and period keys", isOn: $settings.punctuationKeys)
                 Toggle("Show flick hints on keys", isOn: $settings.flickHints)
             }
             Section {

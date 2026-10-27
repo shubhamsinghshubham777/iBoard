@@ -510,6 +510,15 @@ public final class TypingCoordinator {
         requestPrediction(afterInserting: String(lc.dropLast(deleteCount)) + insertText)
     }
 
+    /// The word the user typed, while an autocorrection just applied can still be undone by one backspace.
+    public var undoableAutocorrection: String? { autocorrectState.lastCorrection?.original }
+
+    /// Reverts the last autocorrection (same as pressing backspace right after it).
+    public func undoAutocorrection() {
+        guard undoableAutocorrection != nil else { return }
+        deleteBackward()
+    }
+
     public func deleteBackward() {
         if deferWhileSwiping({ $0.deleteBackward() }) { return }
         if let swiped = lastSwipe {

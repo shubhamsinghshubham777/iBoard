@@ -31,7 +31,6 @@ final class KeyboardViewController: UIInputViewController {
     private var repeatLink: CADisplayLink?
     private var hapticsEnabled: Bool { SettingsPolicy.hapticsActive(settings: settings, hasFullAccess: hasFullAccess) }
     private lazy var input = InputController(proxy: ProxyAdapter(controller: self))
-    private var haptic: UIImpactFeedbackGenerator?
     private var autoShiftPending = false
     private lazy var coordinator = TypingCoordinator(input: input)
     private var engineLoadStarted = false
@@ -66,7 +65,16 @@ final class KeyboardViewController: UIInputViewController {
     private var markedDeleteEnabled: Bool { deletePreviewStyle != "strip" }
     private var gestureKeyIndex = -1
     private enum DragMode { case none, cursor(SpacebarCursorDrag), selecting(SpacebarCursorDrag), deleteWords(BackspaceSwipePlan) }
-    private var dragMode = DragMode.none
+    private var dragMode = DragMode.none {
+        didSet {
+            switch dragMode {
+            case .cursor, .selecting: grid.setCursorMode(true)
+            default: grid.setCursorMode(false)
+            }
+        }
+    }
+    /// First-run gesture tips in the strip (Next / Skip); remembered in the extension's own defaults.
+    private var coach = CoachStore.load()
     private var lastStrip = StripContent.empty
     // Strip chips (M6-03 code chip, M6-06 personal info). Codes are read-only from the App Group (works without Full
     // Access, P-23); inserted ids are remembered in memory only, to emulate "clear after insert" because the keyboard
@@ -272,7 +280,7 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.autocorrectionEnabled = policy.enabled
         coordinator.autocorrectSettings.aggressiveness = policy.aggressiveness
         // Haptic generator is rebuilt lazily when the strength changed.
-        haptic = nil
+        hapticGenerators = [:]
     }
 
     private var incognitoEnabled: Bool {
@@ -459,8 +467,24 @@ final class KeyboardViewController: UIInputViewController {
         case .none:
             strip.bannerText = nil
             strip.actionTitles = []
+            strip.bannerShare = 0.36
+        }
+        if !coach.isDone, let tip = coach.text {
+            strip.emphasizedSlots = []
+            strip.boldSlots = []
+            strip.bannerShare = 0.72
+            strip.bannerText = tip
+            strip.actionTitles = coach.actionTitles
+            strip.actionEnabled = []
+            return
         }
         var texts = lastStrip.texts
+        var bold = Set<Int>()
+        for (i, slot) in lastStrip.slots.enumerated() where i < texts.count && slot?.role == .best { bold.insert(i) }
+        // Right after an autocorrection the first slot offers to undo it (one tap = backspace right after it).
+        let undo = chipPlan[0] == nil ? coordinator.undoableAutocorrection : nil
+        if let undo, !texts.isEmpty { texts[0] = "↩\u{FE0E} \(undo)"; bold.remove(0) }
+        strip.boldSlots = bold
         var emphasized = Set<Int>()
         for (i, chip) in chipPlan.enumerated() where i < texts.count {
             guard let chip else { continue }
@@ -605,6 +629,7 @@ final class KeyboardViewController: UIInputViewController {
         ls.numberRow = settings.numberRow || ls.numberRow
         ls.emojiKey = true
         ls.compact = true
+        ls.punctuationKeys = settings.punctuationKeys
         // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
         ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {
@@ -694,6 +719,15 @@ final class KeyboardViewController: UIInputViewController {
                         feedback()
                         return
                     }
+                    if !coach.isDone, strip.isShowingActions {
+                        if let i = strip.actionIndex(forLocalX: point.x - strip.frame.minX) {
+                            coach.perform(action: i)
+                            CoachStore.save(coach)
+                            renderStrip()
+                            feedback(.action)
+                        }
+                        return
+                    }
                     if strip.isShowingActions {
                         if let i = strip.actionIndex(forLocalX: point.x - strip.frame.minX), let a = SelectionAction(rawValue: i) {
                             performSelectionAction(a)
@@ -702,6 +736,8 @@ final class KeyboardViewController: UIInputViewController {
                     }
                     if slot >= 0, slot < chipPlan.count, let chip = chipPlan[slot] {
                         insertChip(chip)
+                    } else if slot == 0, coordinator.undoableAutocorrection != nil {
+                        coordinator.undoAutocorrection()
                     } else {
                         coordinator.tapSlot(slot)
                     }
@@ -1062,14 +1098,18 @@ final class KeyboardViewController: UIInputViewController {
         case .insert(let text):
             clearSelection()
             coordinator.insert(text)
-            feedback()
+            feedback(text == " " ? .space : .letter)
             scheduleAutoShift()
         case .deleteBackward:
             clearSelection()
             coordinator.deleteBackward()
-            feedback()
+            feedback(.delete)
             scheduleAutoShift()
         case .deleteWord:
+            let t = ProcessInfo.processInfo.systemUptime
+            deleteWordRun = t - lastDeleteWordAt < 0.6 ? deleteWordRun + 1 : 0
+            lastDeleteWordAt = t
+            feedback(.deleteWord(run: deleteWordRun))
             coordinator.deleteWord()
             scheduleAutoShift()
         case .returnKey:
@@ -1077,13 +1117,14 @@ final class KeyboardViewController: UIInputViewController {
             if coordinator.returnKey() { feedback(); scheduleAutoShift() }
         case .openEmoji:
             // Not inside the machine call that emitted this (openEmoji cancels the machine's touches): next turn.
-            feedback()
+            feedback(.action)
             DispatchQueue.main.async { [weak self] in self?.openEmoji() }
         case .advanceKeyboard:
             advanceToNextInputMode()
         case .shiftChanged(let state):
             shiftManual = state != .off && !applyingAutoShift
             grid.setShift(state)
+            if state == .capsLock { feedback(.lock) }
         case .alternatesBegan(let keyIndex):
             swipeCapture.cancel() // a long press and a swipe are exclusive (F5)
             resetArbiter()
@@ -1117,13 +1158,32 @@ final class KeyboardViewController: UIInputViewController {
         return false
     }
 
-    /// Key click (needs `ClickInputView`, works without Full Access: P-23) and haptic (Full Access only).
-    private func feedback() {
+    private var hapticGenerators: [HapticKind.Weight: UIImpactFeedbackGenerator] = [:]
+    private var deleteWordRun = 0
+    private var lastDeleteWordAt: TimeInterval = 0
+
+    /// Key click (needs `ClickInputView`, works without Full Access: P-23) and haptic (Full Access only). Letters, space,
+    /// delete, word delete (rising), caps lock and actions each get their own weight.
+    private func feedback(_ kind: HapticKind = .letter) {
         if settings.keyClickSound { UIDevice.current.playInputClick() }
-        if hapticsEnabled {
-            if haptic == nil { haptic = UIImpactFeedbackGenerator(style: SettingsPolicy.impactStyle(for: settings.hapticIntensity)) }
-            haptic?.impactOccurred()
+        guard hapticsEnabled else { return }
+        let style: UIImpactFeedbackGenerator.FeedbackStyle
+        switch kind.weight {
+        case .light: style = .light
+        case .medium: style = .medium
+        case .rigid: style = .rigid
+        case .soft: style = .soft
+        case .heavy: style = .heavy
         }
+        let g = hapticGenerators[kind.weight] ?? UIImpactFeedbackGenerator(style: style)
+        hapticGenerators[kind.weight] = g
+        let base: Double
+        switch settings.hapticIntensity {
+        case .light: base = 0.6
+        case .medium: base = 0.85
+        case .strong: base = 1
+        }
+        g.impactOccurred(intensity: CGFloat(base * kind.intensity))
     }
 
     private func applyDeferredLayerChange() {
