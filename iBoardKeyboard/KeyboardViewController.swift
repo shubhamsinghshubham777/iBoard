@@ -151,6 +151,7 @@ final class KeyboardViewController: UIInputViewController {
         theme = themeStore.loadSelected() // Native on any problem (D-07); works without Full Access (P-23)
         appliedSkin = nil
         refreshAppearanceAndTraits()
+        applyHeightBeforeAppearing()
         applyFieldConfig(forceFieldChange: true)
         DispatchQueue.main.async { [weak self] in self?.coordinator.resync() } // never come back to an empty strip
         applyAppCommands()
@@ -232,7 +233,7 @@ final class KeyboardViewController: UIInputViewController {
             self.refreshAppearanceAndTraits()
         }
 
-        let h = view.heightAnchor.constraint(equalToConstant: 260)
+        let h = view.heightAnchor.constraint(equalToConstant: LayoutMetrics.phonePortraitDefaultHeight)
         h.priority = .required - 1
         h.isActive = true
         heightConstraint = h
@@ -244,6 +245,67 @@ final class KeyboardViewController: UIInputViewController {
         debugOverlay?.onToggleIncognito = { [weak self] in self?.toggleIncognito() }
         debugOverlay?.refreshHook = { [weak self] in self?.refreshDebugStatus() }
         #endif
+    }
+
+    // MARK: Height (the host reads our height constraint once while presenting; a late change can take seconds to land)
+
+    private static let heightCacheKey = "iBoard.heightCache"
+
+    private func heightCacheKey(width: CGFloat) -> String {
+        "\(Int(width.rounded()))|\(currentTraits())|\(layoutKind)|\(currentLayoutSettings())"
+    }
+
+    /// Sets the final height before the first frame: the cached value for this width/trait/settings combination from the
+    /// last run (exact), else a direct computation. Without this the constraint starts at a placeholder and the real
+    /// height is only applied from the first layout pass, after the host has already presented a shorter keyboard.
+    private func applyHeightBeforeAppearing() {
+        let width = view.bounds.width
+        guard width > 0, let constraint = heightConstraint else { return }
+        let cache = UserDefaults.standard.dictionary(forKey: Self.heightCacheKey) as? [String: Double] ?? [:]
+        let want: CGFloat
+        if let cached = cache[heightCacheKey(width: width)] {
+            want = CGFloat(cached)
+        } else {
+            let safe = LayoutInsets(top: 0, left: view.safeAreaInsets.left, bottom: view.safeAreaInsets.bottom, right: view.safeAreaInsets.right)
+            want = LayoutEngine.preferredHeight(width: width, safeArea: safe, traits: currentTraits(), kind: layoutKind, settings: currentLayoutSettings())
+        }
+        if abs(constraint.constant - want) > 0.5 { constraint.constant = want }
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+    }
+
+    private func rememberHeight(_ height: CGFloat, width: CGFloat) {
+        var cache = UserDefaults.standard.dictionary(forKey: Self.heightCacheKey) as? [String: Double] ?? [:]
+        let key = heightCacheKey(width: width)
+        guard cache[key] != Double(height) else { return }
+        if cache.count > 24 { cache.removeAll() }
+        cache[key] = Double(height)
+        UserDefaults.standard.set(cache, forKey: Self.heightCacheKey)
+    }
+
+    /// If the host presented us shorter than the constraint asks (the failure seen on device), nudge it to re-read the
+    /// height: re-activate the constraint and invalidate the sizing of our view and the host's container.
+    private func verifyHeightAfterAppearing(attempt: Int = 0) {
+        guard let constraint = heightConstraint, view.window != nil else { return }
+        if abs(view.bounds.height - constraint.constant) > 1 {
+            constraint.isActive = false
+            constraint.isActive = true
+            view.invalidateIntrinsicContentSize()
+            view.superview?.setNeedsLayout()
+            view.superview?.layoutIfNeeded()
+            view.setNeedsUpdateConstraints()
+            view.setNeedsLayout()
+        }
+        guard attempt < 6 else { return }
+        let delays = [0.05, 0.15, 0.3, 0.6, 1.0, 2.0]
+        DispatchQueue.main.asyncAfter(deadline: .now() + delays[attempt]) { [weak self] in
+            self?.verifyHeightAfterAppearing(attempt: attempt + 1)
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        verifyHeightAfterAppearing()
     }
 
     override func viewDidLayoutSubviews() {
@@ -1109,6 +1171,7 @@ final class KeyboardViewController: UIInputViewController {
             want = DuoGeometry.fillToFoldHeight(innerLandscapeHeight: min(screen.width, screen.height))
         }
         if abs((heightConstraint?.constant ?? 0) - want) > 0.5 { heightConstraint?.constant = want }
+        rememberHeight(want, width: size.width)
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
         strip.frame = layout.stripFrame

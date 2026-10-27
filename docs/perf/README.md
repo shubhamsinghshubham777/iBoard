@@ -2,7 +2,7 @@
 
 Hook: `iBoardKeyboard/PerfMetricsHook.swift`, compiled only with `DEBUG` or `-DIBOARD_PERF` (Release stays clean).
 Every 0.5 s it samples `phys_footprint` and every 2 s writes counts and numbers only (never text) to
-`Library/Caches/perf-metrics.json` in the extension container: `peakMB`, `currentMB`, `appearCount`, `memoryWarnings`,
+`Library/Caches/perf/perf-<processStart>.json` (one file per keyboard process, newest 12 kept) in the extension container: `peakMB`, `currentMB`, `appearCount`, `memoryWarnings`,
 Perf p50/p95 per metric, and a footprint timeline `[unixSeconds, MB]`.
 
 **Quickest:** `scripts/device-perf.sh run` (phone unlocked and plugged in): builds the Release + hook build, installs it, prints
