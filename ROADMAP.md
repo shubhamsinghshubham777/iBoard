@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — KEYBOARD3 + DEVICE merged
+M8-04 landscape side punctuation columns (`landscapeSideKeys`, default on; no app toggle yet), clipboard panel via emoji-key long-press, hint-symbol overlap fix, controller robustness fixes (pre-layout touch crash path, memory-warning drops). DEVICE: flag-gated `PerfMetricsHook` (DEBUG/-DIBOARD_PERF only), `scripts/device-perf.sh`, `docs/perf/README.md`; Release build installed on the iPhone 12 but the keyboard never appeared in the XCUITest so M1-09/M13-02 have NO numbers yet (keyboard binary 4.7 MB static). Finding: extension links CloudKit/IBoardSync via IBoardEngine→PersonalSyncAdapter (1132 sync symbols) — being decoupled. All `[~]`; device pass needed. Build + `scripts/test.sh --no-ui` + privacy audit pass.
+
 ### 2026-10-27 — APP3 merged (release material)
 Original app icon (light/dark/tinted), file-timestamp reason C617.1 in the app privacy manifest, `docs/site/` (home/privacy/support, GitHub Pages ready), `docs/APP_STORE_LISTING.md`, About licences, CHANGELOG, version 1.0.0. Build + privacy audit pass; not validated by an App Store Connect upload. Owner needed: review-notes contact line, enable GitHub Pages, screenshots, confirm repo URL, iCloud container/entitlement. See docs/agent-reports/app3.md and docs/RELEASE_CHECKLIST.md.
 
