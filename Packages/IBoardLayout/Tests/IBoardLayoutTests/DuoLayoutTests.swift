@@ -46,7 +46,7 @@ struct DuoOuterTests {
 
     @Test("phones are unaffected by the Duo tuning")
     func phoneUnchanged() {
-        #expect(LayoutEngine.preferredHeight(width: 390, traits: LayoutTraits(), kind: .letters) == 295)
+        #expect(LayoutEngine.preferredHeight(width: 390, traits: LayoutTraits(), kind: .letters) == 270)
     }
 }
 
