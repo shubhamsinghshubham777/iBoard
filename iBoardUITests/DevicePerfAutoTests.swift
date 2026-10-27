@@ -8,10 +8,10 @@ import ObjectiveC
 final class DevicePerfAutoTests: XCTestCase {
     var notes: XCUIApplication!
     // iPhone 12 (390x844 pt) iBoard geometry, measured from device screenshots (docs/perf/evidence).
-    let rowY: [CGFloat] = [580, 634, 688]
+    let rowY: [CGFloat] = [571, 628, 684.5]
     let rowX0: [CGFloat] = [21, 40.5, 78.5]
     let pitch: CGFloat = 38.6
-    let spaceY: CGFloat = 743
+    let spaceY: CGFloat = 741.5
     let rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
 
     func p(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
@@ -84,6 +84,18 @@ final class DevicePerfAutoTests: XCTestCase {
         return true
     }
 
+    /// True when the Q key's pixel (full-height 270 pt layout position) shows the key colour.
+    func fullHeight() -> Bool {
+        guard let cg = XCUIScreen.main.screenshot().image.cgImage else { return false }
+        let sc = CGFloat(cg.width) / 390
+        var px = [UInt8](repeating: 0, count: 4)
+        guard let ctx = CGContext(data: &px, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let crop = cg.cropping(to: CGRect(x: 11 * sc, y: 568 * sc, width: 1, height: 1)) else { return false }
+        ctx.draw(crop, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        return Int(px[0]) + Int(px[1]) + Int(px[2]) > 3 * 40
+    }
+
     func openScratchNote() {
         notes = XCUIApplication(bundleIdentifier: "com.apple.mobilenotes")
         notes.launch()
@@ -96,7 +108,7 @@ final class DevicePerfAutoTests: XCTestCase {
         sleep(2)
     }
     func deleteScratchNote() {
-        // Done (checkmark) then "..." menu > Delete.
+        // Done, then "..." > Delete; then back to the list and remove any leftover scratch notes (title starts "The quick").
         p(352, 69).tap(); sleep(1)
         let more = notes.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'More'")).firstMatch
         if more.waitForExistence(timeout: 3) { more.tap(); sleep(1)
@@ -105,7 +117,21 @@ final class DevicePerfAutoTests: XCTestCase {
             let confirm = notes.buttons["Delete"].firstMatch
             if confirm.waitForExistence(timeout: 2) { confirm.tap() }
         }
-        sleep(1); shot("after-delete")
+        sleep(1)
+        let back = notes.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Notes' OR label CONTAINS[c] 'Back'")).firstMatch
+        if back.exists { back.tap() } else { p(38, 69).tap() }
+        sleep(1)
+        func scratch() -> NSPredicate { NSPredicate(format: "label BEGINSWITH 'The quick'") }
+        for _ in 0..<5 {
+            let cell = notes.cells.matching(scratch()).firstMatch
+            guard cell.exists else { break }
+            cell.swipeLeft(); sleep(1)
+            let d = notes.buttons["Delete"].firstMatch
+            if d.waitForExistence(timeout: 2) { d.tap() } else { break }
+            sleep(1)
+        }
+        print("IBOARD_SCRATCH_LEFT", notes.cells.matching(scratch()).count)
+        shot("after-delete")
     }
 
     @MainActor
@@ -135,12 +161,20 @@ final class DevicePerfAutoTests: XCTestCase {
             for _ in 0..<6 { p(195, 700).press(forDuration: 0.05, thenDragTo: p(195, 560)) }
             sleep(10); shot("4-emoji-scrolled")
             // close: tap the ABC / letters key at bottom-left (see screenshot)
-            p(42, 804).tap(); sleep(1); shot("5-emoji-closed")
+            p(27, 748).tap(); sleep(1); shot("5-emoji-closed")   // "ABC" key of the emoji panel
         }
         if phases.contains("reshow") {
-            for _ in 0..<20 {
+            for i in 1...20 {
                 p(352, 69).tap(); usleep(900_000)     // Done: keyboard dismisses
-                p(195, 300).tap(); usleep(1_200_000)  // tap back into the note
+                let t0 = Date()
+                p(195, 300).tap()                     // tap back into the note
+                var ms = -1.0
+                while Date().timeIntervalSince(t0) < 4 {
+                    if fullHeight() { ms = Date().timeIntervalSince(t0) * 1000; break }
+                }
+                print("IBOARD_RESHOW", i, ms < 0 ? "NOT_FULL_HEIGHT_WITHIN_4S" : String(format: "full height after %.0f ms (tap + screenshot polling, +-150 ms)", ms))
+                if [1, 10, 20].contains(i) { shot("reshow-\(i)") }
+                usleep(500_000)
             }
             shot("6-reshown")
         }
@@ -151,7 +185,7 @@ final class DevicePerfAutoTests: XCTestCase {
             let letters = Array("abcdefghijklmnopqrstuvwxyz ")
             while Date() < end {
                 if n % 60 == 59 { _ = swipeWord(["hello", "world", "people", "tomorrow"][Int(rnd() * 4) % 4]) }
-                else if n % 50 == 49 { p(352, 688).tap() }   // backspace
+                else if n % 50 == 49 { p(352, 684.5).tap() }   // backspace
                 else { tapKey(letters[Int(rnd() * 27) % 27]) }
                 n += 1
             }

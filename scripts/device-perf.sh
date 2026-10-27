@@ -17,13 +17,14 @@ case "${1:-}" in
     rm -rf "$OUT/perf"; mkdir -p "$OUT"
     xcrun devicectl device copy from --device "$DEVICE" --domain-type appDataContainer \
       --domain-identifier app.iBoard.keyboard --source Library/Caches/perf --destination "$OUT/perf"
-    python3 -I - "$OUT/perf" <<'PY'
+    python3 -I - "$OUT/perf" "${PERF_SINCE:-0}" <<'PY'
 import json,sys,glob,time
+since=float(sys.argv[2])   # ignore keyboard processes that stopped before this unix time (older runs left on the phone)
 runs=[]
 for f in sorted(glob.glob(sys.argv[1]+"/**/perf-*.json",recursive=True)):
     try: d=json.load(open(f))
     except Exception: continue
-    runs.append(d)
+    if d["samples"][-1][0] >= since: runs.append(d)
 if not runs: print("NO PERF FILES on the device (was the perf build installed and the keyboard used?)"); sys.exit(1)
 def n(d): return sum(v["count"] for v in d["metrics"].values())
 print("keyboard processes recorded: %d"%len(runs))
@@ -49,6 +50,7 @@ PY
     # Usage: auto [--soak SECONDS]. Needs the phone unlocked and plugged in.
     SOAK=0; [ "${2:-}" = "--soak" ] && SOAK="${3:-1800}"
     xcrun devicectl device info lockState --device "$DEVICE" 2>&1 | grep -q "passcodeRequired: true" && { echo "Phone is locked: unlock it and retry."; exit 3; }
+    export PERF_SINCE=$(date +%s)
     mkdir -p "$OUT"; "$0" crashes > "$OUT/crashes-before.txt" 2>&1 || true
     rm -rf "$OUT/auto.xcresult" "$OUT/attachments"
     TEST_RUNNER_IBOARD_SOAK_SECONDS="$SOAK" xcodebuild -project iBoard.xcodeproj -scheme iBoard -configuration Release \

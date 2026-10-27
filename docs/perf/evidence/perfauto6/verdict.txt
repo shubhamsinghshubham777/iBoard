@@ -1,0 +1,11 @@
+File received from Device
+/Volumes/SSD/Projects/Personal/iBoard/.claude/worktrees/agent-a121083f834c54ebd/build/device-perf/perf
+keyboard processes recorded: 2
+  start 21:30:47 span  232s peak  75.9 MB appears 14 warnings 9 timing samples 340
+  start 21:34:43 span   29s peak  53.8 MB appears  6 warnings 0 timing samples 0
+Busiest process: start 21:30:47, span 232s, peakMB 75.9, appears 14
+  keystrokeToSuggestions   n=87    p50    5.6  p95   10.2 ms  budget 25  PASS
+  touchDownToHighlight     n=132   p50    0.3  p95    0.5 ms  budget 16.7  PASS
+  touchUpToInsert          n=121   p50    0.9  p95    4.1 ms  budget 20  PASS
+  memory peak over all processes 75.9 MB vs 30 target / 40 hard: FAIL (over 40 MB hard cap); warnings 9
+VERDICT: ALL RECORDED TIMING BUDGETS MET

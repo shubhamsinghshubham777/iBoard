@@ -19,3 +19,13 @@ Owner steps (about 5 min), because on-device XCUITest could not raise the keyboa
 2. For the 30-minute soak: type continuously (or run `scripts/device-perf.sh soak 1800` with the phone unlocked on the
    iBoard home screen and iBoard already the active keyboard in the first text field), then `pull`; `peakMB` must stay
    under 30 (target) / 40 (hard) and the timeline must not climb.
+
+## Fully automated run (no human): `scripts/device-perf.sh auto [--soak SECONDS]`
+Phone unlocked, awake (screen on, home or any app) and plugged in; Settings > Developer > Enable UI Automation on. One command builds
+Release + `-DIBOARD_PERF` (with `ENABLE_TESTABILITY=YES` so `iBoardTests` still compiles), installs, runs
+`iBoardUITests/DevicePerfAutoTests.testAuto` (drives Apple Notes and the real iBoard keyboard by screen coordinates: idle 20 s, ~110 typed
+characters, 10 swipe-typed words through 3-5 points each, emoji panel via comma long-press + scroll + 10 s, 20 show/hide cycles, then
+deletes the scratch note), pulls the per-process files, filters to processes alive since the run started (`PERF_SINCE`), prints the verdict and
+lists only NEW crash files. It exits 1 with "RUN FAILED" when no timing data was recorded. Screenshots: `build/device-perf/attachments`.
+`TEST_RUNNER_IBOARD_PHASES=idle,type,...` selects phases. Keyboard coordinates in the test are for iPhone 12 / 270 pt keyboard.
+"Timed out while enabling automation mode" means the screen was asleep or locked: wake it, then retry. Evidence: `docs/perf/evidence/perfauto6/`.
