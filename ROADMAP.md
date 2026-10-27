@@ -506,6 +506,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   rotation and fold transitions, whether `UIHingeInteraction`/`reservedRegions` now reach the extension (P-14);
   capture system keyboard screenshots in each pose as layout reference. Depends: M0-01, M0-02. Unblocks: M11.
   **Partial (2026-10-26):** NOT TESTED — axe can't drive the Duo sim and simctl has no pose controls; only outer-display sizes confirmed (466×678 / 669×951 pt). Needs the owner in Simulator/Device Hub. See `docs/spikes/M0-10.md`.
+  **Update (2026-10-27):** owner supplied 5 Device Hub screenshots (poses inferred, unlabeled): iBoard loads in all of them, fills the width, and has no fold awareness — keys cross the vertical fold in inner landscape (expected; split not wired). Frame sizes/traits and hinge-data arrival still NOT measured. `docs/spikes/M0-10.md`.
 - [x] **M0-11 Language data & licensing** — Shortlist corpora/word lists for EN and Hinglish, emoji annotations (CLDR),
   keyboard eval data; record license, attribution and share-alike obligations in `docs/DATA_SOURCES.md`; prefer
   public-domain/CC BY/permissive; any CC BY-SA data needs 👤 sign-off (fine for open source, must be attributed and
