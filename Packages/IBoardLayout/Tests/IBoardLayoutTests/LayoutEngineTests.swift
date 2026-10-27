@@ -149,8 +149,8 @@ struct LayoutInvariantTests {
         #expect(abs(a.x - b.x) < 1e-9 && abs(a.y - b.y) < 1e-9)
     }
 
-    @Test("centre gap seam is accepted and currently ignored")
-    func centreGapIgnored() {
+    @Test("centre gap is ignored unless the split is active (see DuoLayoutTests for the split)")
+    func centreGapIgnoredWithoutSplit() {
         let size = CGSize(width: 951, height: 206)
         let traits = LayoutTraits(displayClass: .duoInner, orientation: .landscape)
         let plain = LayoutEngine.layout(containerSize: size, traits: traits, kind: .letters)

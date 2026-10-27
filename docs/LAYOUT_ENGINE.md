@@ -59,18 +59,36 @@ width 32.33, radius 8.5; pad tiles 48 high, row gap 6, margin 5.33, radius 10.6.
 | Preferred height | `strip + body x growth x displayFactor x heightScale`; growth (phones) = 1 + 0.25 x (clamp(w,390,440)/390 - 1) |
 | Corner radius | 8.5 (10.6 pads) x clamp(vertical scale, 0.85, 1.25) |
 
-## Duo seam (D-20)
+## Duo modes (D-20, F18, M11-01..04)
 
-`LayoutSettings.centreGap: CentreGap?` exists but is **ignored**; a test asserts the layout is identical with and
-without it. Implementing the split means placing each row's keys into two column segments around the gap inside
-`Placer` (LayoutEngine.swift) and letting `HitModel.build` treat the gap as a cell boundary.
+Geometry is a function of container size, traits and `LayoutSettings`; never a device model. `LayoutMetrics.duoMode`
+derives a `DuoMode` (`standard`, `split(CentreGap)`, `fillToFold`). P-14: extensions get no hinge data, so the split
+is rule-based. M0-10 is open: every Duo number below is ESTIMATED until the real keyboard is measured.
+
+- **Outer display (M11-01)**: portrait height factor 0.88 (was 0.9), key width capped at 40 pt portrait / 46 pt
+  landscape so keys do not stretch on the wider/shorter screen. All ESTIMATED.
+- **Inner portrait (M11-02)**: full width, key width capped at 56 pt, number row on by default
+  (`LayoutSettings.defaults`). ESTIMATED.
+- **Inner landscape split (M11-03)**: `defaults(for:)` sets `splitLandscape` on the inner display; `splitPortrait`
+  is the per-orientation flag for the pinch toggle (host stores it). `centreGap` nil = centred, width
+  `DuoGeometry.foldBandWidth` = 27 pt (ESTIMATED, F18); a smaller given width is raised to it. Each half is a
+  5-column grid anchored to the outer edge, key width capped at 72 pt (ESTIMATED). Key identities and order are the
+  same as the non-split layout (swipe templates keep working). Bottom row: one space key, in the left half (ESTIMATED
+  arrangement). `KeyboardLayout.foldBand` is the full-height band; `stripSegments` are the two strip pieces. Invariant
+  test: no key cap or strip segment intersects the band. Touch regions deliberately continue across the band so the
+  hit model has no hole and swipes crossing the fold resolve every sample. Pads are never split.
+- **Laptop fill to fold (M11-04)**: `LayoutSettings.fillToFold` (host sets it while snapped; inner landscape only;
+  wins over split). Height = half of the inner landscape height (`DuoGeometry.fillToFoldHeight`, 669 -> 334.5);
+  `snappedHeight` snaps within 24 pt (ESTIMATED). One block, number row forced on, key cap 72 pt, arrow/edit column
+  reserved as `KeyboardLayout.auxiliaryColumn` (14% of width, 96-160 pt, ESTIMATED); the keys for it are not
+  defined yet, so the column is empty space. Preferred height does not apply; the host uses the fold height.
 
 ## Tests
 
 `swift test` in `Packages/IBoardLayout`: invariants (no overlap, inside bounds, regions tile, dense point sweep),
 trait/key-set tests, preferred-height rules, native comparison (390 pt frames within 1 pt of the JSON for letters, 123,
 #+=, email, URL, number/decimal/phone pads, return variants), and JSON snapshots per size and layer in
-`Tests/IBoardLayoutTests/Snapshots/`. Regenerate snapshots after an intentional change with
+`Tests/IBoardLayoutTests/Snapshots/`. Snapshots for Duo outer portrait/landscape and Duo inner landscape were regenerated in M11 (height factor, key caps, default split). Regenerate snapshots after an intentional change with
 `IBOARD_UPDATE_SNAPSHOTS=1 swift test`, then review the diff.
 
 ## Estimated values (NOT measured by M1-01)
@@ -79,8 +97,8 @@ trait/key-set tests, preferred-height rules, native comparison (390 pt frames wi
   refinements (side columns, etc.) come in M8-04.
 - **Caps lock**: not captured; geometry assumed identical to shift (only the glyph differs).
 - **12 mini (375), Pro Max (428/440), Duo outer/inner**: derived from the scaling rules above, not captured. Width
-  growth of the preferred height and the Duo outer height factor 0.9 are guesses.
-- **Duo inner**: letter width cap 56 pt, pad block cap 520 pt, number row on in portrait; centre gap not implemented.
+  growth of the preferred height and the Duo outer height factor 0.88 are guesses.
+- **Duo inner**: letter width cap 56 pt, pad block cap 520 pt, number row on in portrait; split/laptop numbers: see Duo modes.
 - **Globe layout**: measured captures had no globe; the 123 key's width is split into two halves.
 - **Safe-area values used in snapshots** (landscape L/R 44-47, bottom 21) are typical, not measured.
 - Gap / margin growth with width, `@ .` widths on email (1.3 x), shadows, fonts: see the JSON for status.
