@@ -87,11 +87,17 @@ public protocol TextProxy: AnyObject {
     var contextAfter: String? { get }
     /// `adjustTextPosition(byCharacterOffset:)`: the offset is in UTF-16 units (P-24).
     func adjustPosition(byUTF16 offset: Int)
+    /// `setMarkedText(_:selectedRange:)`: replaces the current marked text (or inserts new marked text at the cursor).
+    func setMarkedText(_ text: String)
+    /// `unmarkText()`: the marked text becomes ordinary text.
+    func unmarkText()
 }
 
 public extension TextProxy {
     var contextAfter: String? { nil }
     func adjustPosition(byUTF16 offset: Int) {}
+    func setMarkedText(_ text: String) {}
+    func unmarkText() {}
 }
 
 public struct InputFieldTraits: Sendable, Equatable {

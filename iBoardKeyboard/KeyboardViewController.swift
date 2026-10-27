@@ -60,6 +60,16 @@ final class KeyboardViewController: UIInputViewController {
     private var arbiter: GestureArbiter?
     private var arbiterTouchID = -1
     private var gestureOrigin = CGPoint.zero
+    /// Backspace swipe: the words to delete are marked in the host field while dragging (see `MarkedDeletePreview`).
+    private lazy var markedDelete = MarkedDeletePreview(proxy: ProxyAdapter(controller: self), style: deletePreviewStyle == "marked" ? .marked : .live)
+    /// Left context captured when the drag starts; every plan of the drag is computed from it (the proxy lags edits).
+    private var deleteBaseContext: String?
+    /// A host that ignored marked text was seen: no more in-field previews until the keyboard is recreated.
+    private var markedDeleteUnsupported = false
+    /// `UserDefaults` `iBoard.deletePreviewStyle`: "live" (default: words vanish as you drag), "marked" (marked text,
+    /// no visible highlight in tested hosts) or "strip" (suggestion strip only).
+    private var deletePreviewStyle: String { UserDefaults.standard.string(forKey: "iBoard.deletePreviewStyle") ?? "live" }
+    private var markedDeleteEnabled: Bool { deletePreviewStyle != "strip" }
     private var gestureKeyIndex = -1
     private enum DragMode { case none, cursor(SpacebarCursorDrag), selecting(SpacebarCursorDrag), deleteWords(BackspaceSwipePlan) }
     private var dragMode = DragMode.none
@@ -856,6 +866,8 @@ final class KeyboardViewController: UIInputViewController {
         let wasDeleting: Bool
         if case .deleteWords = dragMode { wasDeleting = true } else { wasDeleting = false }
         if case .selecting = dragMode { finalizeSelectionDrag() }
+        markedDelete.cancel() // a drag that did not end in a release-delete leaves the words alone
+        deleteBaseContext = nil
         dragMode = .none
         if wasDeleting { renderStrip() }
     }
@@ -984,12 +996,26 @@ final class KeyboardViewController: UIInputViewController {
 
     private func updateDeletePreview(at point: CGPoint) {
         let extra = max(0, gestureOrigin.x - point.x - GestureThresholds().backspaceDragStart)
-        let plan = BackspaceSwipePlan.plan(before: coordinator.contextBeforeForPreview, extraDistance: extra)
+        if deleteBaseContext == nil { deleteBaseContext = coordinator.contextBeforeForPreview }
+        let plan = BackspaceSwipePlan.plan(before: deleteBaseContext ?? "", extraDistance: extra)
         if case .deleteWords(let old) = dragMode, old == plan { return }
         dragMode = .deleteWords(plan)
+        if markedDeleteEnabled, !markedDeleteUnsupported {
+            markedDelete.show(plan)
+            if markedDelete.isActive { verifyMarkedDeleteSoon() }
+        }
         let preview = plan.preview.replacingOccurrences(of: "\n", with: " ")
-        strip.emphasizedSlots = []
+        strip.emphasizedSlots = [1]
         strip.slotTexts = ["", preview, ""]
+    }
+
+    /// The host may ignore marked text: after a run-loop turn check that the marked words are still in the field;
+    /// if not they are typed back, the in-field preview is switched off and the release deletes plainly.
+    private func verifyMarkedDeleteSoon() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+            guard let self, self.markedDelete.isActive else { return }
+            if !self.markedDelete.verify() { self.markedDeleteUnsupported = true }
+        }
     }
 
     /// Lift of the arbiter's touch. Returns true when the gesture was fully handled here (flick / drag end).
@@ -1026,6 +1052,9 @@ final class KeyboardViewController: UIInputViewController {
             extendSelection(step)
         }
         if case .deleteWords = dragMode { updateDeletePreview(at: point) }
+        // Release-delete with the words already marked in the field: remove them now (before the reset cancels).
+        var deletedViaMarks = false
+        if g == .backspaceSwipeDelete, markedDelete.isActive { deletedViaMarks = markedDelete.verify() && markedDelete.commit() > 0 }
         let mode = dragMode
         let startIndex = gestureKeyIndex
         let origin = gestureOrigin
@@ -1036,7 +1065,7 @@ final class KeyboardViewController: UIInputViewController {
             return true
         case .backspaceSwipeDelete:
             if case .deleteWords(let plan) = mode {
-                coordinator.deleteRun(graphemes: plan.graphemes)
+                if deletedViaMarks { coordinator.finishPreviewedDelete() } else { coordinator.deleteRun(graphemes: plan.graphemes) }
                 feedback()
                 scheduleAutoShift()
             }
@@ -1260,6 +1289,10 @@ final class ProxyAdapter: TextProxy {
     func deleteBackwardOnce() { controller.textDocumentProxy.deleteBackward() }
     var contextAfter: String? { controller.textDocumentProxy.documentContextAfterInput }
     func adjustPosition(byUTF16 offset: Int) { controller.textDocumentProxy.adjustTextPosition(byCharacterOffset: offset) }
+    func setMarkedText(_ text: String) {
+        controller.textDocumentProxy.setMarkedText(text, selectedRange: NSRange(location: (text as NSString).length, length: 0))
+    }
+    func unmarkText() { controller.textDocumentProxy.unmarkText() }
 }
 
 extension AutoCapMode {

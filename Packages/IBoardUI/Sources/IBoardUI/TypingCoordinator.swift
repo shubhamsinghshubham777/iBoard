@@ -600,6 +600,18 @@ public final class TypingCoordinator {
         if deferWhileSwiping({ $0.deleteRun(graphemes: graphemes) }) { return }
         noteTyped(); autocorrectState.noteOtherInput()
         for _ in 0..<graphemes { input.proxy.deleteBackwardOnce() }
+        afterRunDeleted()
+    }
+
+    /// The backspace swipe's words were already removed from the host by the in-field preview (`MarkedDeletePreview`);
+    /// finish like `deleteRun` without deleting again.
+    public func finishPreviewedDelete() {
+        if deferWhileSwiping({ $0.finishPreviewedDelete() }) { return }
+        noteTyped(); autocorrectState.noteOtherInput()
+        afterRunDeleted()
+    }
+
+    private func afterRunDeleted() {
         if awaitingContinue, lastCommit != nil, let learner { learnerQueue.enqueue { await learner.lastWordReopened() } }
         awaitingContinue = false
         lastCommit = nil
