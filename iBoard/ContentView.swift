@@ -4,10 +4,16 @@ import IBoardCore
 
 /// Companion app root. Layout adapts via size classes only (D-24); no UIScreen/idiom checks.
 struct ContentView: View {
+    @AppStorage(OnboardingStorage.completedKey) private var onboardingCompleted = false
+    @State private var showOnboarding = false
     var body: some View {
         NavigationStack {
             List {
-                Section("Set up") { SetupStepsView() }
+                Section("Set up") {
+                    SetupStepsView()
+                    Button("Run the guided setup again") { showOnboarding = true }
+                    NavigationLink("Verification codes (Shortcuts)") { OTPSetupView() }
+                }
                 Section("Try it") { TryKeyboardView() }
                 Section {
                     NavigationLink("Settings") { SettingsView() }
@@ -18,6 +24,8 @@ struct ContentView: View {
             }
             .navigationTitle("iBoard")
         }
+        .onAppear { if !onboardingCompleted { showOnboarding = true } }
+        .fullScreenCover(isPresented: $showOnboarding) { OnboardingView() }
     }
 }
 
