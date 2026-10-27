@@ -248,3 +248,17 @@ struct ResizePreviewMathTests {
         #expect(ResizeMath.percentText(scale: 0.8) == "80%")
     }
 }
+
+@Suite("Swipe trail gradient")
+struct SwipeTrailGradientTests {
+    @Test func tailIsFaintAndThinHeadIsBrightAndFullWidth() {
+        let s = SwipeTrailGradient.stops(count: 14, head: (0, 0.48, 1), width: 3)
+        #expect(s.count == 14)
+        #expect(s.first!.alpha < 0.1 && s.last!.alpha > 0.9)
+        #expect(s.first!.width < s.last!.width)
+        #expect(abs(s.last!.width - 3) < 1e-9)
+        #expect(zip(s, s.dropFirst()).allSatisfy { $0.alpha <= $1.alpha && $0.width <= $1.width })
+        #expect(s.last!.red == 0 && s.last!.green == 0.48 && s.last!.blue == 1)
+        #expect(SwipeTrailGradient.stops(count: 0, head: (0, 0, 0), width: 3).isEmpty)
+    }
+}
