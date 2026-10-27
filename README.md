@@ -22,14 +22,32 @@ fluid gestures, and types Hinglish as naturally as English, all on-device.
 
 ## Honest scope
 
-"Native feel" has limits that come from iOS itself. iBoard can match the system keyboard's layout, key metrics,
-typography, colors, click sound, auto-capitalization, shift/caps-lock behavior and delete acceleration. It cannot match:
+"Native feel" is a goal, not a finished claim. Everything below was measured on one device (iPhone 12, iOS 27.0).
 
-- system dictation (keyboard extensions have no microphone access);
-- haptics without Full Access;
-- secure text fields, phone-pad fields, or apps that opt out of custom keyboards (iOS shows the system keyboard there);
-- the system's exact touch model on day one (iBoard's adaptive model has to earn it);
-- possibly true see-through blur of the host app (under investigation).
+**What iOS does not allow a keyboard extension to do**
+
+- Use the microphone: iBoard has no dictation of its own. The system draws its own bar (globe, mic) below the keyboard,
+  and whether that mic dictates into a third-party keyboard is still being checked on a device.
+- Haptics without Full Access. On the test iPhone they were not felt with Full Access off and were felt with it on.
+  iBoard asks for Full Access (off by default); core typing works without it.
+- Appear in secure text fields, phone-pad fields, or apps that opt out of custom keyboards (iOS shows the system
+  keyboard there).
+- Read SMS, Mail or notifications, so one-time codes need either the system keyboard's own AutoFill (one tap to
+  switch) or an optional Shortcuts automation.
+- Set a text selection (Shift+space selection is a preview kept by the keyboard), draw outside the keyboard's bounds
+  (top-row popups are clipped), or see more than about 500 characters of text before the cursor.
+- Know the iPhone Duo's fold or pose: keyboards receive no hinge information yet, so the split layout is rule-based.
+
+**Where iBoard is still earning "native"**
+
+- Layout, key metrics and colours were measured on iPhone 12 portrait only; landscape, caps lock and other sizes are
+  estimated, and typography is approximate. Delete acceleration timings are estimates, not matched to iOS.
+- Touch accuracy: an adaptive touch model learns each person's offsets. On synthetic traces it cut raw key errors
+  from 9.0% to 4.7%; it has not been compared with the system keyboard on real typing.
+- Autocorrect accuracy targets are measured on synthetic data only. Swipe typing is measured on 402 real swipes from
+  one person (top-3 98.8%), not yet on other people or hands.
+- The keyboard's backdrop is the system's own glass, which already shows the host app through; iBoard only changes the
+  keys. This was verified in the simulator and still needs a device check.
 
 ## Privacy
 
