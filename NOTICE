@@ -27,3 +27,10 @@ Language data attributions will be listed in docs/DATA_SOURCES.md.
   CC BY-SA 4.0; Madhani et al. 2022, Roark et al. 2020) and project-authored CC0 lists. The derived data files are
   released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); see Data/hinglish/LICENSE.md and
   docs/HINGLISH.md. The code stays Apache-2.0.
+
+- Data/english/ (lexicon.iblex, lm.iblm) — English word list and 3-gram model, built by Tools/EnglishData from SCOWL
+  2020.12.07 (Copyright 2000-2018 Kevin Atkinson; permission notice and the notices of its sources, incl. Princeton
+  WordNet and Ispell/VarCon, are reproduced in Data/english/LICENSE.md), the Leipzig Corpora Collection English news
+  2023/2024 (CC BY 4.0; Goldhahn, Eckart, Quasthoff, LREC 2012) and project-authored CC0 lists. The derived data files
+  are distributed under CC BY 4.0 with those notices (https://creativecommons.org/licenses/by/4.0/); see
+  Data/english/LICENSE.md and docs/ENGLISH_DATA.md. The code stays Apache-2.0.

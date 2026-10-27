@@ -1,0 +1,107 @@
+# Project-authored, CC0-1.0. Common casual phrases. sentence<TAB>weight (approx occurrences per million tokens). Lowercase, no punctuation except apostrophes.
+# Every adjacent word pair and triple becomes an n-gram.
+thank you so much	30
+thank you very much	25
+thank you	80
+thanks a lot	25
+thanks for the	20
+i don't know	60
+i don't think	50
+i don't want	25
+i don't have	30
+i can't wait	20
+i can't believe	15
+i'm not sure	20
+i'm going to	60
+i'm sorry	25
+i'm so	25
+i'm good	10
+i'm fine	8
+i'll be there	15
+i'll see you	10
+i'll let you know	15
+i'll call you	10
+i've been	25
+i want to	50
+i need to	50
+i have to	40
+i think so	15
+i love you	30
+i miss you	15
+i hope you	20
+i was just	15
+do you want to	35
+do you have	40
+do you know	30
+what do you think	25
+what are you doing	20
+how are you	50
+how are you doing	15
+how's it going	15
+how was your	15
+see you later	20
+see you soon	15
+see you tomorrow	15
+see you tonight	8
+talk to you later	15
+let me know	50
+let me know if	25
+let's go	25
+let's meet	10
+let's do it	10
+on my way	30
+be right back	8
+good morning	30
+good night	25
+good luck	20
+good evening	10
+good afternoon	10
+have a great day	15
+have a good one	8
+have a nice day	10
+happy birthday	20
+happy new year	10
+merry christmas	8
+what's up	25
+what's going on	12
+what's the	20
+where are you	25
+when are you	15
+are you coming	12
+are you free	12
+can you please	20
+could you please	15
+would you like to	20
+please let me know	20
+looking forward to	20
+sounds good	25
+sounds great	15
+no problem	25
+no worries	15
+of course	35
+by the way	25
+as soon as possible	10
+in the morning	20
+in a few minutes	8
+at the moment	12
+right now	35
+a lot of	60
+a little bit	20
+kind of	30
+sort of	20
+you're welcome	15
+it's okay	10
+it's fine	10
+it's not	35
+it's a	40
+that's great	15
+that's okay	8
+that's right	10
+that's why	15
+that's what	10
+don't worry	25
+don't forget	15
+can't wait	15
+won't be	15
+didn't know	12
+doesn't matter	10

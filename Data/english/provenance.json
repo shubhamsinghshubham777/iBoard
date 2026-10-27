@@ -1,0 +1,62 @@
+{
+  "authored": {
+    "contractions.tsv": "24b760b30a39b919d019638c6a1edcd7c20e6a19f64c486fc45fb3be747faeb2",
+    "phrases.tsv": "12fffd38a757eb6e90f0b4f8a85cad29fe631ab0c02e344b42daa546ae0c7627"
+  },
+  "leipzig": {
+    "lz/x/eng_news_2023_1M/eng_news_2023_1M-sentences.txt": "53a3978953c6ec62d41b9044be88e3bf8298f6185588af7c6b8a9e8768472a46",
+    "lz/x/eng_news_2024_1M/eng_news_2024_1M-sentences.txt": "9075074241be058abaabdbd151c4a2a4e2a8a95bba7228c489b31fb9fb9812fb"
+  },
+  "scowl": {
+    "copyright": "283326a422e29c510e2ba6805518c418ce3c35ed1fadc3eec83d2da4f6c5a055",
+    "files": {
+      "scowl/scowl-2020.12.07/final/american-proper-names.50": "6eaa9c20a519ecbdf22a9796ca3da11215f1afa1942dd3f7f0c12cfa69e0bd8b",
+      "scowl/scowl-2020.12.07/final/american-upper.50": "2f2e6d66b2bd69aa414f6a9f7124930decd14953ace72f98b44924c0f3ebdd7c",
+      "scowl/scowl-2020.12.07/final/american-upper.60": "a5ab3131a20305a6b7881e30cff4027a22286758d40690c986ad190594a429e8",
+      "scowl/scowl-2020.12.07/final/american-words.10": "6ed66394d8b46ed12feac7aad989dfc4620c4f2051316ab774560aae71140994",
+      "scowl/scowl-2020.12.07/final/american-words.20": "a7ae730cd5f2ee11b584c163bf0750cc7659e336c3a04da1a8a2e9c44b604b9e",
+      "scowl/scowl-2020.12.07/final/american-words.35": "c999d002cfe31a2c3d9726eee1b87697402bb71cc831a2c63d064403c6a3a7fb",
+      "scowl/scowl-2020.12.07/final/american-words.40": "5a9c03d207087acabc969b32c6ef93ed376208287b2c8343f7952d0d06085577",
+      "scowl/scowl-2020.12.07/final/american-words.50": "1846537a15d7cf9f0b5fde8d2f69a9d3606856695c68de1701fc85d698646994",
+      "scowl/scowl-2020.12.07/final/american-words.55": "d5b6d504b907ef159b164286519fc96168737d60a62310ff5d74d2076ed97027",
+      "scowl/scowl-2020.12.07/final/american-words.60": "3296121b977bcc2fc3fab374b69d2a0891c825bb473ef8078161245b2a990f2f",
+      "scowl/scowl-2020.12.07/final/american-words.70": "96b09f0f5db4203fa41fca64d6c40833da0ccdc1c02f913628c7ed129a68f6c3",
+      "scowl/scowl-2020.12.07/final/british-upper.35": "441d646194b99f7a306b2cbf968ab46f527dacaf50b97a3a1d7c5bef8cdfd2bc",
+      "scowl/scowl-2020.12.07/final/british-upper.50": "344e0f21b3cd7f9df34832181fa749bc2654b7dcb90e1503d4680ea73f4d42ac",
+      "scowl/scowl-2020.12.07/final/british-upper.60": "255d15c7e8f0dce70fd62b736d04c65fef2f7d9c765e6efcf04105711b4bc5bf",
+      "scowl/scowl-2020.12.07/final/british-words.10": "cdf5841d5cbd9c0c07bddd7a2eb65b1d3d4c4dc7990f30edccfc0abb7d1236fa",
+      "scowl/scowl-2020.12.07/final/british-words.20": "50a1f325b1b278e418c0084428b1919f2a1ddc2bafc99234e1cf2e442dfca6c3",
+      "scowl/scowl-2020.12.07/final/british-words.35": "afb66faedb0c23d4619aab67110b58f0f640799811f51ef4182f5814f733c2ab",
+      "scowl/scowl-2020.12.07/final/british-words.40": "37d25a050c104761e2da3c4708522f5da7fcc3c6b87c4a4256ef96587570f714",
+      "scowl/scowl-2020.12.07/final/british-words.50": "1f973ca3ee598763df60a64049610ef06580fc8b3abe91cca689e3604f79414c",
+      "scowl/scowl-2020.12.07/final/british-words.55": "125d4d1c54d3ca1de0fc498e8b306066c5c589066d3c1dd3d2674b846c37e256",
+      "scowl/scowl-2020.12.07/final/british-words.60": "f0d338b32c8c6594ca515e336085b2a35987dde6cf0465f53feb8b51d9d54c7b",
+      "scowl/scowl-2020.12.07/final/british-words.70": "0ccec34c0a27dd004ed111ea133fa05a4ec2b33d83ff3339bc4ee61757d7d027",
+      "scowl/scowl-2020.12.07/final/english-contractions.10": "3d6036120922bc64e51c0ba3f4c52e24da5d86695ae93168b3f336c6eabfdd25",
+      "scowl/scowl-2020.12.07/final/english-contractions.35": "413da1bae492c46f7fe1d04fc8065d1065d81cf9c65c80de9cedef6cff74abeb",
+      "scowl/scowl-2020.12.07/final/english-contractions.40": "8ef274d42f258664fc86b797b1b65fecfef99beeb402405084e7e85cd2eeaed9",
+      "scowl/scowl-2020.12.07/final/english-contractions.50": "c707dfceb56f848f6464e0db85b849b726088debc2ac7dfef6c0c196e2b64513",
+      "scowl/scowl-2020.12.07/final/english-contractions.60": "5e37357043cdb8d57647e84d54aa795618c40aa489cd44dda3ff93f57e0590fd",
+      "scowl/scowl-2020.12.07/final/english-contractions.70": "0b50bd9b5453c6cbdf3bffa006581a3710b06d74410ebe4dc4ef79f7e98b7b1b",
+      "scowl/scowl-2020.12.07/final/english-proper-names.35": "97b114c3ba12b477cb892b86ad194a76013a18900f45db755f52d9b68c29a5b5",
+      "scowl/scowl-2020.12.07/final/english-proper-names.40": "7922cff2b2a13ff1df7eba4af46889292c04ffd183401dc02cbcf68827ae50de",
+      "scowl/scowl-2020.12.07/final/english-proper-names.50": "b68e92cfb81ae6411692e23f3a3267cee52c07a28facca3554635533c67b5639",
+      "scowl/scowl-2020.12.07/final/english-upper.10": "fc43953092fb131ca5da2b6dacdc5e6e56de42a7dec2d753f8b2c5f720534abb",
+      "scowl/scowl-2020.12.07/final/english-upper.35": "b3f1c4e46e901063b9a4ed5f25927fadbccbebbdd88e4d62c636071a23b1d627",
+      "scowl/scowl-2020.12.07/final/english-upper.40": "90ea0df3b135015d4ef73f530288ecd15d69fd595a32d4977bdbba12f7d3b539",
+      "scowl/scowl-2020.12.07/final/english-upper.50": "a239863f9e9898e19d4fd57d81440b0de741696be549f1892df06587cebd8cc2",
+      "scowl/scowl-2020.12.07/final/english-upper.60": "c6425b9c341b6d232bcfd15fd686f7d2e152082d7642b6998e77f2d7f38c6e92",
+      "scowl/scowl-2020.12.07/final/english-words.10": "f19988ecdb0280ab63340e5c5e155a814ab3d0f225ae60f5cb9e000252283b0b",
+      "scowl/scowl-2020.12.07/final/english-words.20": "618998fff18fb9e143a5bab49e669ec48c023758f0db476d6b64ec06994ba71e",
+      "scowl/scowl-2020.12.07/final/english-words.35": "f36ace33ff09bd5eda5f3ccbcc9971c1b6a8887fa62f5ad7f93e3c220d871388",
+      "scowl/scowl-2020.12.07/final/english-words.40": "fc5c2058cd24af4ca6a9bca97ce7d300c8899753715d029fc8bb3cbe602eef7f",
+      "scowl/scowl-2020.12.07/final/english-words.50": "ff5b1f1752df695e0512c1e9e096f22af2dc127119918b1e43a35582ef90da90",
+      "scowl/scowl-2020.12.07/final/english-words.55": "be646fbdc9c4b4fef5b23e9c5678f7479534c428a7581745178642dfd9c744d6",
+      "scowl/scowl-2020.12.07/final/english-words.60": "8922ac79ea926ae876d68f178fcb1107bbdf1b90996086f63ffc3e97da55427f",
+      "scowl/scowl-2020.12.07/final/english-words.70": "283f54865410e896bdab53bdaf04fa4e1a3a189dc6961a4033714944ee67cb6a",
+      "scowl/scowl-2020.12.07/misc/offensive.1": "f5fb48dc9c5a60dd79422da979497d96a0785968264ac26b708294b9e85ffaa2",
+      "scowl/scowl-2020.12.07/misc/offensive.2": "989f41977bf8bc4e238c5b8e149875645ce20bc580cf58eccbba273e40b90cd3"
+    },
+    "version": "2020.12.07"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "formatVersion" : 1,
+  "shareAlike" : false,
+  "sources" : [
+    {
+      "attribution" : "iBoard project-authored phrases",
+      "id" : "english-authored-ngrams",
+      "kind" : "ngram",
+      "sha256" : "93025baecb361be7398407485bcf60768ffdc5dbe6876567e06278a4d993569e",
+      "spdx" : "CC0-1.0",
+      "url" : "https://github.com/shubhamsinghshubham777/iBoard"
+    },
+    {
+      "attribution" : "iBoard project-authored contractions and casual forms",
+      "id" : "english-authored-unigrams",
+      "kind" : "unigram",
+      "sha256" : "8f49579b0d7377a5fb639fded3d54f582badcac3c43c8438274b93475a461ddf",
+      "spdx" : "CC0-1.0",
+      "url" : "https://github.com/shubhamsinghshubham777/iBoard"
+    },
+    {
+      "attribution" : "Leipzig Corpora Collection, English news 2023 and 2024, 1M sentences each (Universitat Leipzig, Wortschatz), CC BY 4.0; D. Goldhahn, T. Eckart, U. Quasthoff, LREC 2012",
+      "id" : "english-news-ngrams",
+      "kind" : "ngram",
+      "sha256" : "ef6cd54efd3bddd2c72d4e9532ccc29b834ae4c46d20beddaaebce73dc10d350",
+      "spdx" : "CC-BY-4.0",
+      "url" : "https://wortschatz.uni-leipzig.de/en/download",
+      "version" : "eng_news_2023_1M, eng_news_2024_1M"
+    },
+    {
+      "attribution" : "Leipzig Corpora Collection, English news 2023 and 2024, 1M sentences each (Universitat Leipzig, Wortschatz), CC BY 4.0; D. Goldhahn, T. Eckart, U. Quasthoff, LREC 2012",
+      "id" : "english-news-unigrams",
+      "kind" : "unigram",
+      "sha256" : "ef8101494f18e522905ae97e6c11771bba12dcb96945e571c139a432937c7b71",
+      "spdx" : "CC-BY-4.0",
+      "url" : "https://wortschatz.uni-leipzig.de/en/download",
+      "version" : "eng_news_2023_1M, eng_news_2024_1M"
+    },
+    {
+      "attribution" : "SCOWL (Spell Checking Oriented Word Lists) 2020.12.07, Copyright 2000-2018 Kevin Atkinson; permission notice in Data/english/LICENSE.md",
+      "id" : "english-scowl-vocabulary",
+      "kind" : "unigram",
+      "sha256" : "47e72f2df710384a6046d1983c12b5c6894a44925ad8d200b01f903d71c79968",
+      "spdx" : "LicenseRef-SCOWL",
+      "url" : "http://wordlist.aspell.net/",
+      "version" : "SCOWL 2020.12.07"
+    }
+  ]
+}
