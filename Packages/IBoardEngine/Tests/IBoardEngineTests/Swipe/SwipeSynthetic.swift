@@ -144,6 +144,8 @@ struct SwipeScore {
     /// Prompts such as "dont" or "thats" mean the contraction: when the plain spelling is not a lexicon word but exactly
     /// one apostrophe insertion is, the contraction is the intended truth (the keyboard should type it).
     static func canonicalTruth(_ word: String, in lexicon: Lexicon) -> String {
+        // A swipe for "id" is overwhelmingly meant as i'd (owner preference, 2026-10-27).
+        if word == "id", lexicon.lookup("i'd") != nil { return "i'd" }
         guard !word.contains("'"), lexicon.lookup(word) == nil else { return word }
         let chars = Array(word)
         for i in 1..<max(1, chars.count) {

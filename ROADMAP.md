@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — "id" -> i'd preference
+Owner confirmed thanks/what's work on device; "id" swipes should prefer i'd. Raised the i'd rate in `Tools/EnglishData/data/contractions.tsv` 450 -> 1300 per million (realistic conversational rate; "is" had won on LM prior), rebuilt `Data/english/` (sizes unchanged). Scorer counts an "id" prompt as i'd. Real (402): top-1 89.6 / top-3 99.3, held-out top-3 99.5; i'd is now rank 1 / rank 2 on the two "id" swipes (n=2, weak evidence). Engine tests 260 pass, `scripts/build.sh` OK. Plain "id" typed by tapping is unaffected by swipe ranking but autocorrect may now prefer i'd more: check on device.
+
 ### 2026-10-27 — Hinglish lexicon: dhanyavaad/dhanyawaad variants
 Owner confirmed contraction swiping feels much better on device. Added `dhanyavaad` and `dhanyawaad` to the धन्यवाद cluster in `Tools/HinglishData/data/common_hinglish.tsv`, rebuilt `Data/hinglish/` with `Tools/HinglishData/build.sh` (diff: a few bytes; lexicon 4,013,360 B). Real traces (402): top-1 89.1 / top-3 98.8, confident-wrong 6 -> 2. Engine `swift test` 260 pass, `scripts/build.sh` and privacy audit OK; full `scripts/test.sh --no-ui` not rerun (data-only change). Remaining real misses: thanks, whats/what's (poor swipes), id vs i'd.
 
