@@ -456,6 +456,28 @@ public final class TypingCoordinator {
         insertSeparatorOrSymbol(text)
     }
 
+    /// The word being typed right now (empty after a separator or while a swipe is pending). Memory only.
+    public var typedToken: String { tokenPrefix + word }
+
+    /// M3-05: the typed token is a Text Replacement shortcut; replaces it with `expansion` plus a space. The shortcut
+    /// is not learned or autocorrected; the expansion starts a fresh word context.
+    public func expandShortcut(_ expansion: String) {
+        if deferWhileSwiping({ $0.expandShortcut(expansion) }) { return }
+        let token = typedToken
+        guard !token.isEmpty, !expansion.isEmpty else { return }
+        noteTyped()
+        autocorrectState.noteOtherInput()
+        for _ in 0..<token.count { input.proxy.deleteBackwardOnce() }
+        input.insert(expansion + " ")
+        word = ""
+        tokenPrefix = ""
+        hits = []
+        lastSuggestions = nil
+        lastCommit = nil
+        setContent(.empty)
+        requestPrediction(afterInserting: expansion + " ")
+    }
+
     /// Alternates and other direct insertions: ends the word literally, then inserts.
     public func insertDirect(_ text: String) {
         if deferWhileSwiping({ $0.insertDirect(text) }) { return }
