@@ -71,3 +71,43 @@ dropped by the engine's sequence number.
 - A strict exclusivity trap: `shiftActive` must not read the input machine (crashed once, fixed).
 - Files needing `xcodegen generate`: `iBoardKeyboard/EngineHost.swift`, `iBoardKeyboard/Resources/lexicon.iblex`,
   `iBoardKeyboard/Resources/lm.iblm`.
+
+## Chips, selection and emoji (M6-03, M6-06, M5-05, M9 wiring)
+
+Strip priority (`KeyboardViewController.renderStrip`): emoji strip > selection banner/action row > backspace delete
+preview > chips over suggestions.
+
+**Code chip (M6-03).** `OTPReader` (IBoardOTP) reads the App Group, so it works without Full Access (P-23). Fresh codes
+are re-read on appear and every 2 s while visible. `ChipPlanner` (pure, IBoardUI/StripChips.swift): a `oneTimeCode`
+field or a number/decimal pad gives up to three emphasised chips from slot 0; any other field gets the newest code in
+slot 2. Secure fields get nothing except a one-time-code field. A tap inserts the code with `insertDirect` (never
+learned). The keyboard cannot delete from the shared store, so inserted ids are kept in memory
+(`consumedCodeIDs`, ids only) and passed to `freshCodes(excluding:)`; the OTP "clear after insert" setting is honoured.
+Clipboard fallback (M6-05) is not part of this.
+
+**Personal info chips (M6-06).** `PersonalInfo` / `PersonalInfoReader` / `PersonalInfoWriter` in IBoardUI/PersonalInfo.swift
+(IBoardCore was off limits this round). The app writes JSON under App Group key `iBoard.personalInfo`
+(`fullName, givenName, familyName, emails, phones, addresses[street, city, region, postalCode]`); the keyboard only
+reads. Chips only for `name, givenName, familyName, emailAddress, telephoneNumber, fullStreetAddress,
+streetAddressLine1, addressCity, addressCityAndState, addressState, postalCode`, only while the field is empty, never
+in secure or untyped fields. The app-side editor is not built.
+
+**Shift + space selection (M5-05).** Only a MANUAL shift arms it (`shiftManual`: auto-capitalisation at a sentence start
+must not turn a cursor drag into a selection). `VirtualSelection` (IBoardUI/VirtualSelection.swift) keeps the context
+captured at gesture start (before/after halves, grapheme `Character`s), moves the real host cursor with the finger and
+returns exact UTF-16 offsets (P-24). Vertical drag jumps hard lines. Strip shows `"...text..." . N chars`, then on lift
+the banner on the left and `[Cut][Copy][Delete][Aa][x]` on the right; Cut/Copy are dimmed without Full Access. `Aa`
+cycles lower, Title, UPPER by delete + reinsert (the selection stays). A real host selection (`selectedText`, observed
+in `textDidChange`/`selectionDidChange`) gets the same row. Typing, return or delete clears the virtual selection.
+Limits: selection is bounded by the context the host exposes (<= 500 chars before); cancel (x) leaves the cursor at the
+extent end, it does not return to the anchor.
+
+**Emoji (M9-01/02 wired).** Long press (0.45 s) on the 123 key opens `EmojiHost` (iBoardKeyboard/EmojiHost.swift);
+the 123 touch-down has already switched layer, so the letters layer is restored on open. The panel covers the key area,
+the strip becomes "Search emoji". Tapping the strip starts search: the normal keys type into an in-memory
+`EmojiSearchBuffer`, the strip shows `query | hit | hit`, return or the query slot shows all hits in the panel, tapping
+a hit inserts it. Panel, catalog and search index exist only while open (`close()`, memory warning, `viewDidDisappear`
+drop them). Recents/skin tones live in the extension's own defaults (`iboard.emoji.prefs`), never the App Group.
+DEBUG overlay line `emoji: <mode> +X MB (peak +Y)`.
+
+Files needing `xcodegen generate` (project.yml gained the IBoardEmoji package): `iBoardKeyboard/EmojiHost.swift`.

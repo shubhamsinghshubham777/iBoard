@@ -18,6 +18,7 @@ packages:
   IBoardLayout: { path: Packages/IBoardLayout }
   IBoardEngine: { path: Packages/IBoardEngine }
   IBoardOTP: { path: Packages/IBoardOTP }
+  IBoardEmoji: { path: Packages/IBoardEmoji }
   IBoardTheme: { path: Packages/IBoardTheme }
   IBoardUI: { path: Packages/IBoardUI }
 targets:
@@ -52,6 +53,7 @@ targets:
       - package: IBoardLayout
       - package: IBoardEngine
       - package: IBoardOTP
+      - package: IBoardEmoji
       - package: IBoardTheme
       - package: IBoardUI
     info:

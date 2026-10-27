@@ -621,6 +621,33 @@ public final class TypingCoordinator {
         return true
     }
 
+    /// Selection drag (M5-05): the virtual selection already planned the exact UTF-16 offset.
+    public func adjustCursor(utf16 offset: Int) {
+        guard offset != 0 else { return }
+        if deferWhileSwiping({ $0.adjustCursor(utf16: offset) }) { return }
+        input.proxy.adjustPosition(byUTF16: offset)
+        noteTyped(); autocorrectState.noteOtherInput()
+        awaitingContinue = false
+        lastCommit = nil
+        resetSession()
+        scheduleResync()
+    }
+
+    /// Carries out the host steps of a selection action (move, delete backwards, insert). The pasteboard part of the
+    /// edit belongs to the caller. Inserted text is never learned.
+    public func applySelectionEdit(_ edit: SelectionEdit) {
+        if deferWhileSwiping({ $0.applySelectionEdit(edit) }) { return }
+        noteTyped(); autocorrectState.noteOtherInput()
+        endWordLiterally()
+        if edit.moveUTF16 != 0 { input.proxy.adjustPosition(byUTF16: edit.moveUTF16) }
+        for _ in 0..<edit.deleteGraphemes { input.proxy.deleteBackwardOnce() }
+        if let text = edit.insert { input.insert(text) }
+        awaitingContinue = false
+        lastCommit = nil
+        resetSession()
+        scheduleResync()
+    }
+
     /// The context split after moving the cursor by `offset` UTF-16 units (offset always lands on a boundary).
     private static func shifted(before: String, after: String, by offset: Int) -> (String, String) {
         let all = Array(before.utf16) + Array(after.utf16)
