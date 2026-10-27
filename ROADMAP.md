@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — APP3 merged (release material)
+Original app icon (light/dark/tinted), file-timestamp reason C617.1 in the app privacy manifest, `docs/site/` (home/privacy/support, GitHub Pages ready), `docs/APP_STORE_LISTING.md`, About licences, CHANGELOG, version 1.0.0. Build + privacy audit pass; not validated by an App Store Connect upload. Owner needed: review-notes contact line, enable GitHub Pages, screenshots, confirm repo URL, iCloud container/entitlement. See docs/agent-reports/app3.md and docs/RELEASE_CHECKLIST.md.
+
 ### 2026-10-27 — DATA2 merged (swipe accuracy)
 Hinglish swipe: top-1 now 95.5/94.4/89.5% and top-3 99.7/99.1/96.3% (careful/normal/sloppy) on synthetic traces, up from 89.8/88.1/82.8 and 98.4/96.9/92.7; held-out half 94.6/98.6. Cause: sharp Hinglish n-gram backoff vetoed correct swipes; fixed via `lmUnigramMix` 0.3 and `lmWeight` 0.5. English top-1 93.5→95.1%. Engine 254 tests pass. M4-04 still needs real traces (versioned `.jsonl` format + loader in `Fixtures/traces/`). F3 on real fingers unproven. See docs/agent-reports/data2.md.
 
