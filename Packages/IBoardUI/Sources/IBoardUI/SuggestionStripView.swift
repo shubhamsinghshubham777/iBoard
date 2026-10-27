@@ -17,11 +17,15 @@ public final class SuggestionStripView: UIView {
     /// Slot text (static placeholders until F2 supplies candidates). Ignored while the alternates row shows.
     public var slotTexts: [String] = ["", "", ""] { didSet { relayout() } }
 
+    /// Slots drawn as a highlighted chip (a prominent one-time code, M6-03).
+    public var emphasizedSlots: Set<Int> = [] { didSet { if emphasizedSlots != oldValue { relayout() } } }
+
     public private(set) var selection: AlternatesSelection?
 
     private let slotLabels = (0..<SuggestionStripView.slotCount).map { _ in UILabel() }
     private let dividers = (0..<SuggestionStripView.slotCount - 1).map { _ in CALayer() }
     private let highlightLayer = CALayer()
+    private let emphasisLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
     private var altLabels: [UILabel] = []
     private var tokens = NativeThemeTokens.light
 
@@ -36,6 +40,11 @@ public final class SuggestionStripView: UIView {
             addSubview(l)
         }
         for d in dividers { layer.addSublayer(d) }
+        for e in emphasisLayers {
+            e.cornerCurve = .continuous
+            e.isHidden = true
+            layer.insertSublayer(e, at: 0)
+        }
         highlightLayer.cornerCurve = .continuous
         highlightLayer.isHidden = true
         layer.insertSublayer(highlightLayer, at: 0)
@@ -103,6 +112,7 @@ public final class SuggestionStripView: UIView {
         CATransaction.setDisableActions(true)
         for d in dividers { d.backgroundColor = tokens.keyLabel.cgColor.copy(alpha: 0.18) }
         highlightLayer.backgroundColor = tokens.actionKeyFill.cgColor
+        for e in emphasisLayers { e.backgroundColor = tokens.actionKeyFill.cgColor }
         CATransaction.commit()
         relayout()
     }
@@ -119,6 +129,13 @@ public final class SuggestionStripView: UIView {
             l.frame = CGRect(x: CGFloat(i) * slotW, y: 0, width: slotW, height: h)
             l.text = i < slotTexts.count ? slotTexts[i] : ""
             l.isHidden = alt != nil
+            let on = alt == nil && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
+            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
+            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : .regular)
+            let e = emphasisLayers[i]
+            e.isHidden = !on
+            e.frame = l.frame.insetBy(dx: 4, dy: 5)
+            e.cornerRadius = min(e.frame.height, e.frame.width) / 3
         }
         for (i, d) in dividers.enumerated() {
             d.frame = CGRect(x: slotW * CGFloat(i + 1) - 0.25, y: h * 0.25, width: 0.5, height: h * 0.5)

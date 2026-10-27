@@ -10,6 +10,7 @@ let package = Package(
         .package(path: "../IBoardLayout"),
         .package(path: "../IBoardEngine"),
         .package(path: "../IBoardTheme"),
+        .package(path: "../IBoardOTP"),
     ],
     targets: [
         .target(name: "IBoardUI", dependencies: [
@@ -17,6 +18,7 @@ let package = Package(
             .product(name: "IBoardLayout", package: "IBoardLayout"),
             .product(name: "IBoardEngine", package: "IBoardEngine"),
             .product(name: "IBoardTheme", package: "IBoardTheme"),
+            .product(name: "IBoardOTP", package: "IBoardOTP"),
         ]),
         .testTarget(name: "IBoardUITests", dependencies: [
             "IBoardUI",

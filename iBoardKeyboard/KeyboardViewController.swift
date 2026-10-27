@@ -2,6 +2,7 @@ import UIKit
 import IBoardCore
 import IBoardEngine
 import IBoardLayout
+import IBoardOTP
 import IBoardTheme
 import IBoardUI
 
@@ -55,6 +56,16 @@ final class KeyboardViewController: UIInputViewController {
     private enum DragMode { case none, cursor(SpacebarCursorDrag), deleteWords(BackspaceSwipePlan) }
     private var dragMode = DragMode.none
     private var lastStrip = StripContent.empty
+    // Strip chips (M6-03 code chip, M6-06 personal info). Codes are read-only from the App Group (works without Full
+    // Access, P-23); inserted ids are remembered in memory only, to emulate "clear after insert" because the keyboard
+    // cannot delete from the shared store.
+    private let otpReader = OTPReader()
+    private var consumedCodeIDs = Set<String>()
+    private var freshCodes: [StoredCode] = []
+    private var chipPlan: [StripChip?] = [nil, nil, nil]
+    private var chipTimer: Timer?
+    /// F7 info saved by the app (M6-06); read-only here.
+    private var personalInfo = PersonalInfo.empty
     /// Keyboard-local placeholder for the incognito toggle (F15 UI comes later). Never leaves the extension.
     static let incognitoKey = "iBoard.incognito"
     #if DEBUG
@@ -84,6 +95,8 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
         applyFieldConfig(forceFieldChange: true)
         applyAppCommands()
+        reloadCodes()
+        startChipTimer()
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
         grid.accessibilityValue = "haptics=\(settings.haptics) fullAccess=\(hasFullAccess)"
@@ -113,8 +126,7 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.onStripChange = { [weak self] content in
             guard let self else { return }
             self.lastStrip = content
-            if case .deleteWords = self.dragMode { return } // the delete preview owns the strip until release
-            self.strip.slotTexts = content.texts
+            self.renderStrip()
         }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
@@ -141,6 +153,7 @@ final class KeyboardViewController: UIInputViewController {
         refreshAppearanceAndTraits()
         applyFieldConfig(forceFieldChange: false)
         updateAutoShift()
+        replanChips()
         // The proxy settles a run-loop turn after the host's edit.
         DispatchQueue.main.async { [weak self] in self?.coordinator.resync() }
     }
@@ -275,8 +288,9 @@ final class KeyboardViewController: UIInputViewController {
         guard !debugStatusInFlight else { return }
         debugStatusInFlight = true
         let status = engineStatus, mode = personalMode, learner = personalStore
+        let chipLine = "chips: codes \(freshCodes.count) consumed \(consumedCodeIDs.count) info \(personalInfo.isEmpty ? "none" : "set")"
         Task { [weak self] in
-            var lines = [status]
+            var lines = [status, chipLine]
             if let learner {
                 let st = await learner.store.stats()
                 let learning = await learner.isLearning
@@ -298,6 +312,64 @@ final class KeyboardViewController: UIInputViewController {
             self.autoShiftPending = false
             self.updateAutoShift()
         }
+    }
+
+    // MARK: Strip chips (M6-03, M6-06)
+
+    /// Re-reads the fresh codes from the App Group (cheap, no Full Access needed) and re-plans the chips.
+    private func reloadCodes() {
+        freshCodes = otpReader.freshCodes(excluding: consumedCodeIDs)
+        replanChips()
+    }
+
+    private func startChipTimer() {
+        chipTimer?.invalidate()
+        // A code can arrive while the keyboard is visible (the Message automation runs in the background).
+        chipTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] t in
+            guard let self else { t.invalidate(); return }
+            MainActor.assumeIsolated { self.reloadCodes() }
+        }
+    }
+
+    private func currentChipField() -> ChipField {
+        let proxy = textDocumentProxy
+        return ChipField(
+            contentType: proxy.textContentType?.rawValue,
+            keyboard: FieldKeyboardKind(uikitRawValue: proxy.keyboardType?.rawValue ?? 0),
+            isSecure: proxy.isSecureTextEntry ?? false,
+            isEmpty: !proxy.hasText
+        )
+    }
+
+    private func replanChips() {
+        let plan = ChipPlanner.plan(codes: freshCodes, info: personalInfo, field: currentChipField(), suggestions: lastStrip.slots)
+        guard plan != chipPlan else { return }
+        chipPlan = plan
+        renderStrip()
+    }
+
+    /// One tap inserts the chip's text as is (never learned) and hides an inserted code.
+    private func insertChip(_ chip: StripChip) {
+        coordinator.insertDirect(chip.insert)
+        if case .code(let id) = chip.source {
+            consumedCodeIDs.insert(id)
+            reloadCodes()
+        }
+        scheduleAutoShift()
+    }
+
+    /// The strip shows (highest priority first): the backspace delete preview, chips over suggestions.
+    private func renderStrip() {
+        if case .deleteWords = dragMode { return } // the delete preview owns the strip until release
+        var texts = lastStrip.texts
+        var emphasized = Set<Int>()
+        for (i, chip) in chipPlan.enumerated() where i < texts.count {
+            guard let chip else { continue }
+            texts[i] = chip.display
+            if chip.emphasized { emphasized.insert(i) }
+        }
+        strip.emphasizedSlots = emphasized
+        strip.slotTexts = texts
     }
 
     // MARK: Layout
@@ -334,6 +406,8 @@ final class KeyboardViewController: UIInputViewController {
         settleOnDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
+        chipTimer?.invalidate()
+        chipTimer = nil
     }
 
     private var heightKey: String {
@@ -417,7 +491,11 @@ final class KeyboardViewController: UIInputViewController {
                 stripTouchID = nil
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = Int((point.x - strip.frame.minX) / (strip.frame.width / CGFloat(SuggestionStripView.slotCount)))
-                    coordinator.tapSlot(slot)
+                    if slot >= 0, slot < chipPlan.count, let chip = chipPlan[slot] {
+                        insertChip(chip)
+                    } else {
+                        coordinator.tapSlot(slot)
+                    }
                     feedback()
                     scheduleAutoShift()
                 }
@@ -505,8 +583,10 @@ final class KeyboardViewController: UIInputViewController {
         arbiter = nil
         arbiterTouchID = -1
         gestureKeyIndex = -1
-        if case .deleteWords = dragMode { strip.slotTexts = lastStrip.texts }
+        let wasDeleting: Bool
+        if case .deleteWords = dragMode { wasDeleting = true } else { wasDeleting = false }
         dragMode = .none
+        if wasDeleting { renderStrip() }
     }
 
     /// Feeds a move to the arbiter. Returns true when the move was consumed by a cursor / delete drag.
@@ -553,6 +633,7 @@ final class KeyboardViewController: UIInputViewController {
         if case .deleteWords(let old) = dragMode, old == plan { return }
         dragMode = .deleteWords(plan)
         let preview = plan.preview.replacingOccurrences(of: "\n", with: " ")
+        strip.emphasizedSlots = []
         strip.slotTexts = ["", preview, ""]
     }
 
