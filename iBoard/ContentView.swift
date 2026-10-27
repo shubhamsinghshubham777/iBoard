@@ -6,15 +6,37 @@ import IBoardCore
 struct ContentView: View {
     @AppStorage(OnboardingStorage.completedKey) private var onboardingCompleted = false
     @State private var showOnboarding = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var section: Destination? = .home
+
+    enum Destination: String, CaseIterable, Identifiable {
+        case home = "Set up", settings = "Settings", theme = "Theme studio", dictionary = "Dictionary"
+        case insights = "Typing insights", about = "Privacy, licenses and about"
+        var id: String { rawValue }
+        var icon: String {
+            switch self {
+            case .home: "keyboard"
+            case .settings: "gearshape"
+            case .theme: "paintpalette"
+            case .dictionary: "character.book.closed"
+            case .insights: "chart.bar"
+            case .about: "hand.raised"
+            }
+        }
+    }
+
     var body: some View {
+        Group {
+            if sizeClass == .regular { wide } else { compact }
+        }
+        .onAppear { if !onboardingCompleted { showOnboarding = true } }
+        .fullScreenCover(isPresented: $showOnboarding) { OnboardingView() }
+    }
+
+    private var compact: some View {
         NavigationStack {
             List {
-                Section("Set up") {
-                    SetupStepsView()
-                    Button("Run the guided setup again") { showOnboarding = true }
-                    NavigationLink("Verification codes (Shortcuts)") { OTPSetupView() }
-                }
-                Section("Try it") { TryKeyboardView() }
+                homeSections
                 Section {
                     NavigationLink("Settings") { SettingsView() }
                     NavigationLink("Dictionary") { DictionaryManagerView() }
@@ -24,8 +46,36 @@ struct ContentView: View {
             }
             .navigationTitle("iBoard")
         }
-        .onAppear { if !onboardingCompleted { showOnboarding = true } }
-        .fullScreenCover(isPresented: $showOnboarding) { OnboardingView() }
+    }
+
+    /// Wide windows (iPad, iPhone Duo inner display, Split View, Stage Manager): sidebar + detail (M11-06).
+    private var wide: some View {
+        NavigationSplitView {
+            List(Destination.allCases, selection: $section) { s in
+                Label(s.rawValue, systemImage: s.icon).tag(s)
+            }
+            .navigationTitle("iBoard")
+        } detail: {
+            NavigationStack {
+                switch section ?? .home {
+                case .home: List { homeSections }.navigationTitle("Set up")
+                case .settings: SettingsView()
+                case .theme: ThemeStudioView()
+                case .dictionary: DictionaryManagerView()
+                case .insights: InsightsView()
+                case .about: AboutView()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var homeSections: some View {
+        Section("Set up") {
+            SetupStepsView()
+            Button("Run the guided setup again") { showOnboarding = true }
+            NavigationLink("Verification codes (Shortcuts)") { OTPSetupView() }
+        }
+        Section("Try it") { TryKeyboardView() }
     }
 }
 
@@ -35,7 +85,7 @@ struct SetupStepsView: View {
             Label("Open Settings", systemImage: "1.circle")
             Label("General > Keyboard > Keyboards > Add New Keyboard", systemImage: "2.circle")
             Label("Choose iBoard", systemImage: "3.circle")
-            Label("Full Access is optional (needed only for haptics and opt-in features)", systemImage: "4.circle")
+            Label("Full Access is optional: it only adds haptics, clipboard history, sharing your dictionary with this app, and iCloud sync", systemImage: "4.circle")
         }
         .font(.subheadline)
         Button("Open Settings") {

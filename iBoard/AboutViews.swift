@@ -10,7 +10,7 @@ enum LegalContent {
         Item(title: "What you type stays on your device", body: "iBoard never logs or stores the text you type. It learns words only into a local dictionary that you can search, edit, export and erase."),
         Item(title: "No network from the keyboard", body: "The keyboard does not use the network. Features that would need it are opt-in and off by default."),
         Item(title: "No tracking, no data collection", body: "iBoard declares no tracking, no tracking domains and no collected data types in its privacy manifests."),
-        Item(title: "Full Access is optional", body: "Typing, suggestions, autocorrect, learning and your settings work without Full Access. Full Access is needed only for haptics, and for the keyboard to share your dictionary and counters with this app."),
+        Item(title: "Full Access is optional", body: "Typing, suggestions, autocorrect, learning and your settings work without Full Access. iBoard does not ask for Full Access to type. If you turn it on yourself, it enables exactly four things: haptic feedback, clipboard history (opt-in), sharing your dictionary and counters with this app, and iCloud sync (opt-in). Nothing you type is sent anywhere."),
         Item(title: "Counters hold no text", body: "Typing insights are aggregate numbers such as words typed and autocorrect undo rate. You can reset them at any time."),
         Item(title: "Exports are your responsibility", body: "A dictionary export is a plain text file containing your words. Anyone you give it to can read it."),
     ]

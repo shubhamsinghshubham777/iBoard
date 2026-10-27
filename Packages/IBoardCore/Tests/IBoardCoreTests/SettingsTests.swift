@@ -76,9 +76,24 @@ struct SettingsTests {
         #expect(o.numberRow == true)
     }
 
+    @Test func v3PayloadMigratesWithClipboardDefaults() throws {
+        let m = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"version":3,"haptics":false,"hapticPack":"soft"}"#.utf8))
+        #expect(m.version == 4)
+        #expect(m.hapticPack == .soft)
+        #expect(m.clipboardHistory == false)
+        #expect(m.clipboardTTL == .oneHour)
+    }
+
+    @Test func clipboardFieldsRoundTripAndTolerateJunk() throws {
+        let v = IBoardSettings(clipboardHistory: true, clipboardTTL: .oneDay)
+        #expect(try JSONDecoder().decode(IBoardSettings.self, from: JSONEncoder().encode(v)) == v)
+        let j = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"clipboardTTL":"forever"}"#.utf8))
+        #expect(j.clipboardTTL == .oneHour)
+    }
+
     @Test func migratesV2ToV3WithDefaults() throws {
         let m = try JSONDecoder().decode(IBoardSettings.self, from: Data(#"{"version":2,"haptics":false,"numberRow":true,"heightScales":{"phone.portrait":1.2}}"#.utf8))
-        #expect(m.version == 3)
+        #expect(m.version == IBoardSettings.currentVersion)
         #expect(m.haptics == false && m.numberRow)
         #expect(m.heightScale(forKey: "phone.portrait") == 1.2)
         #expect(m.autocorrect == .conservative)

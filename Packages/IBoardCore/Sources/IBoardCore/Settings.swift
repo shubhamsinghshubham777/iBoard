@@ -3,7 +3,7 @@ import Foundation
 /// Versioned user settings written by the companion app and read by the keyboard (works WITHOUT Full Access;
 /// keyboard->app writes do not work, see docs/spikes/device-session-2026-10-26.md). Contains no typed text.
 public struct IBoardSettings: Codable, Sendable, Equatable {
-    public static let currentVersion = 3
+    public static let currentVersion = 4
     public static let defaults = IBoardSettings()
 
     public var version: Int
@@ -43,6 +43,10 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     public var punctuationKeys: Bool
     /// How long a still touch must last before it counts as a long press (alternates, punctuation row).
     public var longPressDelay: LongPressDelay
+    /// Clipboard history (M9-03). Opt-in, off by default; only works with Full Access (P-23).
+    public var clipboardHistory: Bool
+    /// How long unpinned clipboard items are kept.
+    public var clipboardTTL: ClipboardTTL
 
     public init(
         version: Int = IBoardSettings.currentVersion, haptics: Bool = true, keyClickSound: Bool = false,
@@ -51,8 +55,11 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         smartPunctuation: Bool = true, swipeTyping: Bool = true, incognitoByDefault: Bool = false,
         spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
         duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true,
-        longPressDelay: LongPressDelay = .standard, hapticPack: HapticPack = .standard
+        longPressDelay: LongPressDelay = .standard, hapticPack: HapticPack = .standard,
+        clipboardHistory: Bool = false, clipboardTTL: ClipboardTTL = .oneHour
     ) {
+        self.clipboardHistory = clipboardHistory
+        self.clipboardTTL = clipboardTTL
         self.hapticPack = hapticPack
         self.version = version
         self.haptics = haptics
@@ -89,7 +96,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
         case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys, longPressDelay
         case flickHints = "keyHints"
-        case hapticPack
+        case hapticPack, clipboardHistory, clipboardTTL
     }
 
     /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
@@ -121,6 +128,22 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.punctuationKeys = try c.decodeIfPresent(Bool.self, forKey: .punctuationKeys) ?? d.punctuationKeys
         self.longPressDelay = (try? c.decodeIfPresent(LongPressDelay.self, forKey: .longPressDelay)) ?? d.longPressDelay
         self.hapticPack = (try? c.decodeIfPresent(HapticPack.self, forKey: .hapticPack)) ?? d.hapticPack
+        // v4 adds clipboardHistory + clipboardTTL.
+        self.clipboardHistory = try c.decodeIfPresent(Bool.self, forKey: .clipboardHistory) ?? d.clipboardHistory
+        self.clipboardTTL = (try? c.decodeIfPresent(ClipboardTTL.self, forKey: .clipboardTTL)) ?? d.clipboardTTL
+    }
+}
+
+/// Retention of unpinned clipboard history items.
+public enum ClipboardTTL: String, Codable, Sendable, CaseIterable {
+    case fiveMinutes, oneHour, oneDay
+
+    public var seconds: TimeInterval {
+        switch self {
+        case .fiveMinutes: 300
+        case .oneHour: 3600
+        case .oneDay: 86400
+        }
     }
 }
 

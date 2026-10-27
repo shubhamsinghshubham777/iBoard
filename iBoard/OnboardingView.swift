@@ -95,7 +95,7 @@ private struct EnableKeyboardStep: View {
 private struct FullAccessStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("iBoard works without Full Access. It never sends what you type anywhere. Full Access only unlocks features iOS withholds from keyboards without it.")
+            Text("iBoard does not need Full Access to type. It never sends what you type anywhere. If you choose to turn it on, it enables only: haptics, clipboard history (opt-in), showing learned words and counters in this app, and iCloud sync (opt-in).")
                 .font(.subheadline)
             ForEach(FullAccessMatrix.rows, id: \.feature) { row in
                 HStack(alignment: .top, spacing: 10) {

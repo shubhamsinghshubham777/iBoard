@@ -29,12 +29,30 @@ struct SettingsView: View {
                 Toggle("Incognito by default", isOn: $settings.incognitoByDefault)
                 Text("Nothing is learned while incognito is on.").font(.footnote).foregroundStyle(.secondary)
             }
+            Section {
+                Toggle("Clipboard history", isOn: $settings.clipboardHistory)
+                if settings.clipboardHistory {
+                    Picker("Keep items for", selection: $settings.clipboardTTL) {
+                        ForEach(ClipboardTTL.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                }
+            } header: {
+                Text("Clipboard")
+            } footer: {
+                Text("Needs Full Access. Items stay on this phone, pinned items are kept, and codes expire after 10 minutes. Nothing is read from password fields.")
+            }
             Section("Feel") {
                 Toggle("Haptic feedback (needs Full Access)", isOn: $settings.haptics)
                 if settings.haptics {
                     Picker("Haptic strength", selection: $settings.hapticIntensity) {
                         ForEach(HapticIntensity.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                     }
+                }
+                if settings.haptics {
+                    Picker("Haptic pack", selection: $settings.hapticPack) {
+                        ForEach(HapticPack.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    Text(settings.hapticPack.explanation).font(.footnote).foregroundStyle(.secondary)
                 }
                 Toggle("Key click sound", isOn: $settings.keyClickSound)
                 Picker("Long-press time", selection: $settings.longPressDelay) {
@@ -112,6 +130,35 @@ extension AutocorrectLevel {
         case .conservative: "Fixes only clear typos. Backspace right after a correction undoes it."
         case .balanced: "Fixes most likely typos."
         case .aggressive: "Corrects eagerly. Backspace right after a correction undoes it."
+        }
+    }
+}
+
+extension HapticPack {
+    var title: String {
+        switch self {
+        case .standard: "Standard"
+        case .soft: "Soft"
+        case .crisp: "Crisp"
+        case .lettersOnly: "Letters only"
+        }
+    }
+    var explanation: String {
+        switch self {
+        case .standard: "The default feel."
+        case .soft: "Everything a step lighter and softer."
+        case .crisp: "Sharper taps for letters and delete."
+        case .lettersOnly: "Only letter keys tap; delete, space and actions stay quiet."
+        }
+    }
+}
+
+extension ClipboardTTL {
+    var title: String {
+        switch self {
+        case .fiveMinutes: "5 minutes"
+        case .oneHour: "1 hour"
+        case .oneDay: "1 day"
         }
     }
 }
