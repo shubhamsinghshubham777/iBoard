@@ -96,6 +96,19 @@ public struct LayoutMetrics: Sendable, Equatable {
     /// ESTIMATED cap for the numeric pad block width.
     static let maxPadWidth: CGFloat = 520
 
+    /// Compact chrome (`LayoutSettings.compact`): strip 44 -> 36 (portrait) / 32 -> 28, key gap 6 -> 4.5, side margin
+    /// 6.67 -> 4, keys 43 -> 46 high, rows 11 -> 8 apart. Pads are left alone.
+    static let compactColumnGap: CGFloat = 4.5
+    static let compactEdgeMargin: CGFloat = 4
+
+    static func reference(kind: LayoutKind, orientation: LayoutOrientation, compact: Bool = false) -> Reference {
+        let base = reference(kind: kind, orientation: orientation)
+        guard compact, !kind.isPad else { return base }
+        return orientation == .portrait
+            ? Reference(stripHeight: 36, topGap: 4, keyHeight: 46, rowGap: 8, bottomInset: 3)
+            : Reference(stripHeight: 28, topGap: 4, keyHeight: 38, rowGap: 6, bottomInset: 3)
+    }
+
     static func reference(kind: LayoutKind, orientation: LayoutOrientation) -> Reference {
         switch (kind.isPad, orientation) {
         case (false, .portrait): portraitLetters
@@ -152,7 +165,7 @@ public struct LayoutMetrics: Sendable, Equatable {
     ) -> LayoutMetrics {
         let mode = duoMode(containerSize: containerSize, traits: traits, kind: kind, settings: rawSettings)
         let settings = effectiveSettings(rawSettings, mode: mode)
-        let ref = reference(kind: kind, orientation: traits.orientation)
+        let ref = reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
         let rows = rowCount(kind: kind, settings: settings)
 
         let availableHeight = max(containerSize.height - safeArea.bottom - ref.stripHeight, 1)
@@ -160,8 +173,9 @@ public struct LayoutMetrics: Sendable, Equatable {
 
         let availW = max(containerSize.width - safeArea.left - safeArea.right, 1)
         let widthRatio = availW / referenceWidth
-        let gap = referenceColumnGap * min(max(widthRatio, 1), 1.25)
-        let margin = referenceEdgeMargin * min(max(widthRatio, 0.96), 1.15)
+        let compactKeys = settings.compact && !kind.isPad
+        let gap = (compactKeys ? compactColumnGap : referenceColumnGap) * min(max(widthRatio, 1), 1.25)
+        let margin = (compactKeys ? compactEdgeMargin : referenceEdgeMargin) * min(max(widthRatio, 0.96), 1.15)
 
         var keyWidth = (availW - 2 * margin - 9 * gap) / 10
         var regionWidth = availW   // horizontal space the standard block is centred in

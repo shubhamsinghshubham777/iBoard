@@ -242,6 +242,16 @@ struct TraitVariantTests {
         #expect(layout(.numberPad, settings: LayoutSettings(emojiKey: true)).firstKey(.emoji) == nil)
     }
 
+    @Test func compactChromeGivesBiggerKeysAndAShorterStrip() {
+        let plain = layout(), tight = layout(settings: LayoutSettings(compact: true))
+        #expect(tight.stripFrame.height < plain.stripFrame.height)
+        let a = plain.firstKey(.letter("a"))!.frame, b = tight.firstKey(.letter("a"))!.frame
+        #expect(b.width > a.width && b.height > a.height)
+        #expect(tight.keys.allSatisfy { $0.frame.minX >= 0 && $0.frame.maxX <= 390 })
+        let (q, w) = (tight.firstKey(.letter("q"))!.frame, tight.firstKey(.letter("w"))!.frame)
+        #expect(w.minX - q.maxX < 5)
+    }
+
     @Test func email() {
         let l = layout(traits: LayoutTraits(keyboardKind: .emailAddress))
         let bottom = l.keys.filter { $0.row == 3 }.map(\.identity)

@@ -169,6 +169,9 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
     /// An emoji key next to 123 (letters, numbers and symbols layers). Off in the Native metrics; the keyboard turns
     /// it on. It takes half of the 123 key's width (a third each with the system globe key).
     public var emojiKey: Bool
+    /// Tighter chrome: a shorter suggestion strip, less space between the strip and the keys, smaller gaps between
+    /// keys (bigger keys at the same width) and taller keys. Off in the Native metrics.
+    public var compact: Bool
 
     public init(
         numberRow: Bool = false,
@@ -179,7 +182,8 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         splitPortrait: Bool = false,
         splitLandscape: Bool = false,
         fillToFold: Bool = false,
-        emojiKey: Bool = false
+        emojiKey: Bool = false,
+        compact: Bool = false
     ) {
         self.numberRow = numberRow
         self.heightScale = heightScale
@@ -190,10 +194,11 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         self.splitLandscape = splitLandscape
         self.fillToFold = fillToFold
         self.emojiKey = emojiKey
+        self.compact = compact
     }
 
     private enum CodingKeys: String, CodingKey {
-        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold, emojiKey
+        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold, emojiKey, compact
     }
 
     // Tolerant decoding: settings stored before the Duo fields existed still load.
@@ -208,6 +213,7 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
         splitLandscape = try c.decodeIfPresent(Bool.self, forKey: .splitLandscape) ?? false
         fillToFold = try c.decodeIfPresent(Bool.self, forKey: .fillToFold) ?? false
         emojiKey = try c.decodeIfPresent(Bool.self, forKey: .emojiKey) ?? false
+        compact = try c.decodeIfPresent(Bool.self, forKey: .compact) ?? false
     }
 
     public func isSplit(for orientation: LayoutOrientation) -> Bool {

@@ -129,7 +129,7 @@ public enum LayoutEngine {
         kind: LayoutKind,
         settings: LayoutSettings = LayoutSettings()
     ) -> CGFloat {
-        let ref = LayoutMetrics.reference(kind: kind, orientation: traits.orientation)
+        let ref = LayoutMetrics.reference(kind: kind, orientation: traits.orientation, compact: settings.compact)
         let mode = LayoutMetrics.duoMode(
             containerSize: CGSize(width: width, height: 0), traits: traits, kind: kind, settings: settings
         )

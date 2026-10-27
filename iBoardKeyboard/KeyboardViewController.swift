@@ -604,6 +604,7 @@ final class KeyboardViewController: UIInputViewController {
         var ls = LayoutSettings.defaults(for: traits)
         ls.numberRow = settings.numberRow || ls.numberRow
         ls.emojiKey = true
+        ls.compact = true
         // The height is chosen in the app (Settings > Keyboard height); there is no drag handle any more.
         ls.heightScale = CGFloat(settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {

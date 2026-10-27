@@ -57,7 +57,8 @@ public final class EmojiPanelView: UIView {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 4
-        layout.sectionInset = UIEdgeInsets(top: 2, left: 6, bottom: 6, right: 6)
+        layout.sectionInset = UIEdgeInsets(top: 2, left: 6, bottom: 8, right: 6)
+        layout.sectionHeadersPinToVisibleBounds = true // the category name stays visible while scrolling
         grid = UICollectionView(frame: .zero, collectionViewLayout: layout)
         super.init(frame: .zero)
         configure()
@@ -78,16 +79,18 @@ public final class EmojiPanelView: UIView {
 
         bar.axis = .horizontal
         bar.distribution = .fillEqually
-        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.layoutMargins = UIEdgeInsets(top: 3, left: 4, bottom: 3, right: 4)
+        bar.isLayoutMarginsRelativeArrangement = true
         let close = UIButton(type: .system)
         close.setTitle("ABC", for: .normal)
+        close.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
         close.accessibilityLabel = "Back to keyboard"
         close.addAction(UIAction { [weak self] _ in self?.onClose?() }, for: .touchUpInside)
         bar.addArrangedSubview(close)
         func addTab(_ t: Tab, _ glyph: String, _ label: String) {
             let b = UIButton(type: .system)
             b.setTitle(glyph, for: .normal)
-            b.titleLabel?.font = .systemFont(ofSize: 18)
+            b.titleLabel?.font = .systemFont(ofSize: 19)
             b.titleLabel?.adjustsFontSizeToFitWidth = true
             b.accessibilityLabel = label
             b.addAction(UIAction { [weak self] _ in self?.select(t) }, for: .touchUpInside)
@@ -110,6 +113,15 @@ public final class EmojiPanelView: UIView {
             bar.bottomAnchor.constraint(equalTo: bottomAnchor),
             bar.heightAnchor.constraint(equalToConstant: 36),
         ])
+        let hairline = UIView()
+        hairline.backgroundColor = UIColor.separator
+        hairline.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(hairline)
+        NSLayoutConstraint.activate([
+            hairline.leadingAnchor.constraint(equalTo: leadingAnchor), hairline.trailingAnchor.constraint(equalTo: trailingAnchor),
+            hairline.bottomAnchor.constraint(equalTo: bar.topAnchor), hairline.heightAnchor.constraint(equalToConstant: 0.5),
+        ])
+        bar.translatesAutoresizingMaskIntoConstraints = false
     }
 
     // MARK: Lifecycle (memory)
@@ -234,9 +246,9 @@ public final class EmojiPanelView: UIView {
     private func highlight(_ t: Tab?) {
         for (tt, b) in tabButtons {
             // No `isSelected`: the system button style paints a solid accent block over the glyph.
-            b.alpha = tt == t ? 1 : 0.55
-            b.backgroundColor = tt == t ? UIColor.label.withAlphaComponent(0.12) : .clear
-            b.layer.cornerRadius = 8
+            b.alpha = tt == t ? 1 : 0.5
+            b.backgroundColor = tt == t ? UIColor.label.withAlphaComponent(0.14) : .clear
+            b.layer.cornerRadius = 10
         }
     }
 
@@ -315,7 +327,11 @@ extension EmojiPanelView: UICollectionViewDataSource, UICollectionViewDelegateFl
     }
 
     public func collectionView(_ cv: UICollectionView, layout: UICollectionViewLayout, sizeForItemAt ip: IndexPath) -> CGSize {
-        mode == .kaomoji ? CGSize(width: max(80, (cv.bounds.width - 24) / 3), height: 40) : CGSize(width: 44, height: 44)
+        if mode == .kaomoji { return CGSize(width: max(80, (cv.bounds.width - 24) / 3), height: 40) }
+        // Equal columns that use the full width (no ragged right edge): as many 40+ pt cells as fit.
+        let usable = cv.bounds.width - 12
+        let columns = max(6, Int(usable / 40))
+        return CGSize(width: floor(usable / CGFloat(columns)), height: 42)
     }
 
     public func collectionView(_ cv: UICollectionView, didSelectItemAt ip: IndexPath) {
@@ -373,7 +389,9 @@ private final class EmojiHeader: UICollectionReusableView {
     let label = UILabel()
     override init(frame: CGRect) {
         super.init(frame: frame)
-        label.font = .systemFont(ofSize: 12, weight: .semibold)
+        // Pinned over scrolling emoji: a soft opaque band keeps the name readable.
+        backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.17, alpha: 0.96) : UIColor(white: 0.90, alpha: 0.96) }
+        label.font = .systemFont(ofSize: 12, weight: .bold)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)

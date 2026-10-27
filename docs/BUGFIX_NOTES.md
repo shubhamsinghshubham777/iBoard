@@ -94,3 +94,49 @@ that supports it) and is not available. The owner should decide whether live del
 4. Spacebar drag right at the end of a line in the host where it failed before (name it, so it can be added to the notes).
 5. Resize handle: stable preview, one change on release (also on the Duo).
 6. Trail look and speed; emoji panel scroll position memory; backspace swipe in Notes/WhatsApp (live deletion, undo behaviour).
+
+---
+# Round 2 (owner device feedback, branch `fix/owner-bugs-2`, 2026-10-27)
+Verified on an iPhone 12 / iOS 27.0 simulator (axe) unless stated; nothing re-tested on the physical phone.
+
+- **Emoji panel went blank on fast scroll — root cause measured, fixed.** The keyboard process grew to **108 MB** (Debug sim)
+  after scrolling the whole list: CoreText caches a colour-emoji glyph bitmap per emoji (~43 KB at 30 pt @3x) and never
+  frees them, so the extension reached its memory ceiling and the system restarted it (blank panel). Emoji are now 26 pt
+  rendered at 2x and the shrink-to-fit measurement is off for single emoji: **28-35 MB after 40 fast full-list scrolls**.
+  `didReceiveMemoryWarning` no longer empties a visible list.
+- **Resize drag handle removed.** Keyboard size is chosen in the app (Settings > Keyboard size): six presets
+  (Extra small 80% ... Maximum 140%) per display class and orientation (`HeightPreset`); takes effect next time the keyboard
+  appears. The old slider values map to the nearest preset. (Duo "fill to fold" snap and double-tap number-row on the handle
+  went with it; the number row stays a setting.)
+- **Emoji key next to 123** (real key in the layout, `LayoutSettings.emojiKey`; with the system globe key the three share
+  the old 123 width). Replacing the system globe is NOT possible: iOS draws that key itself (P-09). The strip button is gone.
+  Fixed a crash I introduced (exclusivity violation: opening emoji inside the machine's own callback) - now deferred a turn.
+- **All screens resident:** the emoji panel is built hidden ~1.5 s after the keyboard loads and only shown/hidden afterwards
+  (instant open). Letters/numbers/symbols were already instant (same grid, glyph cache). Honest limit: "always loaded, no memory
+  issues" is a trade-off, not a guarantee; resident emoji costs memory (about +6 MB) and a memory warning still drops its
+  catalog. Recheck the footprint on the iPhone 12.
+- **Compact chrome** (`LayoutSettings.compact`, on in the keyboard): strip 44 -> 36 pt, strip-to-keys gap 8 -> 4, key gap
+  6 -> 4.5, side margin 6.67 -> 4, keys 43 -> 46 pt high, rows 11 -> 8 apart. Letter keys ~5% wider, ~7% taller; total height
+  260 -> 251 at Standard size (use Large for more). Native-metrics tests stay valid (compact is off in them).
+- **Swipe trail, third version:** thick tapered ribbon (thin cool tail -> 12 pt bright head), soft halo, white-rimmed bead at the
+  fingertip, seamless (no stepped joints). Reduce Motion unchanged.
+- **Emoji panel UI:** equal-width columns (no ragged edge), pinned category headers on an opaque band, hairline above a
+  roomier chip bar with soft-filled selection.
+- Crashes found by simulator testing and fixed: Auto Layout exception from a constraint added before its view was in the
+  hierarchy (emoji hairline), exclusivity violation above.
+
+## Proposed UI/UX improvements (not built; pick any)
+1. **Suggestion strip as a tinted pill row**: best word bold, others regular, hairline separators only between filled slots; fade
+   in new words (60 ms) instead of swapping, and show the autocorrect target with a subtle underline.
+2. **Key feedback**: tiny scale-down (0.96) plus brief colour flash on press; optional soft pop/key-pop on long-press alternates.
+3. **Smart shift/caps**: caps lock shows an underline bar under the shift glyph and a one-time haptic tick; shift key pulses once at sentence start.
+4. **Spacebar as a live cursor trackpad hint**: while dragging, dim the letters and show "<-  move cursor  ->" on the space key.
+5. **Swipe-typing candidate preview**: show the predicted word live above the fingertip as the trail grows (like Gboard), so the
+   user can lift as soon as it is right.
+6. **Undo last autocorrect chip**: after a correction, the strip's left slot briefly shows "undo: teh" (one tap reverts and teaches).
+7. **Quick punctuation**: long-press comma/period for a one-row strip of ! ? ; : - ( ) instead of the symbols layer.
+8. **One-handed mode** (left/right squeeze) and a **floating/thumb mode** via the new size presets.
+9. **Emoji**: skin-tone/recents "frequently used" row on top, a "search" field that focuses on first keypress, GIF/sticker later.
+10. **Theme polish**: accent-coloured return key by context (send/search/go), subtle gradient on key tiles, per-app themes.
+11. **Haptics**: distinct light/medium ticks for letters / delete / space; a rising tick pattern while deleting words.
+12. **Onboarding in-keyboard**: first-run coach marks for the gestures (swipe, space drag, backspace swipe), dismissible and never shown again.
