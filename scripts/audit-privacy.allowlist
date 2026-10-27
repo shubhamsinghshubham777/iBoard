@@ -1,0 +1,18 @@
+# Privacy audit allowlist. Format: RULE|path-prefix|reason   (lines starting with # are comments)
+# Every entry is a reviewed exception; add one only with a reason a reviewer can check.
+SIGNPOST|Packages/IBoardCore/Sources/IBoardCore/Perf.swift|signpost event carries a numeric footprint (privacy: .public), never text
+STRDESC|iBoard/DictionaryStore.swift|DictionaryError cases carry only counts/versions (checked), shown in the companion app UI, never logged
+PASTEBOARD|iBoardKeyboard/KeyboardViewController.swift|user-triggered cut/copy of the user's own selection (needs Full Access, P-23)
+WRITE|Packages/IBoardCore/Sources/IBoardCore/AppCommands.swift|app-group command queue and shared snapshot plumbing: commands/settings only, no typed text
+WRITE|Packages/IBoardCore/Sources/IBoardCore/Settings.swift|settings values only (height scale, number row, flags)
+WRITE|Packages/IBoardCore/Sources/IBoardCore/Insights.swift|aggregate counters only (counts, no text)
+WRITE|Packages/IBoardEngine/Sources/IBoardEngine/Personal/PersonalStorage.swift|the personal store itself (snapshot + journal), the one sanctioned place words persist
+WRITE|Packages/IBoardEngine/Sources/IBoardEngine/Personal/AdaptiveTouchModel.swift|touch-offset statistics (numbers per key), no text
+WRITE|Packages/IBoardOTP/Sources/IBoardOTP/OTPStore.swift|OTP codes with TTL, opt-in feature (docs/PRIVACY.md)
+WRITE|Packages/IBoardUI/Sources/IBoardUI/PersonalInfo.swift|user-entered personal-info snippets the user chose to store
+WRITE|Packages/IBoardUI/Sources/IBoardUI/AppCommandApplier.swift|applies app commands to settings flags
+WRITE|Packages/IBoardTheme/Sources/IBoardTheme/ThemeStore.swift|theme definitions and user-chosen theme photos
+WRITE|iBoardKeyboard/EngineHost.swift|exports the personal store as shared/dictionary.iboarddict for the companion app (Full Access only)
+WRITE|iBoardKeyboard/KeyboardViewController.swift|incognito flag only
+WRITE|iBoardKeyboard/EmojiHost.swift|emoji recents/skin-tone preferences (emoji, not typed words)
+WRITE|iBoardKeyboard/DebugOverlay.swift|overlay visibility flag

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run `swift test` in every Packages/* dir, then xcodebuild tests on an iPhone simulator.
+# Run the privacy audit, `swift test` in every Packages/* dir and Tools/LexiconBuilder, then xcodebuild tests on an iPhone simulator.
 # Usage: scripts/test.sh [--no-ui]   (--no-ui skips the iBoardUITests target)
 # Env: DERIVED_DATA (default build/DerivedData), SIM_NAME (force a simulator name).
 set -euo pipefail
@@ -13,7 +13,10 @@ for a in "$@"; do
   esac
 done
 
-for pkg in Packages/*/; do
+echo "== privacy audit"
+scripts/audit-privacy.sh
+
+for pkg in Packages/*/ Tools/LexiconBuilder/; do
   [ -f "$pkg/Package.swift" ] || continue
   echo "== swift test: $pkg"
   (cd "$pkg" && swift test)
