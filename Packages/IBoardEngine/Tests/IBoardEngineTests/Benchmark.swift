@@ -32,6 +32,21 @@ enum Benchmark {
 }
 
 extension Benchmark {
+    /// Enforces a roadmap budget (no slack) only in optimised builds. Debug builds on a loaded macOS host are
+    /// not representative, so there the figure is reported and never fails the test (R-11). Release thresholds
+    /// are unchanged. Run strict: `swift test -c release`.
+    static func assertBudget(_ p95: Double, _ budgetMilliseconds: Double,
+                             sourceLocation: SourceLocation = #_sourceLocation) {
+        #if DEBUG
+        if p95 > budgetMilliseconds {
+            print("BENCH NOTE: p95 \(p95) ms exceeds budget \(budgetMilliseconds) ms in a DEBUG build (reporting only; enforced in release)")
+        }
+        #else
+        #expect(p95 <= budgetMilliseconds, "p95 \(p95) ms exceeds budget \(budgetMilliseconds) ms",
+                sourceLocation: sourceLocation)
+        #endif
+    }
+
     static func p50Milliseconds(_ sorted: [UInt64]) -> Double { Double(sorted[sorted.count / 2]) / 1_000_000 }
 
     /// Runs `body`, prints "BENCH name: p50 .. ms p95 .. ms (n ops/iter)" and returns the p95 in ms.

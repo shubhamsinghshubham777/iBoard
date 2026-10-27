@@ -25,7 +25,7 @@ import IBoardEngine
             for i in 0..<1000 { sink &+= lex.lookup(words[i]) ?? 0 }
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
     }
 
     @Test func prefixCompletions() throws {
@@ -43,7 +43,7 @@ import IBoardEngine
             }
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
     }
 
     @Test func languageModelScoring() throws {
@@ -57,7 +57,7 @@ import IBoardEngine
             }
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
     }
 
     @Test func openingIsCheap() throws {

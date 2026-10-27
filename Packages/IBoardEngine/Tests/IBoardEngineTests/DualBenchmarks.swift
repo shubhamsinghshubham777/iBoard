@@ -58,7 +58,7 @@ import IBoardLayout
         }
         print("BENCH tap p95 dual \(String(format: "%.3f", dualP95)) ms vs single \(String(format: "%.3f", singleP95)) ms")
         #expect(sink > 0)
-        #expect(dualP95 <= PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
+        Benchmark.assertBudget(dualP95, PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
     }
 
     @Test func swipeLiftBothLexicons() throws {
@@ -89,7 +89,7 @@ import IBoardLayout
         print("BENCH swipe p95 dual \(String(format: "%.3f", dualP95)) ms vs single \(String(format: "%.3f", singleP95)) ms; "
               + "mean nodes visited (dual) \(visited / traces.count), truncated \(cut)")
         #expect(sink > 0)
-        #expect(dualP95 <= PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
+        Benchmark.assertBudget(dualP95, PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
     }
 
     /// Worst case: long random wandering paths (wide corridor), both tries walked.
@@ -113,6 +113,6 @@ import IBoardLayout
             i += 1
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.swipeLiftToCandidate.budgetMilliseconds)
     }
 }

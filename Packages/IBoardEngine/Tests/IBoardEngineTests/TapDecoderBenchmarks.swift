@@ -42,7 +42,7 @@ import IBoardLayout
             i += 1
         }
         #expect(sink > 0)
-        #expect(p95 <= PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
+        Benchmark.assertBudget(p95, PerfMetric.keystrokeToSuggestions.budgetMilliseconds)
     }
 
     @Test func accuracyOnBenchLexicon() throws {
