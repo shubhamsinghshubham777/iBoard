@@ -87,7 +87,7 @@ for pk in Packages/*/Package.swift; do
   fi
 done
 # 3) Built binary (when present; DERIVED_DATA output or EXT_BINARY=<path>): no CloudKit link, no sync symbols.
-EXT_BIN=${EXT_BINARY:-$(find "${DERIVED_DATA:-build/DerivedData}" -path '*iBoardKeyboard.appex/iBoardKeyboard' -type f 2>/dev/null | head -1)}
+EXT_BIN=${EXT_BINARY:-$(find "${DERIVED_DATA:-build/DerivedData}" -path '*iBoardKeyboard.appex/iBoardKeyboard' -type f 2>/dev/null | head -1 || true)}
 if [ -n "$EXT_BIN" ] && [ -f "$EXT_BIN" ]; then
   if otool -L "$EXT_BIN" | grep -q CloudKit; then
     echo "FAIL [EXT-SYNC] $EXT_BIN links CloudKit.framework"; failures=$((failures + 1))

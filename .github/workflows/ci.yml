@@ -63,6 +63,8 @@ jobs:
       - run: brew install xcodegen
       - run: scripts/build.sh
       - run: scripts/test.sh --no-ui --xcode-only
+        env:
+          IBOARD_SKIP_IF_NO_SIM: 1
 
   ios-ui-tests:
     # UI tests (onboarding, settings, theme studio, dictionary) on the default simulator; same entry point as local runs.
@@ -72,3 +74,5 @@ jobs:
       - uses: actions/checkout@v4
       - run: brew install xcodegen
       - run: scripts/test.sh --xcode-only
+        env:
+          IBOARD_SKIP_IF_NO_SIM: 1
