@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — M4-03/04 swipe contractions
+Owner: glide typing feels much better on device; contractions (i'll, didn't, shouldn't) could not be swiped. Cause: trie search walked letter keys only, apostrophe words unreachable. Fix: apostrophes in lexicon words are zero-width/zero-cost in the trie and skipped in path vertices; `contractionPenalty` 0.5 (smallest value keeping real top-1 at 95.0 after "want" -> "wasn't"). Synthetic: all 19 test contractions top-3 on clean swipes, 190 noisy swipes top-1 88.9 / top-3 100; owner trace set unchanged (95.0/98.0) but has no contractions, so real contraction accuracy is unmeasured. Recorder now prompts 44 contraction/ambiguous-pair words first (swipe5.md); owner offered to record them. Tasks stay `[~]`.
+
 ### 2026-10-27 — M4-04 real swipe traces: F3 top-3 met on owner data
 Owner recorded 201 real swipes on the iPhone 12 (committed with LICENSE.md, Apache-2.0). Baseline real: top-1 92.0 / top-3 93.5, 8 confident-wrong. After endpoint penalty + wider end/corridor radii (tuned on even-index train only): train 94.1/97.0, held-out 96.0/99.0, all 95.0/98.0, 4 confident-wrong (swipe4.md). Synthetic suites unchanged or better. Caveat: one person, one phone, 201 swipes (1 swipe = 1 pt); remaining misses are "dhanyavaad" spelling missing from the Hinglish lexicon (x3), "thanks", "have". Follow-ups: add dhanyavaad variant to Hinglish lexicon; don't auto-commit on confidence for out-of-lexicon words; more traces from other people/hands. M4-04 stays `[~]` until a device feel check of the new decoder.
 

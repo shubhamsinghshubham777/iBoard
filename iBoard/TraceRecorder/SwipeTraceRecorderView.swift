@@ -9,7 +9,14 @@ import SwiftUI
 /// Nothing the person types anywhere else is ever recorded. Hook-up: `NavigationLink("Swipe trace recorder") {
 /// SwipeTraceRecorderView() }` inside a `#if DEBUG` block of SettingsView (or any debug menu).
 struct SwipeTraceRecorderView: View {
-    private static let prompts = [
+    /// Contraction pairs first (ambiguous plain/contracted shapes), recorded plain then contracted.
+    private static let contractionPrompts = [
+        "ill", "i'll", "its", "it's", "well", "we'll", "were", "we're", "wed", "we'd", "hell", "he'll", "shell", "she'll",
+        "id", "i'd", "cant", "can't", "wont", "won't", "dont", "don't", "isnt", "isn't", "wasnt", "wasn't", "lets", "let's",
+        "thats", "that's", "whats", "what's", "youre", "you're", "theyre", "they're",
+        "didn't", "doesn't", "shouldn't", "wouldn't", "couldn't", "haven't", "i'm", "i've", "you've", "there's",
+    ]
+    private static let prompts = contractionPrompts + [
         "the", "and", "that", "have", "with", "this", "from", "they", "would", "there", "their", "what", "about",
         "which", "when", "make", "like", "time", "just", "know", "people", "because", "good", "some", "could",
         "them", "other", "than", "then", "now", "look", "only", "come", "over", "think", "also", "back", "after",
