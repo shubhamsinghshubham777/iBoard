@@ -135,6 +135,23 @@ struct TypingCoordinatorTests {
         #expect(r.coordinator.content.isPrediction)
     }
 
+    @Test func expandShortcutReplacesTokenWithoutLearningIt() async {
+        let r = Rig()
+        await r.type("omw")
+        #expect(r.coordinator.typedToken == "omw")
+        r.coordinator.expandShortcut("On my way!")
+        await r.coordinator.waitForIdle()
+        #expect(r.proxy.text == "On my way! ")
+        #expect(r.coordinator.typedToken == "")
+        #expect(!r.learner.log.contains(.committed("omw", .typed)))
+    }
+
+    @Test func expandShortcutWithNoTokenDoesNothing() async {
+        let r = Rig()
+        r.coordinator.expandShortcut("x")
+        #expect(r.proxy.text == "")
+    }
+
     @Test func autocorrectOnSpaceAndBackspaceRestores() async {
         let r = Rig()
         await r.type("teh ")

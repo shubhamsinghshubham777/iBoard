@@ -129,12 +129,14 @@ public final class SuggestionStripView: UIView {
         backgroundColor = .clear
         for l in slotLabels {
             l.textAlignment = .center
-            l.font = .systemFont(ofSize: 16)
+            l.font = scaledFont(16)
+            l.adjustsFontSizeToFitWidth = true
+            l.minimumScaleFactor = 0.75
             l.lineBreakMode = .byTruncatingTail
             addSubview(l)
         }
         bannerLabel.textAlignment = .center
-        bannerLabel.font = .systemFont(ofSize: 15)
+        bannerLabel.font = scaledFont(15)
         bannerLabel.lineBreakMode = .byTruncatingMiddle
         bannerLabel.adjustsFontSizeToFitWidth = true
         bannerLabel.minimumScaleFactor = 0.75
@@ -143,14 +145,14 @@ public final class SuggestionStripView: UIView {
         pillLayer.cornerCurve = .continuous
         pillLayer.isHidden = true
         layer.insertSublayer(pillLayer, at: 0)
-        searchLabel.font = .systemFont(ofSize: 16)
+        searchLabel.font = scaledFont(16)
         searchLabel.lineBreakMode = .byTruncatingHead
         searchLabel.isHidden = true
         addSubview(searchLabel)
         caret.cornerRadius = 1
         caret.isHidden = true
         layer.addSublayer(caret)
-        trailingLabel.font = .systemFont(ofSize: 16)
+        trailingLabel.font = scaledFont(16)
         trailingLabel.textAlignment = .center
         trailingLabel.isHidden = true
         addSubview(trailingLabel)
@@ -171,9 +173,34 @@ public final class SuggestionStripView: UIView {
         layer.insertSublayer(highlightLayer, at: 0)
         accessibilityIdentifier = "suggestion-strip"
         applyColors()
+        // M13-01: Dynamic Type (capped, the strip has a fixed height) and Reduce Motion changes apply live.
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (self: SuggestionStripView, _) in
+            self.relayout()
+        }
+        NotificationCenter.default.addObserver(forName: UIAccessibility.reduceMotionStatusDidChangeNotification, object: nil,
+                                               queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reduceMotionChanged() }
+        }
     }
 
     public required init?(coder: NSCoder) { fatalError("unused") }
+
+    /// A font that follows the user's text size but never outgrows the strip (`StripTypeScale`).
+    private func scaledFont(_ base: CGFloat, weight: UIFont.Weight = .regular) -> UIFont {
+        let scaled = UIFontMetrics(forTextStyle: .body).scaledValue(for: base, compatibleWith: traitCollection)
+        return .systemFont(ofSize: StripTypeScale.size(base: base, scaled: scaled), weight: weight)
+    }
+
+    /// Reduce Motion switched on: a blinking caret stops at once instead of at the next layout.
+    private func reduceMotionChanged() {
+        if UIAccessibility.isReduceMotionEnabled { caret.removeAnimation(forKey: "blink") }
+        relayout()
+    }
+
+    /// Strip slots that offer VoiceOver custom actions (name list per slot), e.g. "Forget suggestion" or "Open clipboard
+    /// history". `onAccessibilityAction(slot, index)` runs the chosen one.
+    public var slotAccessibilityActions: [Int: [String]] = [:]
+    public var onAccessibilityAction: ((Int, Int) -> Void)?
 
     public override func layoutSubviews() {
         super.layoutSubviews()
@@ -226,11 +253,28 @@ public final class SuggestionStripView: UIView {
                 t.accessibilityFrameInContainerSpace = bounds
                 return [t]
             }
-            if let f = searchField, f.wide { return [] } // the emoji panel's own search UI owns this state
+            if let f = searchField, f.wide {
+                // The emoji panel's search pill (the keys type into it) and its Cancel button.
+                let actionW = f.trailingAction == nil ? 0 : Self.searchActionWidth
+                let pill = CGRect(x: 14, y: 0, width: max(1, bounds.width - 28 - actionW), height: bounds.height)
+                let field = element(f.text.isEmpty ? f.placeholder : "Search emoji, \(f.text)", pill,
+                                    hint: f.trailingAction == nil ? "Double tap to search with the keyboard" : nil)
+                field.accessibilityTraits = f.focused ? [.searchField, .selected] : [.searchField]
+                var list: [UIAccessibilityElement] = [field]
+                if let cancel = f.trailingAction {
+                    list.append(element(cancel, CGRect(x: bounds.width - actionW, y: 0, width: actionW, height: bounds.height)))
+                }
+                return list
+            }
             let rects = slotRects(width: bounds.width, height: bounds.height)
             for (i, text) in slotTexts.enumerated() where i < rects.count {
                 guard let label = KeyAccessibility.stripLabel(slotIndex: i, text: text) else { continue }
                 let e = element(label, rects[i], hint: "Suggestion")
+                if let names = slotAccessibilityActions[i], !names.isEmpty {
+                    e.accessibilityCustomActions = names.enumerated().map { idx, name in
+                        UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onAccessibilityAction?(i, idx); return true }
+                    }
+                }
                 if boldSlots.contains(i) { e.accessibilityHint = "Best suggestion" }
                 out.append(e)
             }
@@ -254,7 +298,7 @@ public final class SuggestionStripView: UIView {
         while altLabels.count < new.options.count {
             let l = UILabel()
             l.textAlignment = .center
-            l.font = .systemFont(ofSize: 22)
+            l.font = scaledFont(22)
             addSubview(l)
             altLabels.append(l)
         }
@@ -377,11 +421,11 @@ public final class SuggestionStripView: UIView {
         bannerLabel.textColor = label
         let areas = overlayRects(w: w)
         bannerLabel.frame = CGRect(x: areas.banner.minX + 6, y: 0, width: areas.banner.width - 12, height: h)
-        bannerLabel.font = .systemFont(ofSize: actionTitles.isEmpty ? 15 : 12)
+        bannerLabel.font = scaledFont(actionTitles.isEmpty ? 15 : 12)
         while actionLabels.count < actionTitles.count {
             let l = UILabel()
             l.textAlignment = .center
-            l.font = .systemFont(ofSize: 14, weight: .medium)
+            l.font = scaledFont(14, weight: .medium)
             l.adjustsFontSizeToFitWidth = true
             l.minimumScaleFactor = 0.7
             addSubview(l)
@@ -423,7 +467,7 @@ public final class SuggestionStripView: UIView {
             l.isHidden = alt != nil || overlay || (searchField != nil && (i == 0 || searchField!.wide))
             let on = alt == nil && !overlay && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
             l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
-            l.font = .systemFont(ofSize: 16, weight: on || boldSlots.contains(i) ? .semibold : skin.fontWeight.uiWeight)
+            l.font = scaledFont(16, weight: on || boldSlots.contains(i) ? .semibold : skin.fontWeight.uiWeight)
             let chip = chipLayers[i]
             chip.isHidden = skin.stripKind != .chips || alt != nil || overlay || on || (l.text ?? "").isEmpty
             chip.frame = l.frame.insetBy(dx: 3, dy: 1)
