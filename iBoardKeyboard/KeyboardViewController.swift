@@ -556,6 +556,12 @@ final class KeyboardViewController: UIInputViewController {
     /// One tap inserts the chip's text as is (never learned) and hides an inserted code.
     private func insertChip(_ chip: StripChip) {
         if chip.source == .clipboardCode { pasteClipboardCode(); return }
+        if chip.source == .systemCode {
+            // Hands over to the next input mode (normally the system keyboard, whose OTP AutoFill shows the Messages
+            // code). Reads nothing, needs no Full Access.
+            advanceToNextInputMode()
+            return
+        }
         coordinator.insertDirect(chip.insert)
         if case .code(let id) = chip.source {
             consumedCodeIDs.insert(id)
@@ -636,6 +642,9 @@ final class KeyboardViewController: UIInputViewController {
         strip.emphasizedSlots = emphasized
         strip.slotTexts = texts
         strip.slotAccessibilityActions = stripAccessibilityActions()
+        var hints: [Int: String] = [:]
+        for (i, chip) in chipPlan.enumerated() where chip?.source == .systemCode { hints[i] = ChipPlanner.systemCodeHint }
+        strip.slotAccessibilityHints = hints
     }
 
     // MARK: VoiceOver actions on the strip (M13-01)

@@ -22,6 +22,8 @@ public struct StripChip: Equatable, Sendable {
         case clipboardCode
         /// M9-03: the newest clipboard history item, pasted on tap.
         case clipboardItem
+        /// Zero-setup route: switches to the next keyboard so the system OTP AutoFill can offer the Messages code.
+        case systemCode
     }
     public var display: String
     public var insert: String
@@ -53,16 +55,28 @@ public struct ChipField: Sendable, Equatable {
 public enum ChipPlanner {
     /// Three entries (one per strip slot); nil keeps the suggestion in that slot.
     public static let pasteCodeTitle = "Paste code"
+    /// Localisable strip title, a11y label and hint of the "Code from Messages" chip.
+    public static let systemCodeTitle = "Code from Messages"
+    public static let systemCodeHint = "Switches to the system keyboard, which can suggest the code from Messages. Use the globe key to come back."
 
     /// `clipboardOffer`: Full Access is on, the user enabled the fallback and no fresh code is stored; a code field then
     /// shows a "Paste code" chip that reads the pasteboard on tap (never before).
     public static func plan(codes: [StoredCode], info: PersonalInfo, field: ChipField,
                             suggestions: [SuggestionSlot?] = [nil, nil, nil], clipboardOffer: Bool = false,
-                            clipboardItem: String? = nil) -> [StripChip?] {
+                            clipboardItem: String? = nil, systemCodeOffer: Bool = true) -> [StripChip?] {
         var out: [StripChip?] = [nil, nil, nil]
         if field.isSecure, !field.isOneTimeCode { return out }
+        // Zero-setup fallback: only in a true one-time-code field with no fresh stored code. A clipboard offer (opt-in)
+        // keeps slot 0, the system chip takes the next slot.
+        let systemChip = StripChip(display: systemCodeTitle, insert: "", source: .systemCode, emphasized: false)
+        let showSystem = systemCodeOffer && codes.isEmpty && field.isOneTimeCode
         if clipboardOffer, codes.isEmpty, field.codeIsProminent {
             out[0] = StripChip(display: pasteCodeTitle, insert: "", source: .clipboardCode, emphasized: false)
+            if showSystem { out[1] = systemChip }
+            return out
+        }
+        if showSystem {
+            out[0] = systemChip
             return out
         }
         if field.codeIsProminent, !codes.isEmpty {

@@ -210,6 +210,8 @@ public final class SuggestionStripView: UIView {
     /// Strip slots that offer VoiceOver custom actions (name list per slot), e.g. "Forget suggestion" or "Open clipboard
     /// history". `onAccessibilityAction(slot, index)` runs the chosen one.
     public var slotAccessibilityActions: [Int: [String]] = [:]
+    /// Optional per-slot VoiceOver hint replacing "Suggestion" (e.g. the Messages code chip).
+    public var slotAccessibilityHints: [Int: String] = [:]
     public var onAccessibilityAction: ((Int, Int) -> Void)?
 
     public override func layoutSubviews() {
@@ -280,7 +282,7 @@ public final class SuggestionStripView: UIView {
             let rects = slotRects(width: bounds.width, height: bounds.height)
             for (i, text) in slotTexts.enumerated() where i < rects.count {
                 guard let label = KeyAccessibility.stripLabel(slotIndex: i, text: text) else { continue }
-                let e = element(label, rects[i], hint: "Suggestion")
+                let e = element(label, rects[i], hint: slotAccessibilityHints[i] ?? "Suggestion")
                 if let names = slotAccessibilityActions[i], !names.isEmpty {
                     e.accessibilityCustomActions = names.enumerated().map { idx, name in
                         UIAccessibilityCustomAction(name: name) { [weak self] _ in self?.onAccessibilityAction?(i, idx); return true }
