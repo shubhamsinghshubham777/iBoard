@@ -198,6 +198,17 @@ struct SwipeCoordinatorTests {
         #expect(calls == 1)
     }
 
+    @Test func swipeBeforeDecoderExistsIsDecodedWhenItArrives() async {
+        let r = SRig()
+        r.coordinator.setSwipeDecoder(nil)
+        r.coordinator.swipeEnded(points: r.points, shift: .off)
+        #expect(r.proxy.text == "")
+        r.decoder.set(SwipeOutcome(words: ["hello"], confidence: 0.9))
+        r.coordinator.setSwipeDecoder(r.decoder)
+        await r.coordinator.waitForIdle()
+        #expect(r.proxy.text == "hello ")
+    }
+
     @Test func noMatchInsertsNothing() async {
         let r = SRig()
         r.decoder.set(nil)

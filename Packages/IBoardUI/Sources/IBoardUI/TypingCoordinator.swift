@@ -244,7 +244,16 @@ public final class TypingCoordinator {
     public func setSwipeDecoder(_ decoder: (any SwipeDecoding)?) {
         swipeDecoder = decoder
         if let decoder, let l = lettersLayout { swipeQueue.enqueue { await decoder.updateLayout(l) } }
+        // A swipe made while the engine was still loading is decoded now (if it is recent enough to still be wanted).
+        if decoder != nil, let early = earlySwipe {
+            earlySwipe = nil
+            if now() - early.time <= Self.earlySwipeLifetime { swipeEnded(points: early.points, shift: early.shift) }
+        }
     }
+
+    /// The last swipe that ended before the decoder existed (first swipe right after the keyboard appears).
+    private var earlySwipe: (points: [SwipePoint], shift: ShiftState, time: TimeInterval)?
+    static let earlySwipeLifetime: TimeInterval = 6
 
     public var hasSwipeDecoder: Bool { swipeDecoder != nil }
     /// A swipe is being decoded (input that arrives meanwhile is replayed after the word is inserted).
@@ -744,7 +753,12 @@ public final class TypingCoordinator {
     /// the engine's queue, and the best word is inserted with auto-space before and an implied space after.
     /// `shift` is the shift state at lift time. Nothing is inserted when there is no decoder yet or no match.
     public func swipeEnded(points: [SwipePoint], shift: ShiftState) {
-        guard config.suggestionsEnabled, let decoder = swipeDecoder, points.count >= 2 else { return }
+        guard config.suggestionsEnabled, points.count >= 2 else { return }
+        guard let decoder = swipeDecoder else {
+            earlySwipe = (points, shift, now())
+            return
+        }
+        earlySwipe = nil
         if deferWhileSwiping({ $0.swipeEnded(points: points, shift: shift) }) { return }
         noteTyped(clearingSwipe: false)
         autocorrectState.noteOtherInput()

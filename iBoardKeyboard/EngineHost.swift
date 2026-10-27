@@ -6,8 +6,8 @@ import IBoardUI
 
 /// Builds the engine and the personal learner OFF the main thread (M2-04 wiring). Nothing here touches typed text.
 ///
-/// - The lexicon / LM are the bundled files `lexicon.iblex` and `lm.iblm` (a 219-word synthetic CC0 fixture until the
-///   real data lands). If they are missing or fail to open the keyboard runs without an engine: no suggestions,
+/// - The lexicon / LM are the bundled `english/lexicon.iblex` and `english/lm.iblm` (125,796 words + 3-gram LM,
+///   docs/ENGLISH_DATA.md), mmap'd; checksums skipped so pages fault in lazily. If they are missing or fail to open the keyboard runs without an engine: no suggestions,
 ///   but contractions, smart punctuation and personal learning still work. Never crashes, never blocks.
 /// - The personal store is extension-local unless Full Access is granted (P-23: shared writes fail without it).
 /// - The engine takes its personal snapshot from the same store the learner writes to (`refreshPersonal`), and the
@@ -46,12 +46,12 @@ enum EngineHost {
         var lm: NGramModel?
         var words = 0
         var secondary: SecondaryLanguage?
-        if let lexURL = Bundle.main.url(forResource: "lexicon", withExtension: "iblex"),
+        if let lexURL = Bundle.main.url(forResource: "lexicon", withExtension: "iblex", subdirectory: "english"),
            let lex = try? Lexicon(url: lexURL, verifyChecksum: false) {
             secondary = loadHinglish()
             // Checksum verification would fault in every page of a large mmapped lexicon (memory budget); the
             // bundle is code-signed, so integrity is already covered.
-            let model = Bundle.main.url(forResource: "lm", withExtension: "iblm")
+            let model = Bundle.main.url(forResource: "lm", withExtension: "iblm", subdirectory: "english")
                 .flatMap { try? NGramModel(url: $0, lexicon: lex, verifyChecksum: false) }
             lexicon = lex
             lm = model

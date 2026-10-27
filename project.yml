@@ -49,8 +49,13 @@ targets:
     platform: iOS
     sources:
       - iBoardKeyboard
+      # English lexicon + 3-gram LM (M2-01, SCOWL + Leipzig news, docs/ENGLISH_DATA.md): <bundle>/english/, mmap'd lazily.
+      - path: Data/english/lexicon.iblex
+        buildPhase: { copyFiles: { destination: resources, subpath: english } }
+      - path: Data/english/lm.iblm
+        buildPhase: { copyFiles: { destination: resources, subpath: english } }
       # Hinglish lexicon + LM (M7-01, CC BY-SA 4.0 data): copied to <bundle>/hinglish/ because the file names
-      # collide with the bundled English fixture; mmap'd lazily by EngineHost.
+      # collide with the English ones; mmap'd lazily by EngineHost.
       - path: Data/hinglish/lexicon.iblex
         buildPhase: { copyFiles: { destination: resources, subpath: hinglish } }
       - path: Data/hinglish/lm.iblm
