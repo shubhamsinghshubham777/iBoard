@@ -16,3 +16,7 @@ Language data attributions will be listed in docs/DATA_SOURCES.md.
 
 - CODE_OF_CONDUCT.md is adapted from the Contributor Covenant, version 2.1
   (https://www.contributor-covenant.org), licensed under CC BY 4.0.
+
+- Packages/IBoardEmoji/Sources/IBoardEmoji/Resources/emoji.json — generated from Unicode emoji-test.txt (Emoji 18.0)
+  and CLDR 49 annotations (en, hi) from https://github.com/unicode-org/cldr-json. Copyright (c) Unicode, Inc.
+  Unicode License v3 (SPDX Unicode-3.0), full text in Packages/IBoardEmoji/LICENSE-UNICODE.txt; details in docs/EMOJI_DATA.md.
