@@ -21,8 +21,9 @@ final class KeyboardViewController: UIInputViewController {
     private var appliedBackdropPhoto: URL?
     private let strip = SuggestionStripView()
     private let handle = ResizeHandleView()
+    private let resizePreview = ResizePreviewView()
     private let overrides = LocalLayoutOverrides()
-    /// Scale while the handle is being dragged (not persisted until the drag ends).
+    /// Target scale while the handle is being dragged: previewed only, applied and persisted once when the drag ends.
     private var liveScale: Double?
     private var dragStartHeight: CGFloat = 0
     private var consumeShiftOnce = false
@@ -140,10 +141,18 @@ final class KeyboardViewController: UIInputViewController {
         grid.accessibilityIdentifier = "key-grid"
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
-        handle.onDragBegan = { [weak self] in self?.dragStartHeight = self?.view.bounds.height ?? 0 }
+        handle.onDragBegan = { [weak self] in
+            guard let self else { return }
+            self.dragStartHeight = self.view.bounds.height
+            self.resizePreview.frame = self.view.bounds
+            self.view.bringSubviewToFront(self.resizePreview)
+            self.view.bringSubviewToFront(self.handle)
+            self.resizePreview.show()
+        }
         handle.onDragChanged = { [weak self] dy in self?.dragHandle(translationY: dy) }
         handle.onDragEnded = { [weak self] in self?.endDrag() }
         handle.onDoubleTap = { [weak self] in self?.toggleNumberRow() }
+        view.addSubview(resizePreview)
         view.addSubview(handle)
         emojiButton.setImage(UIImage(systemName: "face.smiling"), for: .normal)
         emojiButton.tintColor = .secondaryLabel
@@ -609,7 +618,7 @@ final class KeyboardViewController: UIInputViewController {
         // Display-class defaults (Duo inner: number row in portrait, split in landscape), then the app's values.
         var ls = LayoutSettings.defaults(for: traits)
         ls.numberRow = overrides.numberRow ?? (settings.numberRow || ls.numberRow)
-        ls.heightScale = CGFloat(liveScale ?? overrides.heightScale(forKey: heightKey) ?? settings.heightScale(forKey: heightKey))
+        ls.heightScale = CGFloat(overrides.heightScale(forKey: heightKey) ?? settings.heightScale(forKey: heightKey))
         if traits.displayClass == .duoInner {
             // F12: the pinch (extension-local) wins, then what the app saved explicitly, then the D-20 default.
             let blob = UserDefaults(suiteName: SettingsStore.appGroup)?.data(forKey: SettingsStore.key)
@@ -619,7 +628,7 @@ final class KeyboardViewController: UIInputViewController {
             ls.splitLandscape = DuoSplitPolicy.resolve(
                 local: duoLocal.split(for: .landscape),
                 app: DuoSplitPolicy.explicitAppValue(blob: blob, key: "duoSplitLandscape"), fallback: ls.splitLandscape)
-            ls.fillToFold = traits.orientation == .landscape && (liveFillToFold ?? duoLocal.fillToFold)
+            ls.fillToFold = traits.orientation == .landscape && duoLocal.fillToFold
         }
         return ls
     }
@@ -633,26 +642,32 @@ final class KeyboardViewController: UIInputViewController {
             var ls = currentLayoutSettings(); ls.heightScale = scale
             return LayoutEngine.preferredHeight(width: size.width, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         }
-        // Dragging up grows the keyboard (it is bottom-anchored).
+        // Dragging up grows the keyboard (it is bottom-anchored). The keyboard is NOT resized while dragging (that
+        // moved the handle under the finger and flickered): the preview shows the target and release applies it once.
         let proposed = dragStartHeight - dy
+        var snapped = false
+        var target = proposed
         if traits.displayClass == .duoInner, traits.orientation == .landscape, let screen = screenSize {
             // Laptop pose (D-20, F18): snap to half the inner landscape height and fill to the fold.
             let snap = DuoGeometry.snappedHeight(proposed: proposed, innerLandscapeHeight: min(screen.width, screen.height))
-            if liveFillToFold != snap.snapped {
-                liveFillToFold = snap.snapped
-                lastLayoutKey = nil
-            }
-            if snap.snapped { relayoutIfNeeded(); return }
+            snapped = snap.snapped
+            if snapped { target = DuoGeometry.fillToFoldHeight(innerLandscapeHeight: min(screen.width, screen.height)) }
+            liveFillToFold = snapped
         }
-        liveScale = ResizeMath.scale(forHeight: proposed, height0: h(0), height1: h(1))
-        relayoutIfNeeded()
+        let scale = ResizeMath.scale(forHeight: proposed, height0: h(0), height1: h(1))
+        liveScale = scale
+        if !snapped { target = min(max(proposed, h(0.8)), h(1.4)) }
+        resizePreview.frame = view.bounds
+        resizePreview.update(scale: scale, lower: 0.8, upper: 1.4, targetHeight: target, currentHeight: dragStartHeight, snapped: snapped)
     }
 
     private func endDrag() {
+        resizePreview.hide()
         if let fill = liveFillToFold { duoLocal.setFillToFold(fill) }
         liveFillToFold = nil
         if let s = liveScale, !currentLayoutSettings().fillToFold { overrides.setHeightScale(s, forKey: heightKey) }
         liveScale = nil
+        lastLayoutKey = nil // one final layout with the new height
         relayoutIfNeeded()
     }
 
