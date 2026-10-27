@@ -83,6 +83,15 @@ public protocol TextProxy: AnyObject {
     var hasText: Bool { get }
     func insert(_ text: String)
     func deleteBackwardOnce()
+    /// Text after the cursor (nil when unknown). Default: none.
+    var contextAfter: String? { get }
+    /// `adjustTextPosition(byCharacterOffset:)`: the offset is in UTF-16 units (P-24).
+    func adjustPosition(byUTF16 offset: Int)
+}
+
+public extension TextProxy {
+    var contextAfter: String? { nil }
+    func adjustPosition(byUTF16 offset: Int) {}
 }
 
 public struct InputFieldTraits: Sendable, Equatable {

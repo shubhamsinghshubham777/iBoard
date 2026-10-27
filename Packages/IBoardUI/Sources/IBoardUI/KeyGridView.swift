@@ -36,6 +36,11 @@ public final class KeyGridView: UIView {
         didSet { trail.trailStyle = trailStyle ?? SwipeTrailStyle(color: tokens.actionKeyFill) }
     }
 
+    /// Faint secondary glyph (the up-flick character, M5-04) in the corner of each letter key. Off by default.
+    public var showsFlickHints = false {
+        didSet { if showsFlickHints != oldValue, let layout { apply(layout: layout) } }
+    }
+
     private var tokens = NativeThemeTokens.light
     private var keyLayers: [CALayer] = []
     private var isAction: [Bool] = []
@@ -187,6 +192,9 @@ public final class KeyGridView: UIView {
     func glyphSpec(for identity: KeyIdentity) -> GlyphSpec? {
         switch identity {
         case .letter(let s):
+            if showsFlickHints, let hint = KeyFlick.hint(for: identity) {
+                return .hinted(shift == .off ? s : s.uppercased(), hint: hint, upper: shift != .off)
+            }
             return .text(shift == .off ? s : s.uppercased(), .letter(upper: shift != .off), onAction: false)
         case .symbol(let s): return .text(s, .symbol, onAction: false)
         case .domainSuffix(let s): return .text(s, .function, onAction: false)
@@ -251,6 +259,8 @@ enum GlyphRole: Hashable {
 
 enum GlyphSpec: Hashable {
     case text(String, GlyphRole, onAction: Bool)
+    /// A letter with its faint up-flick character in the top-right corner.
+    case hinted(String, hint: String, upper: Bool)
     case symbol(String, onAction: Bool)
 }
 
@@ -309,6 +319,24 @@ final class GlyphCache {
                 (text as NSString).draw(at: CGPoint(x: (width - textSize.width) / 2, y: baselineY - ascent), withAttributes: attrs)
             }
             return image.cgImage
+        case .hinted(let text, let hint, let upper):
+            let font = UIFont.systemFont(ofSize: upper ? tokens.uppercaseLetterFontSize : tokens.letterFontSize, weight: .regular)
+            let hintFont = UIFont.systemFont(ofSize: 9, weight: .regular)
+            let color = UIColor(cgColor: tokens.keyLabel.cgColor)
+            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+            let hintAttrs: [NSAttributedString.Key: Any] = [.font: hintFont, .foregroundColor: color.withAlphaComponent(0.4)]
+            let textSize = (text as NSString).size(withAttributes: attrs)
+            let hintSize = (hint as NSString).size(withAttributes: hintAttrs)
+            let width = ceil(max(textSize.width, hintSize.width * 2 + 4)) + 2
+            let height = keyHeight // full key height so the hint can sit near the top edge
+            let baselineY = keyHeight * Self.baselineRatio
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = scale
+            format.opaque = false
+            return UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { _ in
+                (text as NSString).draw(at: CGPoint(x: (width - textSize.width) / 2, y: baselineY - font.ascender), withAttributes: attrs)
+                (hint as NSString).draw(at: CGPoint(x: width - hintSize.width - 1, y: 2), withAttributes: hintAttrs)
+            }.cgImage
         case .symbol(let name, let onAction):
             let config = UIImage.SymbolConfiguration(pointSize: name == "globe" ? 20 : 19, weight: .regular)
             let color = UIColor(cgColor: (onAction ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)

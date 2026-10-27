@@ -583,6 +583,57 @@ public final class TypingCoordinator {
         scheduleResync()
     }
 
+    /// Backspace swipe-delete release (M5-03): deletes `graphemes` clusters (the planned words) one proxy call each.
+    public func deleteRun(graphemes: Int) {
+        guard graphemes > 0 else { return }
+        if deferWhileSwiping({ $0.deleteRun(graphemes: graphemes) }) { return }
+        noteTyped(); autocorrectState.noteOtherInput()
+        for _ in 0..<graphemes { input.proxy.deleteBackwardOnce() }
+        if awaitingContinue, lastCommit != nil, let learner { learnerQueue.enqueue { await learner.lastWordReopened() } }
+        awaitingContinue = false
+        lastCommit = nil
+        resetSession()
+        scheduleResync()
+    }
+
+    /// Spacebar cursor (M5-02): moves the cursor by grapheme steps / hard-line jumps, converted to the UTF-16 offset
+    /// the proxy counts (P-24). Ends the current word session; returns whether the cursor was asked to move.
+    @discardableResult
+    public func moveCursor(graphemes: Int = 0, lines: Int = 0) -> Bool {
+        if deferWhileSwiping({ $0.moveCursor(graphemes: graphemes, lines: lines) }) { return true }
+        let before = input.proxy.contextBefore ?? "", after = input.proxy.contextAfter ?? ""
+        var offset = 0
+        var b = before, a = after
+        // Jumps and steps are planned against the context as it will be after the previous part moved.
+        for _ in 0..<abs(lines) {
+            guard let o = CursorMath.lineJumpOffset(up: lines < 0, before: b, after: a) else { break }
+            offset += o
+            (b, a) = Self.shifted(before: b, after: a, by: o)
+        }
+        if graphemes != 0 { offset += CursorMath.utf16Offset(graphemes: graphemes, before: b, after: a) }
+        guard offset != 0 else { return false }
+        input.proxy.adjustPosition(byUTF16: offset)
+        noteTyped(); autocorrectState.noteOtherInput()
+        awaitingContinue = false
+        lastCommit = nil
+        resetSession()
+        scheduleResync()
+        return true
+    }
+
+    /// The context split after moving the cursor by `offset` UTF-16 units (offset always lands on a boundary).
+    private static func shifted(before: String, after: String, by offset: Int) -> (String, String) {
+        let all = Array(before.utf16) + Array(after.utf16)
+        let i = max(0, min(all.count, before.utf16.count + offset))
+        return (String(decoding: all[..<i], as: UTF16.self), String(decoding: all[i...], as: UTF16.self))
+    }
+
+    /// Text before the cursor for the backspace-swipe preview (read per preview change, never stored).
+    public var contextBeforeForPreview: String { input.proxy.contextBefore ?? "" }
+
+    /// The strip content last published (the host restores it after a delete preview).
+    public var stripContent: StripContent { content }
+
     /// Returns whether the field accepted the return key.
     @discardableResult
     public func returnKey() -> Bool {

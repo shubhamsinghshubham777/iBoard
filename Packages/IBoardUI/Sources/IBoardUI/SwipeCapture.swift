@@ -83,12 +83,15 @@ public struct SwipeCapture: Sendable {
         return true
     }
 
-    public mutating func move(id: Int, to point: CGPoint, time: TimeInterval, layout: KeyboardLayout) -> SwipeCaptureUpdate {
+    /// `allowSwipe: false` keeps a touch that crossed into another key undecided (the gesture arbiter has not ruled out
+    /// a vertical flick yet); the samples are still recorded.
+    public mutating func move(id: Int, to point: CGPoint, time: TimeInterval, layout: KeyboardLayout,
+                              allowSwipe: Bool = true) -> SwipeCaptureUpdate {
         guard phase != .idle, id == touchID else { return .none }
         appendRaw(point, time: time)
         var update = SwipeCaptureUpdate.none
         if phase == .undecided {
-            if let hit = layout.hit(at: point), hit.keyIndex != startKey, Self.isLetter(layout, hit.keyIndex) {
+            if allowSwipe, let hit = layout.hit(at: point), hit.keyIndex != startKey, Self.isLetter(layout, hit.keyIndex) {
                 phase = .swiping
                 update = .began
             } else {

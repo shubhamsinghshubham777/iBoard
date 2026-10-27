@@ -46,6 +46,15 @@ final class KeyboardViewController: UIInputViewController {
     private var stripTouchID: Int?
     /// Swipe typing capture (M4-01): one finger at a time; trail drawn by `grid.trail`.
     private var swipeCapture = SwipeCapture()
+    /// Gesture arbiter for the first finger (M5-01): rules out swipes for vertical flicks, starts the spacebar cursor
+    /// and the backspace word-delete. `gestureOrigin` is where it went down (view coordinates).
+    private var arbiter: GestureArbiter?
+    private var arbiterTouchID = -1
+    private var gestureOrigin = CGPoint.zero
+    private var gestureKeyIndex = -1
+    private enum DragMode { case none, cursor(SpacebarCursorDrag), deleteWords(BackspaceSwipePlan) }
+    private var dragMode = DragMode.none
+    private var lastStrip = StripContent.empty
     /// Keyboard-local placeholder for the incognito toggle (F15 UI comes later). Never leaves the extension.
     static let incognitoKey = "iBoard.incognito"
     #if DEBUG
@@ -70,6 +79,7 @@ final class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         settings = SettingsStore().load()
+        grid.showsFlickHints = UserDefaults.standard.bool(forKey: KeyFlick.hintsDefaultsKey)
         refreshAppearanceAndTraits()
         coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
         applyFieldConfig(forceFieldChange: true)
@@ -100,7 +110,12 @@ final class KeyboardViewController: UIInputViewController {
             self?.insights.handle(event)
             self?.sharedSnapshotDirty = true
         }
-        coordinator.onStripChange = { [weak self] content in self?.strip.slotTexts = content.texts }
+        coordinator.onStripChange = { [weak self] content in
+            guard let self else { return }
+            self.lastStrip = content
+            if case .deleteWords = self.dragMode { return } // the delete preview owns the strip until release
+            self.strip.slotTexts = content.texts
+        }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
         }
@@ -313,6 +328,7 @@ final class KeyboardViewController: UIInputViewController {
         super.viewDidDisappear(animated)
         machine?.cancelAll { _ in }
         swipeCapture.cancel()
+        resetArbiter()
         grid.trail.clear()
         coordinator.keyboardWillDisappear()
         settleOnDisappear()
@@ -413,10 +429,14 @@ final class KeyboardViewController: UIInputViewController {
             perfDown = Perf.begin(.touchDownToHighlight)
             coordinator.trackTouch(id: id, at: point)
             machine!.touchDown(id: id, at: point, time: time, emit: sink)
-            if let layout = grid.layout { swipeCapture.begin(id: id, at: point, time: time, layout: layout) }
+            if let layout = grid.layout {
+                swipeCapture.begin(id: id, at: point, time: time, layout: layout)
+                beginArbiter(id: id, at: point, time: time, layout: layout)
+            }
         case .moved:
+            if arbiterTouchID == id, routeArbiterMove(id: id, to: point, time: time, sink: sink) { break }
             if swipeCapture.tracks(id), let layout = grid.layout {
-                switch swipeCapture.move(id: id, to: point, time: time, layout: layout) {
+                switch swipeCapture.move(id: id, to: point, time: time, layout: layout, allowSwipe: arbiter?.decided == .swipeTyping) {
                 case .began:
                     // Crossed into another key: no longer a key press (F3/F5). Release the cap, insert nothing.
                     machine!.touchCancelled(id: id, emit: sink)
@@ -433,9 +453,11 @@ final class KeyboardViewController: UIInputViewController {
             machine!.touchMoved(id: id, to: point, emit: sink)
         case .ended:
             if swipeCapture.isSwiping, swipeCapture.tracks(id) {
+                resetArbiter()
                 finishSwipe(id: id, at: point, time: time)
                 break
             }
+            if arbiterTouchID == id, finishArbiter(id: id, at: point, time: time, sink: sink) { break }
             if swipeCapture.tracks(id) { _ = swipeCapture.end(id: id, at: point, time: time) }
             coordinator.trackTouch(id: id, at: point)
             perfUp = Perf.begin(.touchUpToInsert)
@@ -443,6 +465,7 @@ final class KeyboardViewController: UIInputViewController {
             perfUp = nil // an up that inserts nothing is not a sample (the interval is closed in `handle`)
             coordinator.releaseTouch(id: id)
         case .cancelled:
+            if arbiterTouchID == id { cancelDrag() }
             if swipeCapture.tracks(id) {
                 swipeCapture.cancel()
                 grid.trail.finish()
@@ -457,6 +480,132 @@ final class KeyboardViewController: UIInputViewController {
         applyDeferredLayerChange()
         updateRepeatTimer()
     }
+
+    // MARK: Gesture arbiter (M5-01) -> flicks (M5-04), spacebar cursor (M5-02), backspace swipe-delete (M5-03)
+
+    private func beginArbiter(id: Int, at point: CGPoint, time: TimeInterval, layout: KeyboardLayout) {
+        guard arbiter == nil, let hit = layout.hit(at: point), hit.keyIndex < layout.keys.count else { return }
+        let identity = layout.keys[hit.keyIndex].identity
+        let start: GestureStart
+        switch identity {
+        case .letter: start = .letter
+        case .space: start = .space
+        case .delete: start = .delete
+        default: return
+        }
+        arbiter = GestureArbiter(start: start, origin: point, time: time, keyHeight: layout.metrics.keyHeight,
+                                 hasAlternates: KeyAlternates.options(for: identity) != nil)
+        arbiterTouchID = id
+        gestureOrigin = point
+        gestureKeyIndex = hit.keyIndex
+        dragMode = .none
+    }
+
+    private func resetArbiter() {
+        arbiter = nil
+        arbiterTouchID = -1
+        gestureKeyIndex = -1
+        if case .deleteWords = dragMode { strip.slotTexts = lastStrip.texts }
+        dragMode = .none
+    }
+
+    /// Feeds a move to the arbiter. Returns true when the move was consumed by a cursor / delete drag.
+    private func routeArbiterMove(id: Int, to point: CGPoint, time: TimeInterval, sink: (KeyEvent) -> Void) -> Bool {
+        guard var a = arbiter, let layout = grid.layout else { return false }
+        var crossed = false
+        if a.start == .letter, let hit = layout.hit(at: point), hit.keyIndex != gestureKeyIndex,
+           case .letter = layout.keys[hit.keyIndex].identity { crossed = true }
+        let decided = a.move(to: point, time: time, crossedKeys: crossed)
+        arbiter = a
+        switch decided {
+        case .spacebarCursor?:
+            // The space key is released without typing a space; the drag now owns the touch.
+            machine!.touchCancelled(id: id, emit: sink)
+            coordinator.releaseTouch(id: id)
+            dragMode = .cursor(SpacebarCursorDrag(start: point, time: time))
+            return true
+        case .backspaceSwipeDelete?:
+            // Touch-down already deleted one character and started the repeat; the repeat stops here.
+            machine!.touchCancelled(id: id, emit: sink)
+            coordinator.releaseTouch(id: id)
+            dragMode = .deleteWords(BackspaceSwipePlan(words: 0, graphemes: 0, preview: ""))
+            updateDeletePreview(at: point)
+            return true
+        default: break
+        }
+        switch dragMode {
+        case .cursor(var drag):
+            let step = drag.move(to: point, time: time)
+            dragMode = .cursor(drag)
+            if step.horizontal != 0 || step.vertical != 0 {
+                if coordinator.moveCursor(graphemes: step.horizontal, lines: step.vertical) { feedback() }
+            }
+            return true
+        case .deleteWords:
+            updateDeletePreview(at: point)
+            return true
+        case .none:
+            return false
+        }
+    }
+
+    private func updateDeletePreview(at point: CGPoint) {
+        let extra = max(0, gestureOrigin.x - point.x - GestureThresholds().backspaceDragStart)
+        let plan = BackspaceSwipePlan.plan(before: coordinator.contextBeforeForPreview, extraDistance: extra)
+        if case .deleteWords(let old) = dragMode, old == plan { return }
+        dragMode = .deleteWords(plan)
+        let preview = plan.preview.replacingOccurrences(of: "\n", with: " ")
+        strip.slotTexts = ["", preview, ""]
+    }
+
+    /// Lift of the arbiter's touch. Returns true when the gesture was fully handled here (flick / drag end).
+    private func finishArbiter(id: Int, at point: CGPoint, time: TimeInterval, sink: (KeyEvent) -> Void) -> Bool {
+        guard var a = arbiter, let layout = grid.layout else { resetArbiter(); return false }
+        let keyHeight = layout.metrics.keyHeight
+        // Released far above / below the key row it was dragged away: counts as "onto the keys" for backspace.
+        let away = abs(point.y - gestureOrigin.y) > 2 * keyHeight
+        let g = a.end(at: point, time: time, endedOverKeys: away)
+        let mode = dragMode
+        let startIndex = gestureKeyIndex
+        let origin = gestureOrigin
+        resetArbiter()
+        switch g {
+        case .spacebarCursor, .spacebarSelection:
+            _ = mode // cursor already moved live; the space key was cancelled
+            return true
+        case .backspaceSwipeDelete:
+            if case .deleteWords(let plan) = mode {
+                coordinator.deleteRun(graphemes: plan.graphemes)
+                feedback()
+                scheduleAutoShift()
+            }
+            return true
+        case .backspaceSwipeCancel:
+            return true
+        case .flickUp, .flickDown:
+            guard startIndex >= 0, startIndex < layout.keys.count else { return false }
+            let text = KeyFlick.text(for: layout.keys[startIndex].identity, direction: g == .flickUp ? .up : .down,
+                                     uppercase: grid.shift != .off)
+            if swipeCapture.tracks(id) { swipeCapture.cancel() }
+            grid.trail.clear()
+            if let text {
+                machine!.touchCancelled(id: id, emit: sink)
+                coordinator.releaseTouch(id: id)
+                coordinator.insertDirect(text)
+                feedback()
+                consumeShiftOnce = true
+                scheduleAutoShift()
+                return true
+            }
+            // No secondary character: a normal tap on the key the finger started on.
+            machine!.touchMoved(id: id, to: origin, emit: sink)
+            return false
+        default:
+            return false
+        }
+    }
+
+    private func cancelDrag() { resetArbiter() }
 
     /// The swipe finger lifted: fade the trail and hand the path to the typing coordinator (decode, insert word with
     /// auto-space, strip alternatives). A pending shift is consumed like for a typed letter.
@@ -500,6 +649,7 @@ final class KeyboardViewController: UIInputViewController {
             grid.setShift(state)
         case .alternatesBegan(let keyIndex):
             swipeCapture.cancel() // a long press and a swipe are exclusive (F5)
+            resetArbiter()
             // Not `machine`: this runs inside a machine call. The grid holds the current layout.
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]
