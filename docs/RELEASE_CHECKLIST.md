@@ -3,7 +3,7 @@
 ## Before upload
 - [ ] All Duo/real-device passes done (M11-05, M1-09 perf gates on iPhone 12); owner bug list retested on phone.
 - [ ] Merge SYNC work; re-run `scripts/audit-privacy.sh`; update entitlements, manifests, and privacy label if iCloud is enabled.
-- [ ] Reconcile Full Access copy (docs/agent-reports/app.md finding 1).
+- [x] Full Access copy reconciled (RequestsOpenAccess true, optional features listed in the policy, About and review notes).
 - [ ] Set a real `IBOARD_BUNDLE_PREFIX`/`IBOARD_APP_GROUP` and team in Config/Local.xcconfig; register the App Group and App IDs (app + keyboard) in the developer portal.
 - [ ] Bump version/build; Release archive: `xcodebuild archive -scheme iBoard -configuration Release`.
 
@@ -15,9 +15,10 @@
 - [ ] Beta App Review for external testers; collect feedback for a week.
 
 ## M13-06 App Store + public repo
-- [ ] Privacy policy URL (publish docs/PRIVACY.md), support URL.
+- [ ] Enable GitHub Pages from `docs/site` (branch main, /docs is not it: use a Pages workflow or copy `docs/site`), then set privacy/support URLs. Text is ready in `docs/site`.
 - [ ] Privacy label: Data Not Collected.
-- [ ] Screenshots: 6.9" and 6.5" iPhone; app description, keywords, category, age rating.
-- [ ] Review notes + contact info; demo steps for keyboard enablement.
+- [ ] Screenshots: 6.9" and 6.5" iPhone. Name, subtitle, description, keywords, category, age rating, What's New are drafted in `docs/APP_STORE_LISTING.md`.
+- [ ] Review notes drafted in `docs/APP_STORE_LISTING.md` (4.4.1 explanation); add contact info.
+- [ ] iCloud/CloudKit capability and container `iCloud.app.iBoard` must be added to the app entitlements and portal before sync works; then re-run `scripts/audit-privacy.sh`.
 - [ ] Submit for review; choose release mode.
 - [ ] Public repo: confirm Apache-2.0 LICENSE, README, CONTRIBUTING, third-party licenses; scrub secrets/UDIDs (docs/HANDOFF.md has device UDIDs); tag the release; announce.
