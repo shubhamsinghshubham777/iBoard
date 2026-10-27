@@ -29,9 +29,9 @@ public struct SwipeParameters: Sendable, Equatable {
 
     // Candidate pruning
     /// A letter key is allowed in a word only if its centre is within this many key sizes of the path.
-    public var corridorRadius = 1.1
+    public var corridorRadius = 1.3
     /// The first / last letter of a word must be within this many key sizes of the path start / end.
-    public var endRadius = 1.0
+    public var endRadius = 1.3
     /// Hard cap on trie nodes visited per decode (keeps latency bounded; reported in the result).
     public var maxNodeVisits = 60_000
     /// Words longer than this are never candidates.
@@ -49,6 +49,12 @@ public struct SwipeParameters: Sendable, Equatable {
     public var anchorCap = 1.5
     /// Weight of the anchor term relative to shape and location.
     public var anchorWeight = 0.5
+
+    /// Extra penalty on the first / last path point versus the word's first / last key centre: weight (0 = off),
+    /// free radius and scale in key widths.
+    public var endpointWeight = 2.0
+    public var endpointTolerance = 0.5
+    public var endpointSigma = 0.5
 
     // Anchors
     /// A corner is a turn of at least this many degrees within a short window of the smoothed path.

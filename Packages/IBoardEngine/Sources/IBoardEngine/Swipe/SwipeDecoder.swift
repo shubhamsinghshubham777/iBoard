@@ -305,7 +305,15 @@ public struct SwipeDecoder: Sendable {
             anchorPenalty += c * c
         }
         let sz = shape / p.shapeSigma, lz = loc / p.locationSigma
-        return -0.5 * (sz * sz + lz * lz + p.anchorWeight * anchorPenalty)
+        // Endpoints: the touch-down and lift keys are the most certain evidence in a swipe, but averaged over the
+        // whole path they are diluted; charge them directly beyond a free radius.
+        var endPenalty = 0.0
+        if p.endpointWeight > 0, let g0 = gesture.first, let g1 = gesture.last, let t0 = template.first, let t1 = template.last {
+            let e0 = max(0, g0.dist(t0) - p.endpointTolerance) / p.endpointSigma
+            let e1 = max(0, g1.dist(t1) - p.endpointTolerance) / p.endpointSigma
+            endPenalty = e0 * e0 + e1 * e1
+        }
+        return -0.5 * (sz * sz + lz * lz + p.anchorWeight * anchorPenalty + p.endpointWeight * endPenalty)
     }
 
     /// Letter-key sequence (consecutive repeats collapsed) of `word` if it passes the same corridor / order / end

@@ -75,9 +75,9 @@ func centreSwipe(_ word: String, layout: KeyboardLayout = testLayout) -> [SwipeP
         for c in r.candidates {
             let f = testLayout.firstKey(.letter(String(c.word.first!)))!, l = testLayout.firstKey(.letter(String(c.word.last!)))!
             #expect(hypot(Double(f.frame.midX - start.frame.midX) / Double(start.frame.width),
-                          Double(f.frame.midY - start.frame.midY) / Double(start.frame.height)) <= 1.0 + 1e-9, "\(c.word)")
+                          Double(f.frame.midY - start.frame.midY) / Double(start.frame.height)) <= SwipeParameters().endRadius + 1e-9, "\(c.word)")
             #expect(hypot(Double(l.frame.midX - end.frame.midX) / Double(end.frame.width),
-                          Double(l.frame.midY - end.frame.midY) / Double(end.frame.height)) <= 1.0 + 1e-9, "\(c.word)")
+                          Double(l.frame.midY - end.frame.midY) / Double(end.frame.height)) <= SwipeParameters().endRadius + 1e-9, "\(c.word)")
         }
     }
 
