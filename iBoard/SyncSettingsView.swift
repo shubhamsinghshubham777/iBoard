@@ -1,6 +1,7 @@
 import SwiftUI
 import Security
 import IBoardSync
+import IBoardEngine
 
 /// Opt-in iCloud sync settings (M12-02/03). The keyboard never syncs; only this app talks to CloudKit, only after the
 /// owner turns it on. Needs the iCloud/CloudKit entitlement + container `iCloud.app.iBoard` on a real device.
@@ -33,6 +34,14 @@ final class SyncSettingsModel {
         }
     }
 
+    /// The personal model in the App Group (written by the keyboard with Full Access). The app only touches it while a
+    /// sync runs. Without the shared container there is nothing to sync.
+    private static func personalStore() -> PersonalStore? {
+        guard let root = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.app.iBoard") else { return nil }
+        let dir = root.appendingPathComponent("personal", isDirectory: true)
+        return PersonalStore(storage: FilePersonalStorage(directory: dir, mode: .appGroup))
+    }
+
     func deleteCloudData() async {
         busy = true; defer { busy = false }
         enabled = false
@@ -44,9 +53,10 @@ final class SyncSettingsModel {
         guard enabled else { return }
         busy = true; defer { busy = false }
         let engine = makeEngine()
-        let local = LocalSyncFile.load()
-        let out = await engine.sync(local: local)
-        if out.uploaded { LocalSyncFile.save(out.merged) }
+        guard let store = Self.personalStore() else { statusText = "Personal data unavailable"; return }
+        let memory = PersonalSyncMemory.load(from: LocalSyncFile.url)
+        let result = await PersonalSyncAdapter.run(store: store, engine: engine, memory: memory)
+        if result.outcome.uploaded { result.memory.save(to: LocalSyncFile.url) }
         switch await engine.status {
         case .off: statusText = "Off"
         case .syncing: statusText = "Syncing"
@@ -56,19 +66,9 @@ final class SyncSettingsModel {
     }
 }
 
-/// Local copy of the sync state (device-local, no backup). Wiring to the personal model is a follow-up (see report).
+/// Device-local sync memory (last merged state + ledger of what has been exported/applied). No backup.
 enum LocalSyncFile {
-    static var url: URL {
-        URL.applicationSupportDirectory.appending(path: "sync-state.json")
-    }
-    static func load() -> SyncState {
-        (try? Data(contentsOf: url)).flatMap { try? SyncState.decode($0) } ?? SyncState()
-    }
-    static func save(_ s: SyncState) {
-        guard let d = try? s.encoded() else { return }
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? d.write(to: url, options: [.atomic, .completeFileProtection])
-    }
+    static var url: URL { URL.applicationSupportDirectory.appending(path: "sync-memory.json") }
 }
 
 enum Keychain {

@@ -19,7 +19,7 @@ public struct SyncOutcome: Sendable, Equatable {
 public actor SyncEngine {
     private let store: SyncStore
     private let crypto: SyncCrypto
-    public let deviceID: String
+    public nonisolated let deviceID: String
     private let now: @Sendable () -> Date
     private let maxShardBytes: Int
     private let tombstoneRetention: TimeInterval
