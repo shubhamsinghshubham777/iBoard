@@ -73,6 +73,32 @@ if [ -f "$ALLOW" ]; then
   done < "$ALLOW"
 fi
 
+# Sync/CloudKit must stay out of the keyboard extension (no network from the keyboard; memory budget).
+# 1) Source graph: the extension target's dependencies in project.yml must not include sync packages.
+ext_deps=$(awk '/^  iBoardKeyboard:/{f=1;next} f&&/^  [A-Za-z]/{f=0} f' project.yml)
+if printf '%s\n' "$ext_deps" | grep -qE 'IBoard(Personal)?Sync'; then
+  echo "FAIL [EXT-SYNC] iBoardKeyboard target depends on a sync package in project.yml"; failures=$((failures + 1))
+fi
+# 2) Package graph: no other package may depend on a sync package (app-only: IBoardSync, IBoardPersonalSync).
+for pk in Packages/*/Package.swift; do
+  case "$pk" in Packages/IBoardSync/*|Packages/IBoardPersonalSync/*) continue ;; esac
+  if grep -qE '\.package\(path: "\.\./IBoard(Personal)?Sync"' "$pk"; then
+    echo "FAIL [EXT-SYNC] $pk depends on a sync package (would link CloudKit into the keyboard)"; failures=$((failures + 1))
+  fi
+done
+# 3) Built binary (when present; DERIVED_DATA output or EXT_BINARY=<path>): no CloudKit link, no sync symbols.
+EXT_BIN=${EXT_BINARY:-$(find "${DERIVED_DATA:-build/DerivedData}" -path '*iBoardKeyboard.appex/iBoardKeyboard' -type f 2>/dev/null | head -1)}
+if [ -n "$EXT_BIN" ] && [ -f "$EXT_BIN" ]; then
+  if otool -L "$EXT_BIN" | grep -q CloudKit; then
+    echo "FAIL [EXT-SYNC] $EXT_BIN links CloudKit.framework"; failures=$((failures + 1))
+  fi
+  if nm "$EXT_BIN" 2>/dev/null | grep -qE 'IBoardSync|IBoardPersonalSync'; then
+    echo "FAIL [EXT-SYNC] $EXT_BIN contains IBoardSync symbols"; failures=$((failures + 1))
+  fi
+else
+  echo "audit-privacy: note: no built extension binary found, skipped binary check"
+fi
+
 if [ "$failures" -gt 0 ]; then
   echo "audit-privacy: $failures finding(s). Fix the code, or add a reviewed entry to $ALLOW with a reason."
   exit 1
