@@ -95,6 +95,7 @@ final class KeyboardViewController: UIInputViewController {
         coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
         applyFieldConfig(forceFieldChange: true)
         applyAppCommands()
+        personalInfo = PersonalInfoReader().load() // F7: saved by the app, read-only here (works without Full Access)
         reloadCodes()
         startChipTimer()
         #if DEBUG
