@@ -14,22 +14,34 @@ case "${1:-}" in
       -derivedDataPath "$DD" -allowProvisioningUpdates OTHER_SWIFT_FLAGS='$(inherited) -DIBOARD_PERF' build ;;
   install) xcrun devicectl device install app --device "$DEVICE" "$APP" ;;
   pull)
-    mkdir -p "$OUT"
+    rm -rf "$OUT/perf"; mkdir -p "$OUT"
     xcrun devicectl device copy from --device "$DEVICE" --domain-type appDataContainer \
-      --domain-identifier app.iBoard.keyboard --source Library/Caches/perf-metrics.json --destination "$OUT/perf-metrics.json"
-    python3 -I - "$OUT/perf-metrics.json" <<'PY'
-import json,sys
-d=json.load(open(sys.argv[1])); s=d["samples"]
-print("peakMB %.1f currentMB %.1f appears %d warnings %d samples %d span %.0fs" % (d["peakMB"],d["currentMB"],d["appearCount"],d["memoryWarnings"],len(s),s[-1][0]-s[0][0]))
+      --domain-identifier app.iBoard.keyboard --source Library/Caches/perf --destination "$OUT/perf"
+    python3 -I - "$OUT/perf" <<'PY'
+import json,sys,glob,time
+runs=[]
+for f in sorted(glob.glob(sys.argv[1]+"/**/perf-*.json",recursive=True)):
+    try: d=json.load(open(f))
+    except Exception: continue
+    runs.append(d)
+if not runs: print("NO PERF FILES on the device (was the perf build installed and the keyboard used?)"); sys.exit(1)
+def n(d): return sum(v["count"] for v in d["metrics"].values())
+print("keyboard processes recorded: %d"%len(runs))
+for d in runs:
+    s=d["samples"]; print("  start %s span %4.0fs peak %5.1f MB appears %2d warnings %d timing samples %d"%(time.strftime("%H:%M:%S",time.localtime(d["processStart"])),s[-1][0]-s[0][0],d["peakMB"],d["appearCount"],d["memoryWarnings"],n(d)))
+d=max(runs,key=n); s=d["samples"]
+print("Busiest process: start %s, span %.0fs, peakMB %.1f, appears %d"%(time.strftime("%H:%M:%S",time.localtime(d["processStart"])),s[-1][0]-s[0][0],d["peakMB"],d["appearCount"]))
 B={"touchDownToHighlight":16.7,"touchUpToInsert":20,"keystrokeToSuggestions":25,"swipeLiftToCandidate":60,"coldStart":250,"warmShow":80}
 bad=0
 for k,v in sorted(d["metrics"].items()):
     b=B.get(k); ok = b is None or v["p95ms"]<=b
     bad+= (not ok)
     print("  %-24s n=%-5d p50 %6.1f  p95 %6.1f ms  budget %s  %s"%(k,v["count"],v["p50ms"],v["p95ms"],b,"PASS" if ok else "FAIL"))
-mem = "PASS" if d["peakMB"]<=30 else ("OVER TARGET (<=40 hard cap)" if d["peakMB"]<=40 else "FAIL (over 40 MB hard cap)")
-print("  memory peak %.1f MB vs 30 target / 40 hard: %s; warnings %d"%(d["peakMB"],mem,d["memoryWarnings"]))
-print("VERDICT:", "ALL TIMING BUDGETS MET" if not bad else "%d TIMING BUDGET(S) MISSED"%bad)
+peak=max(r["peakMB"] for r in runs)
+mem = "PASS" if peak<=30 else ("OVER TARGET (<=40 hard cap)" if peak<=40 else "FAIL (over 40 MB hard cap)")
+print("  memory peak over all processes %.1f MB vs 30 target / 40 hard: %s; warnings %d"%(peak,mem,sum(r["memoryWarnings"] for r in runs)))
+if not d["metrics"]: print("VERDICT: NO TIMING DATA (no typing was recorded in any process)")
+else: print("VERDICT:", "ALL RECORDED TIMING BUDGETS MET" if not bad else "%d TIMING BUDGET(S) MISSED"%bad)
 PY
     ;;
   run)

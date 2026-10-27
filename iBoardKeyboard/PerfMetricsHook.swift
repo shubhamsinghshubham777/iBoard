@@ -4,9 +4,9 @@ import IBoardCore
 
 /// Privacy-safe device metrics hook (M1-09 / M13-02). Compiled only for DEBUG or `-DIBOARD_PERF` builds.
 /// Samples `phys_footprint` and the Perf p50/p95 summaries and writes counts/numbers only (never text) to
-/// `Library/Caches/perf-metrics.json` in the extension's data container, which `devicectl` can copy off.
+/// `Library/Caches/perf/perf-<processStart>.json` (one file per keyboard process) in the extension's data container, which `devicectl` can copy off.
 /// Read with: `devicectl device copy from --domain-type appDataContainer --domain-identifier app.iBoard.keyboard
-///   --source Library/Caches/perf-metrics.json`.
+///   --source Library/Caches/perf` (or `scripts/device-perf.sh pull`).
 @MainActor
 enum PerfMetricsHook {
     private static var timer: Timer?
@@ -49,8 +49,16 @@ enum PerfMetricsHook {
             "appearCount": appearCount, "memoryWarnings": warnings, "metrics": metrics, "samples": samples,
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: obj),
-              let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
-        try? data.write(to: dir.appendingPathComponent("perf-metrics.json"), options: .atomic)
+              let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
+        // One file per keyboard process (iOS restarts the extension often), newest 12 kept, so a long run is not overwritten.
+        let dir = caches.appendingPathComponent("perf", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? data.write(to: dir.appendingPathComponent("perf-\(Int(firstSample.timeIntervalSince1970)).json"), options: .atomic)
+        if let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .filter({ $0.lastPathComponent.hasPrefix("perf-") }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent }),
+           files.count > 12 {
+            for f in files.dropLast(12) { try? FileManager.default.removeItem(at: f) }
+        }
     }
 }
 #endif
