@@ -82,7 +82,7 @@ targets:
             IsASCIICapable: true
             PrefersRightToLeft: false
             PrimaryLanguage: en-US
-            RequestsOpenAccess: false
+            RequestsOpenAccess: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(IBOARD_BUNDLE_PREFIX).keyboard
