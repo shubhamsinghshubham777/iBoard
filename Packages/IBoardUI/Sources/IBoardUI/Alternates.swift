@@ -9,6 +9,8 @@ public enum KeyAlternates {
     /// The long-press choice on the emoji key: not text, it opens the iOS Settings page of iBoard (launching Settings is
     /// the one launch Guideline 4.4.1 allows; D-01).
     public static let settingsGlyph = "\u{2699}\u{FE0E}"
+    /// Also on the emoji key (Full Access + clipboard history on): opens the clipboard history panel. Not text.
+    public static let clipboardGlyph = "\u{1F4CB}"
     private static let letters: [String: [String]] = [
         "a": ["à", "á", "â", "ä", "æ", "ã", "å", "ā"],
         "c": ["ç", "ć", "č"],
@@ -38,8 +40,8 @@ public enum KeyAlternates {
 
     /// What a long press offers: for letters the key's hint symbol (its number / symbol, drawn faintly on the key) comes
     /// first, then the accented forms; other keys offer their `options`. nil: nothing to offer.
-    public static func longPressOptions(for identity: KeyIdentity, uppercase: Bool = false) -> [String]? {
-        if case .emoji = identity { return [settingsGlyph] } // the keyboard's way to the iOS Settings page for iBoard
+    public static func longPressOptions(for identity: KeyIdentity, uppercase: Bool = false, clipboardEntry: Bool = false) -> [String]? {
+        if case .emoji = identity { return clipboardEntry ? [clipboardGlyph, settingsGlyph] : [settingsGlyph] } // the keyboard's way to the iOS Settings page for iBoard
         guard case .letter = identity else { return options(for: identity, uppercase: uppercase) }
         let accents = options(for: identity, uppercase: uppercase) ?? []
         let all = (KeyFlick.hint(for: identity).map { [$0] } ?? []) + accents

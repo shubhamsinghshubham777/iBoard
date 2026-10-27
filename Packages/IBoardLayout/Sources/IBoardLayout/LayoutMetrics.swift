@@ -43,6 +43,12 @@ public struct LayoutMetrics: Sendable, Equatable {
     public var auxColumnMinX: CGFloat = 0
     public var auxColumnWidth: CGFloat = 0
 
+    /// F13 landscape side columns (phones): key width of each side column (0 = none) and the x of its left edge /
+    /// right edge. Side keys use the normal key height.
+    public var sideColumnWidth: CGFloat = 0
+    public var sideLeftMinX: CGFloat = 0
+    public var sideRightMaxX: CGFloat = 0
+
     // MARK: Reference tokens (iPhone 12 portrait, measured) and estimates
 
     struct Reference {
@@ -95,6 +101,17 @@ public struct LayoutMetrics: Sendable, Equatable {
     static let auxColumnMax: CGFloat = 160
     /// ESTIMATED cap for the numeric pad block width.
     static let maxPadWidth: CGFloat = 520
+    /// Landscape side columns (F13): only when the available width is at least this (iPhone SE-size landscapes
+    /// have no room), width share of one column and its clamp in pt. ESTIMATED.
+    static let sideColumnMinAvailWidth: CGFloat = 640
+    static let sideColumnShare: CGFloat = 0.075
+    static let sideColumnMin: CGFloat = 40
+    static let sideColumnMax: CGFloat = 64
+
+    static func hasSideColumns(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings, availWidth: CGFloat) -> Bool {
+        settings.landscapeSideKeys && kind == .letters && traits.displayClass == .phone
+            && traits.orientation == .landscape && availWidth >= sideColumnMinAvailWidth
+    }
 
     /// Compact chrome (`LayoutSettings.compact`): strip 44 -> 36 (portrait) / 32 -> 28, key gap 6 -> 4.5, side margin
     /// 6.67 -> 4, keys 43 -> 46 high, rows 11 -> 8 apart. Pads are left alone.
@@ -181,6 +198,12 @@ public struct LayoutMetrics: Sendable, Equatable {
         var keyWidth = (availW - 2 * margin - 9 * gap) / 10
         var regionWidth = availW   // horizontal space the standard block is centred in
         var auxWidth: CGFloat = 0
+        var sideW: CGFloat = 0
+        if hasSideColumns(kind: kind, traits: traits, settings: settings, availWidth: availW) {
+            sideW = min(max(availW * sideColumnShare, sideColumnMin), sideColumnMax)
+            regionWidth = availW - 2 * (sideW + gap)
+            keyWidth = (regionWidth - 2 * margin - 9 * gap) / 10
+        }
         switch traits.displayClass {
         case .duoInner:
             if mode == .fillToFold {
@@ -198,7 +221,7 @@ public struct LayoutMetrics: Sendable, Equatable {
         case .phone: break
         }
         let contentWidth = 10 * keyWidth + 9 * gap
-        let contentLeft = safeArea.left + (regionWidth - contentWidth) / 2
+        let contentLeft = safeArea.left + (sideW > 0 ? sideW + gap : 0) + (regionWidth - contentWidth) / 2
 
         let padMargin = referencePadEdgeMargin * min(max(widthRatio, 0.96), 1.15)
         let padWidth = min(availW - 2 * padMargin, maxPadWidth)
@@ -226,6 +249,14 @@ public struct LayoutMetrics: Sendable, Equatable {
             padKeyWidth: padKeyWidth
         )
         out.mode = mode
+        if sideW > 0 {
+            out.sideColumnWidth = sideW
+            out.sideLeftMinX = safeArea.left + margin
+            out.sideRightMaxX = safeArea.left + availW - margin
+            // The block is inset by the margin on both sides already (keyWidth accounts for it); shift it past the columns.
+            out.contentLeft = safeArea.left + margin + sideW + gap
+            out.contentWidth = regionWidth - 2 * margin
+        }
         if mode == .fillToFold {
             out.auxColumnWidth = auxWidth - margin
             out.auxColumnMinX = safeArea.left + availW - auxWidth

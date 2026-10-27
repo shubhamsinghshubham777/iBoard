@@ -43,6 +43,14 @@ let sizeCases: [SizeCase] = [
         safeArea: LayoutInsets(left: 47, bottom: 21, right: 47)
     ),
     SizeCase(
+        name: "w932-landscape", width: 932, traits: LayoutTraits(orientation: .landscape),
+        safeArea: LayoutInsets(left: 59, bottom: 21, right: 59)
+    ),
+    SizeCase(
+        name: "w667-landscape-se", width: 667, traits: LayoutTraits(orientation: .landscape),
+        safeArea: .zero
+    ),
+    SizeCase(
         name: "w812-landscape", width: 812, traits: LayoutTraits(orientation: .landscape),
         safeArea: LayoutInsets(left: 44, bottom: 21, right: 44)
     ),
@@ -360,12 +368,15 @@ struct TraitVariantTests {
 
     @Test func orientationAndDisplayDoNotChangeKeySets() {
         let ref = Set(names(layout()))
+        // F13: phone landscape adds punctuation columns (nothing else changes).
+        let sideSymbols = Set(["\"", "'", "!", "?", "-", ";", ":", "/"].map { "symbol:\($0)" })
         for sc in sizeCases {
             #expect(Set(sc.layout(.letters).keys.map(\.identity.snapshotName)).subtracting(ref).subtracting(
-                (0...9).map { "symbol:\($0)" }).isEmpty)
+                (0...9).map { "symbol:\($0)" }).subtracting(sideSymbols).isEmpty)
         }
         let landscape = layout(traits: LayoutTraits(orientation: .landscape), width: 844)
-        #expect(Set(names(landscape)) == ref)
+        #expect(Set(names(landscape)).subtracting(sideSymbols) == ref.subtracting(sideSymbols))
+        #expect(Set(names(landscape)).isSuperset(of: ref))
     }
 
     @Test func duoInnerCapsKeyWidth() {

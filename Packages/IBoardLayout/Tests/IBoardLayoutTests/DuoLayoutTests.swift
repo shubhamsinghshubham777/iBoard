@@ -310,3 +310,51 @@ struct DuoFillToFoldTests {
         #expect(phone.metrics.mode == .standard)
     }
 }
+
+@Suite("Landscape side columns (F13)")
+struct LandscapeSideColumnTests {
+    private func letters(width: CGFloat, safe: LayoutInsets, orientation: LayoutOrientation = .landscape,
+                          settings: LayoutSettings = LayoutSettings()) -> KeyboardLayout {
+        let t = LayoutTraits(orientation: orientation)
+        let h = LayoutEngine.preferredHeight(width: width, safeArea: safe, traits: t, kind: .letters, settings: settings)
+        return LayoutEngine.layout(containerSize: CGSize(width: width, height: h), safeArea: safe, traits: t, kind: .letters, settings: settings)
+    }
+
+    @Test("wide phone landscape gets punctuation columns on both sides, standard keys keep their order")
+    func columns() {
+        for (w, safe) in [(812.0, LayoutInsets(left: 44, bottom: 21, right: 44)), (844, LayoutInsets(left: 47, bottom: 21, right: 47)),
+                          (932, LayoutInsets(left: 59, bottom: 21, right: 59))] {
+            let l = letters(width: w, safe: safe)
+            let plain = letters(width: w, safe: safe, settings: LayoutSettings(landscapeSideKeys: false))
+            #expect(l.metrics.sideColumnWidth > 0)
+            #expect(l.keys.count == plain.keys.count + 6)
+            #expect(Array(l.keys.prefix(plain.keys.count)).map(\.identity) == plain.keys.map(\.identity))
+            let side = l.keys.suffix(6)
+            #expect(side.allSatisfy { if case .symbol = $0.identity { true } else { false } })
+            // Side keys flank the main block symmetrically and are as tall as letter keys.
+            let q = l.firstKey(.letter("q"))!, p = l.firstKey(.letter("p"))!
+            #expect(side.map { $0.frame.minX }.min()! < q.frame.minX && side.map { $0.frame.maxX }.max()! > p.frame.maxX)
+            #expect(abs((q.frame.minX - l.keys.last!.frame.maxX) - (l.keys[l.keys.count - 2].frame.minX - p.frame.maxX)) < 6)
+            #expect(l.keys.last!.frame.maxX <= w - safe.right + 0.001)
+            // Wider than the old landscape layout would give 10 letter keys? Main block is narrower, keys remain >= 44 pt.
+            #expect(q.frame.width >= 44)
+        }
+    }
+
+    @Test("no columns on narrow landscape, portrait, or when switched off")
+    func off() {
+        #expect(letters(width: 568, safe: .zero).metrics.sideColumnWidth == 0)
+        #expect(letters(width: 390, safe: .zero, orientation: .portrait).metrics.sideColumnWidth == 0)
+        #expect(letters(width: 844, safe: .zero, settings: LayoutSettings(landscapeSideKeys: false)).metrics.sideColumnWidth == 0)
+    }
+
+    @Test("every point resolves to a key across the side columns")
+    func hits() {
+        let l = letters(width: 844, safe: LayoutInsets(left: 47, bottom: 21, right: 47))
+        for x in stride(from: CGFloat(0), through: 844, by: 7) {
+            for y in stride(from: l.keyArea.minY, through: l.bounds.maxY, by: 5) {
+                #expect(l.nearestHit(to: CGPoint(x: x, y: y)) != nil)
+            }
+        }
+    }
+}

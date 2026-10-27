@@ -129,5 +129,6 @@ private final class Sink {
 
 @Test func theEmojiKeyOffersTheSettingsShortcutOnALongPress() {
     #expect(KeyAlternates.longPressOptions(for: .emoji) == [KeyAlternates.settingsGlyph])
+    #expect(KeyAlternates.longPressOptions(for: .emoji, clipboardEntry: true) == [KeyAlternates.clipboardGlyph, KeyAlternates.settingsGlyph])
     #expect(KeyFlick.text(for: .emoji, direction: .down, uppercase: false) == nil)
 }

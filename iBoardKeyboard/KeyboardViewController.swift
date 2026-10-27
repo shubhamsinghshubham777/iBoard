@@ -846,6 +846,9 @@ final class KeyboardViewController: UIInputViewController {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         emoji.didReceiveMemoryWarning()
+        // Clipboard history is reloaded from disk on demand; drop the in-memory copy unless the panel shows it.
+        if !clipboardPanel.isOpen, !clipboardReading { clipboard = ClipboardHistory(); clipboardLoaded = false }
+        grid.trail.clear()
     }
 
     private func showSelectionActions(banner: String) {
@@ -1101,6 +1104,8 @@ final class KeyboardViewController: UIInputViewController {
             }
             return
         }
+        // A touch before the first layout (machine not built yet) is ignored instead of crashing on `machine!`.
+        guard machine != nil else { return }
         switch phase {
         case .began:
             perfDown = Perf.begin(.touchDownToHighlight)
@@ -1516,13 +1521,15 @@ final class KeyboardViewController: UIInputViewController {
             // Not `machine`: this runs inside a machine call. The grid holds the current layout.
             guard let layout = grid.layout, keyIndex < layout.keys.count else { break }
             let key = layout.keys[keyIndex]
-            let options = KeyAlternates.longPressOptions(for: key.identity, uppercase: grid.shift != .off) ?? []
+            let options = KeyAlternates.longPressOptions(for: key.identity, uppercase: grid.shift != .off,
+                                                         clipboardEntry: hasFullAccess && settings.clipboardHistory) ?? []
             strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
             if let text = strip.end(at: p) {
                 if text == KeyAlternates.settingsGlyph { openSettingsPage(); feedback(); break }
+                if text == KeyAlternates.clipboardGlyph { openClipboardPanel(); feedback(); break }
                 if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)
                 feedback()

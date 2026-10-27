@@ -99,6 +99,7 @@ public enum LayoutEngine {
             placer.buildSplit(kind: kind, traits: traits, settings: settings)
         } else {
             placer.buildLetters(kind: kind, traits: traits, settings: settings)
+            if m.sideColumnWidth > 0 { placer.buildSideColumns() }
         }
 
         let (hit, regions) = HitModel.build(
@@ -227,6 +228,19 @@ private struct Placer {
         }
         buildBottomRow(kind: kind, traits: traits, settings: settings, row: row)
         rowCount = row + 1
+    }
+
+    /// F13: punctuation columns on both sides of the letter rows (not the bottom row). Appended after every other key
+    /// so the order of the standard keys never changes (swipe decoder / touch model).
+    mutating func buildSideColumns() {
+        let n = max(rowCount - 1, 0)
+        let leftAll = ["\"", "'", "!", "?"], rightAll = ["-", ";", ":", "/"]
+        for (i, row) in (0..<n).enumerated() {
+            let li = leftAll.count - n + i, ri = rightAll.count - n + i
+            guard li >= 0, ri >= 0 else { continue }
+            add(.symbol(leftAll[li]), x: m.sideLeftMinX, w: m.sideColumnWidth, row: row)
+            add(.symbol(rightAll[ri]), x: m.sideRightMaxX - m.sideColumnWidth, w: m.sideColumnWidth, row: row)
+        }
     }
 
     private mutating func buildBottomRow(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings, row: Int) {
