@@ -10,6 +10,9 @@ swipe typing, OTP codes, Hinglish, gestures, themes and iPhone Duo layouts.
 3. Pick the next task per ROADMAP §1, mark it `[~]`, do it, verify it, then update the roadmap (checkbox, progress
    log, new facts/risks) **in the same commit**, pushed directly to `main` with a `[TASK-ID] summary` message.
 
+**`docs/HANDOFF.md`** records the current working state (in-flight agents, the owner's open bug list, process, tool quirks).
+Read it right after ROADMAP §1–§6.
+
 Hard rules (details in ROADMAP §1):
 - Locked decisions in ROADMAP §4 change only with the owner's approval.
 - Performance budgets in ROADMAP §6 (base iPhone 12) are acceptance criteria.

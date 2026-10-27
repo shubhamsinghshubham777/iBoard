@@ -83,7 +83,7 @@
 | **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Not started |
 | **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Not started |
 
-**Current blockers:** none.
+**Current blockers:** none. **Open owner-reported bugs (device test, 2026-10-27):** see `docs/HANDOFF.md` §2 (123 long-press opens emoji, spacebar wrap-down, resize flicker, swipe typing types nothing because only a 219-word English fixture is bundled, trail redesign, caps lock, emoji panel revamp, backspace swipe-delete preview).
 
 ---
 
@@ -786,6 +786,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · handoff note ·** Owner tested the round-6 build on the iPhone 12 and reported 8 issues (listed in `docs/HANDOFF.md` §2). Root cause of 'gesture typing types nothing': the bundled English lexicon is the 219-word synthetic fixture (14 KB); an agent is building a real English lexicon (`Data/english/`). Round 7 (KBD7 keyboard settings/Hinglish/Duo split/theme rendering, ONBOARD, QUALITY) and the English-data agent are in flight in worktrees; the bug-fix round starts after they merge. Added `docs/HANDOFF.md` for context continuity.
 
 - **2026-10-27 · round 6 (chips/selection/emoji, Hinglish data + code-switch, settings + theme studio) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 35, Layout 40, Engine 227 (one run had a load-sensitive `ReaderBenchmarks` failure, passes alone — R-11), OTP 11, Theme 18, UI 185, Sync 8, Emoji 21, LexiconBuilder 7; `scripts/build.sh` green. Simulator evidence for code chip, name chip, Shift+space selection, emoji panel and search. Next for agents: bundle Hinglish into the keyboard + read the new settings fields, theme rendering in IBoardUI, emoji memory retention, M6-05 clipboard fallback, M6-04 onboarding + signed shortcut. Needs the owner/device: M1-09 perf gate, haptic/sound feel, Duo screenshots (M0-10).
 
