@@ -10,7 +10,7 @@ does not: what is in flight, how work is run and merged, tool quirks, and the ow
 - All package tests were green at the last merge (Core 35, Layout 40, Engine 227, OTP 11, Theme 18, UI 185, Sync 8, Emoji 21,
   LexiconBuilder 7) and `scripts/build.sh` succeeds. Known flaky: macOS debug timing tests (`ReaderBenchmarks`) fail under
   load, pass alone (R-11; round-7 QUALITY agent is fixing).
-- **Round 7 (KBD7, ONBOARD, QUALITY) and the English-data agent are all MERGED (2026-10-27); no agents are in flight.** Bundling `Data/english/*` into the keyboard is still TODO (bug 4).
+- **Round 7 (KBD7, ONBOARD, QUALITY) and the English-data agent are all MERGED (2026-10-27); no agents are in flight.** Bundling `Data/english/*` into the keyboard is done on `fix/owner-bugs` (bug 4).
 - **In-flight agents, each in its own worktree** (branch = worktree name):
   | Agent | Worktree / branch | Scope |
   |---|---|---|
@@ -27,7 +27,8 @@ does not: what is in flight, how work is run and merged, tool quirks, and the ow
 - The owner's iPhone 12 (UDID `00008101-0014596A1E01001E`) currently has the **round-6 Debug build** installed
   (`app.iBoard`) for the owner to test; do not install over it without telling them.
 
-## 2. Owner's open bug list (from device testing of the round-5/6 build) — NEXT WORK
+## 2. Owner's bug list (from device testing of the round-5/6 build) — FIXED on branch `fix/owner-bugs`, simulator-verified only (details: `docs/BUGFIX_NOTES.md`)
+Status 2026-10-27: 1 fixed (emoji button; 123 long-press neutral; slide-from-123), 2 fixed (line-end wrap), 3 fixed (preview + one change), 4 fixed (English data bundled; first-swipe buffer; prediction fixes; **footprint 25-31 MB Debug sim, recheck on device**), 5 fixed (gradient trail), 6 fixed (caps lock), 7 fixed (continuous list), 8 **partially**: a host-drawn selection is impossible; live in-field deletion preview is the default. Nothing was tested on the physical phone. Original list kept below for reference.
 Do these in ONE dedicated keyboard-owner agent *after* round 7 is merged (they touch the same files as KBD7: `Packages/IBoardUI`,
 `iBoardKeyboard/`):
 1. Holding the **123** key opens the emoji panel — unexpected. Give emoji its own affordance; 123 long-press should behave like iOS.

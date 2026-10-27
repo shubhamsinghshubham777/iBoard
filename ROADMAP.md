@@ -83,7 +83,7 @@
 | **M12** iCloud sync (opt-in) | Encrypted sync of the personal model | Not started |
 | **M13** Hardening & launch | Accessibility, perf soak, App Review, open-source launch | Not started |
 
-**Current blockers:** none. **Open owner-reported bugs (device test, 2026-10-27):** see `docs/HANDOFF.md` §2 (123 long-press opens emoji, spacebar wrap-down, resize flicker, swipe typing types nothing because only a 219-word English fixture is bundled, trail redesign, caps lock, emoji panel revamp, backspace swipe-delete preview).
+**Current blockers:** none. **Owner-reported bugs (device test, 2026-10-27):** fixed on branch `fix/owner-bugs`, simulator-verified only, bug 8 partial — see `docs/BUGFIX_NOTES.md` (was: 123 long-press opens emoji, spacebar wrap-down, resize flicker, swipe typing types nothing because only a 219-word English fixture is bundled, trail redesign, caps lock, emoji panel revamp, backspace swipe-delete preview).
 
 ---
 
@@ -555,7 +555,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [x] **M2-01 LexiconBuilder** — CLI building trie + quantized 3-gram LM + license manifest from M0-11 sources;
   deterministic output; size report. Depends: M0-11.
   **Result (2026-10-26):** `Tools/LexiconBuilder` (Swift 6 package, 7 tests green): deterministic `.iblex` trie + `.iblm` 3-gram + `licenses.json` + size report; format in `docs/LEXICON_FORMAT.md`. Not tested: CLI end to end, real-scale data/size, build time. Plain trie (no suffix sharing yet).
-  **English data (2026-10-27):** real English lexicon + LM built by `Tools/EnglishData` into `Data/english/` (125,796 words, 8.3 MB; 300k bigrams + 240k trigrams, 7.9 MB; byte-identical rebuilds; SCOWL 2020 vocabulary + Leipzig news 2023/2024 counts (CC BY 4.0), attribution only, no share-alike; top-10k coverage 98.2%). Together with Hinglish ≈23.2 MB of the 25 MB asset budget. NOT yet bundled into the keyboard (it still ships the 219-word fixture), so suggestions/swipe still fail for most words until it is; casual-chat register under-weighted (news corpora). `docs/ENGLISH_DATA.md`.
+  **English data (2026-10-27):** real English lexicon + LM built by `Tools/EnglishData` into `Data/english/` (125,796 words, 8.3 MB; 300k bigrams + 240k trigrams, 7.9 MB; byte-identical rebuilds; SCOWL 2020 vocabulary + Leipzig news 2023/2024 counts (CC BY 4.0), attribution only, no share-alike; top-10k coverage 98.2%). Together with Hinglish ≈23.2 MB of the 25 MB asset budget. Bundled into the keyboard on `fix/owner-bugs` (2026-10-27, `<bundle>/english/`, fixture removed; swipe and suggestions verified on the simulator, footprint 25-31 MB Debug sim, recheck on device); casual-chat register under-weighted (news corpora). `docs/ENGLISH_DATA.md`.
 - [x] **M2-02 Runtime readers** — mmap loaders, prefix lookup, LM scoring; macOS benchmarks. Depends: M2-01.
   **Result (2026-10-27):** mmap `Lexicon`/`NGramModel` readers cross-checked against LexiconBuilder (219 words, 16k n-gram probabilities identical); macOS release p95: exact lookup 140 ns, trigram 218 ns, top-8 completions 1.7 µs; fixtures synthetic. Not measured on iPhone 12.
 - [x] **M2-03 Tap decoder** — Spatial Gaussian × LM beam search; literal + candidates + confidence. Depends: M2-02, M1-02.
@@ -792,6 +792,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · owner bug fixes (branch `fix/owner-bugs`) ·** English lexicon + LM bundled into the keyboard (`<bundle>/english/`, fixture removed); first swipe before the engine loads is buffered; next-word prediction now seeded by LM successors and English-first without Hinglish evidence; caps lock (double tap after auto-cap, held shift, tinted tile); emoji button in the strip + slide-from-123; spacebar right drag wraps at line end; resize handle shows a stable preview and applies once; thin gradient swipe trail; emoji panel is one continuous list with jump chips and remembered scroll; backspace swipe-delete previews live in the field (a host-drawn selection is impossible, P-08; marked text showed no highlight in the tested hosts). Verification: `swift test` green in every package (Core 35, Layout 40, Engine 231, OTP 11, Theme 18, UI 227, Sync 8, Emoji 26, LexiconBuilder 7), `scripts/audit-privacy.sh` OK, `scripts/build.sh` OK; behaviours seen on one iPhone 12 (iOS 27.0) simulator via axe (details and gaps in `docs/BUGFIX_NOTES.md`). Footprint (Debug, simulator) 25 MB after swipes, 31 MB after the emoji panel: re-measure on the device against the 30 MB target. NOT tested: anything on the physical phone, Duo, Reduce Motion, Notes/Messages/WhatsApp hosts. Statuses stay `[~]`.
 
 - **2026-10-27 · English lexicon data merged ·** `Data/english/` (see M2-01 note). Verification: agent's hash check (rebuild twice, identical SHA-256) re-checked after merge; engine/UI tests and `scripts/build.sh` still green; NOTICE conflict (two appenders) resolved by keeping both. Next: bundle it into the keyboard (lazy mmap, watch the 30/40 MB footprint — now ~16 MB more mapped data), then the owner's bug-fix round.
 

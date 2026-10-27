@@ -2,7 +2,7 @@
 
 Real English lexicon and 3-gram LM, replacing the 219-word synthetic fixture. Built by `Tools/EnglishData` (generator,
 Python standard library only) and `Tools/LexiconBuilder` (binary writer); output in `Data/english/`. Binary format:
-`docs/LEXICON_FORMAT.md`. Not yet bundled into the keyboard (separate task).
+`docs/LEXICON_FORMAT.md`. Bundled into the keyboard as `<bundle>/english/` (see `docs/BUGFIX_NOTES.md`).
 
 ## Output (measured 2026-10-27)
 
