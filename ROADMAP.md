@@ -808,6 +808,9 @@ translation · themes gallery/sharing · iOS widgets for insights.
 
 ## 15. Progress log
 
+### 2026-10-27 — M12-02 first device sync
+iCloud/CloudKit entitlement added (`iCloud.app.iBoard`, owner created container); Debug build installed on the owner's iPhone 12; owner enabled sync and tapped Sync now: status 'Last synced 27 Oct 2026 at 3:00 PM' (screenshot), i.e. connect + encrypt + upload succeeded on device. Still unverified: content of the upload (may be near-empty), two-device merge, key sharing via iCloud Keychain, Delete iCloud data. M12-02/03 stay `[~]`.
+
 ### 2026-10-27 — KEYBOARD3 + DEVICE merged
 M8-04 landscape side punctuation columns (`landscapeSideKeys`, default on; no app toggle yet), clipboard panel via emoji-key long-press, hint-symbol overlap fix, controller robustness fixes (pre-layout touch crash path, memory-warning drops). DEVICE: flag-gated `PerfMetricsHook` (DEBUG/-DIBOARD_PERF only), `scripts/device-perf.sh`, `docs/perf/README.md`; Release build installed on the iPhone 12 but the keyboard never appeared in the XCUITest so M1-09/M13-02 have NO numbers yet (keyboard binary 4.7 MB static). Finding: extension links CloudKit/IBoardSync via IBoardEngine→PersonalSyncAdapter (1132 sync symbols) — being decoupled. All `[~]`; device pass needed. Build + `scripts/test.sh --no-ui` + privacy audit pass.
 
