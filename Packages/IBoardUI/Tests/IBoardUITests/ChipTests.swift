@@ -97,4 +97,32 @@ import IBoardOTP
         let reader2 = OTPReader(storage: storage, clock: { now.addingTimeInterval(11 * 60) })
         #expect(reader2.freshCodes().isEmpty) // expired
     }
+
+    @Test func clipboardOfferOnlyForCodeFieldsWithoutStoredCode() {
+        let off = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"))
+        #expect(off == [nil, nil, nil])
+        let on = ChipPlanner.plan(codes: [], info: .empty, field: field("oneTimeCode"), clipboardOffer: true)
+        #expect(on[0]?.source == .clipboardCode && on[0]?.display == "Paste code" && on[0]?.insert == "")
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field(), clipboardOffer: true) == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("password", secure: true), clipboardOffer: true) == [nil, nil, nil])
+        // A stored code wins over the clipboard offer.
+        #expect(ChipPlanner.plan(codes: [code], info: .empty, field: field("oneTimeCode"), clipboardOffer: true)[0]?.insert == "123456")
+    }
+
+    @Test func clipboardCodeExtraction() {
+        #expect(ClipboardCode.extract(from: "482913") == "482913")
+        #expect(ClipboardCode.extract(from: " 4829 ") == "4829")
+        #expect(ClipboardCode.extract(from: "Your verification code is 731942. Do not share it.") == "731942")
+        #expect(ClipboardCode.extract(from: "hello world") == nil)
+        #expect(ClipboardCode.extract(from: nil) == nil)
+        #expect(ClipboardCode.extract(from: String(repeating: "1 ", count: 400)) == nil)
+    }
+
+    @Test func clipboardItemChipOnlyInEmptyPlainFields() {
+        let on = ChipPlanner.plan(codes: [], info: .empty, field: field(), clipboardItem: "see you at 5")
+        #expect(on[2]?.source == .clipboardItem && on[2]?.insert == "see you at 5")
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field(empty: false), clipboardItem: "x y") == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("password", secure: true), clipboardItem: "x y") == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [code], info: .empty, field: field(), clipboardItem: "x y")[2]?.source == .code(id: code.id))
+    }
 }

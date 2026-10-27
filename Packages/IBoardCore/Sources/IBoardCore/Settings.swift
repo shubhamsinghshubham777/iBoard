@@ -12,6 +12,8 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
     /// Strength of key haptics (only used when `haptics` is on and Full Access is granted).
     public var hapticIntensity: HapticIntensity
     public var keyClickSound: Bool
+    /// Character of key haptics (M8-03). Only used when `haptics` is on and Full Access is granted.
+    public var hapticPack: HapticPack
     /// Number row above the letters (F1). Layout default is off (on for Duo inner portrait, applied by the host).
     public var numberRow: Bool
     /// Keyboard height multiplier (F11, D-18) per display class x orientation, keyed by `HeightKey.make`.
@@ -49,8 +51,9 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         smartPunctuation: Bool = true, swipeTyping: Bool = true, incognitoByDefault: Bool = false,
         spellingVariant: SpellingVariantSetting = .auto, duoSplitPortrait: Bool = false,
         duoSplitLandscape: Bool = false, emojiSuggestions: Bool = true, punctuationKeys: Bool = true,
-        longPressDelay: LongPressDelay = .standard
+        longPressDelay: LongPressDelay = .standard, hapticPack: HapticPack = .standard
     ) {
+        self.hapticPack = hapticPack
         self.version = version
         self.haptics = haptics
         self.keyClickSound = keyClickSound
@@ -86,6 +89,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         case doubleSpacePeriod, smartPunctuation, swipeTyping, incognitoByDefault, spellingVariant
         case duoSplitPortrait, duoSplitLandscape, emojiSuggestions, punctuationKeys, longPressDelay
         case flickHints = "keyHints"
+        case hapticPack
     }
 
     /// Tolerant decoding: missing or unknown fields fall back to defaults; older versions are migrated to current.
@@ -116,6 +120,7 @@ public struct IBoardSettings: Codable, Sendable, Equatable {
         self.emojiSuggestions = try c.decodeIfPresent(Bool.self, forKey: .emojiSuggestions) ?? d.emojiSuggestions
         self.punctuationKeys = try c.decodeIfPresent(Bool.self, forKey: .punctuationKeys) ?? d.punctuationKeys
         self.longPressDelay = (try? c.decodeIfPresent(LongPressDelay.self, forKey: .longPressDelay)) ?? d.longPressDelay
+        self.hapticPack = (try? c.decodeIfPresent(HapticPack.self, forKey: .hapticPack)) ?? d.hapticPack
     }
 }
 
@@ -130,6 +135,19 @@ public enum LongPressDelay: String, Codable, Sendable, CaseIterable {
         case .long: 0.6
         }
     }
+}
+
+/// Haptic packs (M8-03): how each kind of key press feels. Resolved by `HapticPlan` in IBoardUI. Sound packs are not
+/// possible in a keyboard extension beyond the system click (`playInputClick`, P-23), so there is no sound pack.
+public enum HapticPack: String, Codable, Sendable, CaseIterable {
+    /// The shipped feel.
+    case standard
+    /// Gentler: everything a step lighter and softer.
+    case soft
+    /// Sharper: letters and deletes use the rigid generator.
+    case crisp
+    /// Letters only; deletes, space and actions stay quiet.
+    case lettersOnly
 }
 
 public enum HapticIntensity: String, Codable, Sendable, CaseIterable { case light, medium, strong }

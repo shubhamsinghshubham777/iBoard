@@ -180,6 +180,70 @@ public final class SuggestionStripView: UIView {
         relayout()
     }
 
+    // MARK: VoiceOver (M13-01)
+
+    /// VoiceOver double tap on a slot / action cell; the point is strip-local (the host feeds it through the same path
+    /// as a finger tap).
+    public var onAccessibilityActivate: ((CGPoint) -> Void)?
+
+    public override var isAccessibilityElement: Bool { get { false } set {} }
+
+    public override var accessibilityElements: [Any]? {
+        get {
+            guard bounds.width > 0, selection == nil else { return [] }
+            func element(_ label: String, _ rect: CGRect, hint: String? = nil) -> UIAccessibilityElement {
+                let e = StripElement(accessibilityContainer: self)
+                e.accessibilityLabel = label
+                e.accessibilityHint = hint
+                e.accessibilityTraits = [.button]
+                e.accessibilityFrameInContainerSpace = rect
+                let c = CGPoint(x: rect.midX, y: rect.midY)
+                e.onActivate = { [weak self] in self?.onAccessibilityActivate?(c) }
+                return e
+            }
+            var out: [UIAccessibilityElement] = []
+            if !actionTitles.isEmpty {
+                let area = overlayRects(w: bounds.width).actions
+                let w = area.width / CGFloat(actionTitles.count)
+                if let b = bannerText {
+                    let t = UIAccessibilityElement(accessibilityContainer: self)
+                    t.accessibilityLabel = b
+                    t.accessibilityTraits = [.staticText]
+                    t.accessibilityFrameInContainerSpace = overlayRects(w: bounds.width).banner
+                    out.append(t)
+                }
+                for (i, title) in actionTitles.enumerated() {
+                    let e = element(title, CGRect(x: area.minX + CGFloat(i) * w, y: 0, width: w, height: bounds.height))
+                    if i < actionEnabled.count, !actionEnabled[i] { e.accessibilityTraits.insert(.notEnabled) }
+                    out.append(e)
+                }
+                return out
+            }
+            if let b = bannerText {
+                let t = UIAccessibilityElement(accessibilityContainer: self)
+                t.accessibilityLabel = b
+                t.accessibilityTraits = [.staticText]
+                t.accessibilityFrameInContainerSpace = bounds
+                return [t]
+            }
+            if let f = searchField, f.wide { return [] } // the emoji panel's own search UI owns this state
+            let rects = slotRects(width: bounds.width, height: bounds.height)
+            for (i, text) in slotTexts.enumerated() where i < rects.count {
+                guard let label = KeyAccessibility.stripLabel(slotIndex: i, text: text) else { continue }
+                let e = element(label, rects[i], hint: "Suggestion")
+                if boldSlots.contains(i) { e.accessibilityHint = "Best suggestion" }
+                out.append(e)
+            }
+            return out
+        }
+        set {}
+    }
+
+    private final class StripElement: UIAccessibilityElement {
+        var onActivate: (() -> Void)?
+        override func accessibilityActivate() -> Bool { onActivate?(); return true }
+    }
+
     // MARK: Alternates mode
 
     public var isShowingAlternates: Bool { selection != nil }

@@ -48,6 +48,10 @@ final class KeyboardViewController: UIInputViewController {
     private var lastDocumentID: UUID?
     private var stripTouchID: Int?
     private var stripTouchIgnored = false
+    /// M3-04: long-press on a suggestion opens Forget / Never correct / Cancel in the strip.
+    private var suggestionMenu: SuggestionMenu?
+    private var stripHoldTimer: Timer?
+    private var stripTouchStart = CGPoint.zero
     /// Swipe typing capture (M4-01): one finger at a time; trail drawn by `grid.trail`.
     private var swipeCapture = SwipeCapture()
     /// Gesture arbiter for the first finger (M5-01): rules out swipes for vertical flicks, starts the spacebar cursor
@@ -85,6 +89,13 @@ final class KeyboardViewController: UIInputViewController {
     private var consumedCodeIDs = Set<String>()
     private var freshCodes: [StoredCode] = []
     private var chipPlan: [StripChip?] = [nil, nil, nil]
+    /// M6-05: the pasteboard held no code; no more offers until the field changes.
+    private var clipboardMissed = false
+    /// M9-03: clipboard history (Full Access only), loaded lazily and kept in the extension container.
+    private var clipboard = ClipboardHistory()
+    private lazy var clipboardStore = ClipboardStore(url: EngineHost.localDirectory().appendingPathComponent("clipboard.json"))
+    private var clipboardLoaded = false
+    private var clipboardReading = false
     private var chipTimer: Timer?
     /// Emoji panel + search (M9-01/M9-02 wired): opened by the emoji button at the trailing end of the strip.
     private let emoji = EmojiHost()
@@ -130,6 +141,7 @@ final class KeyboardViewController: UIInputViewController {
         applyAppCommands()
         personalInfo = PersonalInfoReader().load() // F7: saved by the app, read-only here (works without Full Access)
         reloadCodes()
+        recordClipboardIfChanged()
         startChipTimer()
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
@@ -153,6 +165,13 @@ final class KeyboardViewController: UIInputViewController {
         grid.frame = view.bounds
         grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         grid.accessibilityIdentifier = "key-grid"
+        strip.onAccessibilityActivate = { [weak self] local in
+            guard let self else { return }
+            let p = CGPoint(x: self.strip.frame.minX + local.x, y: self.strip.frame.minY + local.y)
+            let t = ProcessInfo.processInfo.systemUptime
+            self.handleTouch(.began, -8, p, t)
+            self.handleTouch(.ended, -8, p, t + 0.02)
+        }
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
@@ -269,6 +288,8 @@ final class KeyboardViewController: UIInputViewController {
         let doc = (proxy as? NSObject)?.value(forKey: "documentIdentifier") as? UUID
         if forceFieldChange || doc != lastDocumentID {
             lastDocumentID = doc
+            clipboardMissed = false
+            suggestionMenu = nil
             coordinator.fieldDidChange(config)
         } else {
             coordinator.updateConfig(config)
@@ -364,6 +385,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Keyboard hidden: close the typing session, learn the last words, and (Full Access) refresh the app's snapshot.
     private func settleOnDisappear() {
         insights.endSession()
+        if clipboardLoaded { clipboardStore.save(clipboard) } // drops expired items from disk
         coordinator.flushLearner()
         guard let host else { return }
         let shareSnapshot = hasFullAccess && sharedSnapshotDirty
@@ -430,7 +452,7 @@ final class KeyboardViewController: UIInputViewController {
         // A code can arrive while the keyboard is visible (the Message automation runs in the background).
         chipTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] t in
             guard let self else { t.invalidate(); return }
-            MainActor.assumeIsolated { self.reloadCodes() }
+            MainActor.assumeIsolated { self.reloadCodes(); self.recordClipboardIfChanged() }
         }
     }
 
@@ -445,14 +467,53 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func replanChips() {
-        let plan = ChipPlanner.plan(codes: freshCodes, info: personalInfo, field: currentChipField(), suggestions: lastStrip.slots)
+        let plan = ChipPlanner.plan(codes: freshCodes, info: personalInfo, field: currentChipField(), suggestions: lastStrip.slots,
+                                   clipboardOffer: hasFullAccess && !clipboardMissed,
+                                   clipboardItem: hasFullAccess ? clipboard.newest(at: Date())?.text : nil)
         guard plan != chipPlan else { return }
         chipPlan = plan
         renderStrip()
     }
 
+    /// M9-03: records a new pasteboard item while the keyboard is visible. `changeCount` is free to read; the string is
+    /// read only when it changed, off the main thread (the first read may show the system paste prompt, P-25).
+    private func recordClipboardIfChanged() {
+        guard hasFullAccess, !clipboardReading else { return }
+        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        let count = UIPasteboard.general.changeCount
+        guard clipboard.needsRead(changeCount: count) else { return }
+        // Never record from secure fields' context: nothing is read while a password field is focused.
+        if textDocumentProxy.isSecureTextEntry ?? false { return }
+        clipboardReading = true
+        Task.detached { [weak self] in
+            let text = UIPasteboard.general.hasStrings ? UIPasteboard.general.string : nil
+            await MainActor.run {
+                guard let self else { return }
+                self.clipboardReading = false
+                self.clipboard.record(text, changeCount: count, at: Date())
+                self.clipboardStore.save(self.clipboard)
+                self.replanChips()
+            }
+        }
+    }
+
+    /// M6-05: reads the pasteboard only now (the first read may show the system paste prompt, P-25), off the main
+    /// thread, and inserts a code when it holds one; otherwise the chip hides until the field changes.
+    private func pasteClipboardCode() {
+        Task.detached { [weak self] in
+            let text = UIPasteboard.general.string
+            let code = ClipboardCode.extract(from: text)
+            await MainActor.run {
+                guard let self else { return }
+                if let code { self.coordinator.insertDirect(code); self.scheduleAutoShift() }
+                else { self.clipboardMissed = true; self.replanChips() }
+            }
+        }
+    }
+
     /// One tap inserts the chip's text as is (never learned) and hides an inserted code.
     private func insertChip(_ chip: StripChip) {
+        if chip.source == .clipboardCode { pasteClipboardCode(); return }
         coordinator.insertDirect(chip.insert)
         if case .code(let id) = chip.source {
             consumedCodeIDs.insert(id)
@@ -464,6 +525,14 @@ final class KeyboardViewController: UIInputViewController {
     /// The strip shows (highest priority first): the backspace delete preview, chips over suggestions.
     private func renderStrip() {
         if case .deleteWords = dragMode { return } // the delete preview owns the strip until release
+        if let menu = suggestionMenu {
+            strip.emphasizedSlots = []
+            strip.bannerShare = 0.3
+            strip.bannerText = menu.banner
+            strip.actionTitles = SuggestionMenu.actionTitles
+            strip.actionEnabled = []
+            return
+        }
         if let texts = emoji.stripTexts {
             strip.emphasizedSlots = []
             strip.bannerText = nil
@@ -514,6 +583,51 @@ final class KeyboardViewController: UIInputViewController {
         }
         strip.emphasizedSlots = emphasized
         strip.slotTexts = texts
+    }
+
+    // MARK: Suggestion menu (M3-04)
+
+    private func scheduleStripHold(at point: CGPoint) {
+        stripHoldTimer?.invalidate()
+        guard suggestionMenu == nil, !emoji.isOpen, coach.isDone, !strip.isShowingActions, !stripTouchIgnored else { return }
+        stripHoldTimer = Timer.scheduledTimer(withTimeInterval: SuggestionMenu.holdDelay, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.openSuggestionMenu(at: point) }
+        }
+    }
+
+    private func openSuggestionMenu(at point: CGPoint) {
+        guard stripTouchID != nil, strip.frame.width > 0, suggestionMenu == nil else { return }
+        let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
+        // Chips (codes, personal info) and the undo-autocorrect slot are not words in the model.
+        guard slot >= 0, slot < lastStrip.slots.count, chipPlan[slot] == nil,
+              !(slot == 0 && coordinator.undoableAutocorrection != nil),
+              let menu = SuggestionMenu.menu(for: lastStrip.slots[slot], at: slot) else { return }
+        suggestionMenu = menu
+        feedback(.action)
+        renderStrip()
+    }
+
+    private func closeSuggestionMenu() {
+        suggestionMenu = nil
+        renderStrip()
+    }
+
+    private func performSuggestionMenu(_ action: SuggestionMenu.Action) {
+        guard let menu = suggestionMenu, let host else { closeSuggestionMenu(); return }
+        suggestionMenu = nil
+        switch action {
+        case .forget:
+            let word = menu.word
+            Task { await host.learner.forgetSuggestion(word); await host.engine?.refreshPersonal() }
+            sharedSnapshotDirty = true
+        case .neverCorrect:
+            let word = menu.word
+            Task { await host.store.addNeverCorrect(word); await host.engine?.refreshPersonal() }
+            sharedSnapshotDirty = true
+        case .cancel: break
+        }
+        if action != .cancel { feedback(.action) }
+        renderStrip()
     }
 
     // MARK: Emoji (M9)
@@ -743,11 +857,25 @@ final class KeyboardViewController: UIInputViewController {
             stripTouchID = id
             // A second finger on the strip while a backspace swipe is deleting words must not insert a suggestion.
             if case .deleteWords = dragMode { stripTouchIgnored = true } else { stripTouchIgnored = false }
+            stripTouchStart = point
+            scheduleStripHold(at: point)
+            return
+        }
+        if stripTouchID == id, phase == .moved {
+            if hypot(point.x - stripTouchStart.x, point.y - stripTouchStart.y) > SuggestionMenu.moveTolerance { stripHoldTimer?.invalidate() }
             return
         }
         if stripTouchID == id {
             if phase == .ended || phase == .cancelled {
                 stripTouchID = nil
+                stripHoldTimer?.invalidate()
+                if suggestionMenu != nil {
+                    if phase == .ended, let i = strip.actionIndex(forLocalX: point.x - strip.frame.minX),
+                       let a = SuggestionMenu.Action(rawValue: i) { performSuggestionMenu(a) }
+                    else if phase == .cancelled { closeSuggestionMenu() }
+                    // A release right after the long-press opened the menu keeps it open.
+                    return
+                }
                 if stripTouchIgnored { stripTouchIgnored = false; return }
                 if phase == .ended, strip.frame.contains(point), strip.frame.width > 0 {
                     let slot = strip.slotIndex(forLocalX: point.x - strip.frame.minX)
@@ -1257,23 +1385,18 @@ final class KeyboardViewController: UIInputViewController {
     private func feedback(_ kind: HapticKind = .letter) {
         if settings.keyClickSound { UIDevice.current.playInputClick() }
         guard hapticsEnabled else { return }
+        guard let impact = HapticPlan.impact(for: kind, pack: settings.hapticPack, intensity: settings.hapticIntensity) else { return }
         let style: UIImpactFeedbackGenerator.FeedbackStyle
-        switch kind.weight {
+        switch impact.weight {
         case .light: style = .light
         case .medium: style = .medium
         case .rigid: style = .rigid
         case .soft: style = .soft
         case .heavy: style = .heavy
         }
-        let g = hapticGenerators[kind.weight] ?? UIImpactFeedbackGenerator(style: style)
-        hapticGenerators[kind.weight] = g
-        let base: Double
-        switch settings.hapticIntensity {
-        case .light: base = 0.6
-        case .medium: base = 0.85
-        case .strong: base = 1
-        }
-        g.impactOccurred(intensity: CGFloat(base * kind.intensity))
+        let g = hapticGenerators[impact.weight] ?? UIImpactFeedbackGenerator(style: style)
+        hapticGenerators[impact.weight] = g
+        g.impactOccurred(intensity: CGFloat(impact.intensity))
     }
 
     private func applyDeferredLayerChange() {
