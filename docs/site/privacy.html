@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iBoard Privacy Policy</title>
+<meta name="description" content="What iBoard does and does not do with your data. Short version: nothing leaves your device unless you opt in to iCloud sync, and then only to your own iCloud.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><a class="brand" href="index.html">iBoard</a>
+<nav><a href="privacy.html">Privacy</a><a href="support.html">Support</a><a href="https://github.com/shubhamsinghshubham777/iBoard">Source</a></nav></header>
+<main>
+<h1>Privacy Policy</h1>
+<p class="muted">Effective: 2026-10-27. Applies to the iBoard app and keyboard for iPhone.</p>
+
+<h2>Summary</h2>
+<p>iBoard does not collect, transmit, sell or share your data. There is no developer server, no analytics, no advertising and no tracking. What you type stays on your device. The one optional exception is iCloud sync, which you must turn on yourself and which stores data only in your own private iCloud.</p>
+
+<h2>What the keyboard does with what you type</h2>
+<ul>
+<li>Typed text is processed on the device to give suggestions, autocorrect and swipe typing.</li>
+<li>Typed text is never logged, not even in debug builds, and never sent anywhere.</li>
+<li>To improve suggestions, iBoard keeps a personal dictionary on the device: words and short phrases you use, with counts. You can search, edit, export and erase it in the app, and long-press a suggestion to forget it.</li>
+<li>Secure and password fields are never learned from. An incognito mode (and per-field rules) stops learning on request.</li>
+<li>Typing insights are aggregate numbers (for example words typed and how often you undo an autocorrection). They contain no text and you can reset them.</li>
+</ul>
+
+<h2>Full Access (optional)</h2>
+<p>iBoard works without Full Access: typing, suggestions, autocorrect, swipe, gestures, themes, emoji and verification-code chips. The keyboard never needs, and never uses, the network. iOS shows a Full Access switch for every keyboard that requests it. If you turn it on, iBoard uses it only for:</p>
+<table>
+<tr><th>Feature</th><th>What happens</th></tr>
+<tr><td>Haptic feedback</td><td>Vibration on key presses. iOS only allows this with Full Access.</td></tr>
+<tr><td>Clipboard history (off by default)</td><td>Recently copied text is kept on the device for the time you choose (5 minutes, 1 hour or 1 day) so you can paste it again. Kept locally only. You can turn it off and clear it.</td></tr>
+<tr><td>Sharing with the iBoard app</td><td>Lets the keyboard write your personal dictionary and counters to a storage area shared with the app, so the app can show and manage them.</td></tr>
+<tr><td>iCloud sync (off by default)</td><td>See below.</td></tr>
+<tr><td>Clipboard code suggestion</td><td>If a copied message looks like a verification code, it can be offered as a chip. The text is not stored beyond the clipboard-history setting above.</td></tr>
+</table>
+<p>None of these send your typing to the developer or to any third party.</p>
+
+<h2>Verification codes</h2>
+<p>iBoard does not read your messages or email. You can create a Shortcuts automation (Settings of the Shortcuts app) that passes the text of a matching message to an iBoard action. iBoard extracts the code locally, keeps it briefly, and shows it as a chip. You choose which senders the automation applies to and can delete it at any time.</p>
+
+<h2>iCloud sync (opt-in)</h2>
+<p>If you turn sync on in the app, your personal dictionary (words, counts, never-correct list) is encrypted on your device with a key stored in your Keychain and saved to your private iCloud database through Apple CloudKit, so your own devices can stay in step. We cannot see or access it. Turning sync off stops it, and the app can delete the iCloud copy. Apple's handling of iCloud is covered by Apple's privacy policy.</p>
+
+<h2>Contacts and text replacements</h2>
+<p>iBoard can use the names and text replacements that iOS itself offers to keyboards, to suggest them while you type. They are provided by the system, are used only on the device, and iBoard does not request access to your Contacts app.</p>
+
+<h2>Exports</h2>
+<p>A dictionary export is a plain text file of your words. Anyone you give it to can read it. Keep it as private as you would any personal file.</p>
+
+<h2>What we collect</h2>
+<p>Nothing. The app's privacy manifest declares no tracking, no tracking domains and no collected data types. Apple's App Store privacy label reads "Data Not Collected".</p>
+
+<h2>Children</h2>
+<p>iBoard collects no personal information from anyone, including children.</p>
+
+<h2>Changes and contact</h2>
+<p>If this policy changes, the new version and date will appear here and in the repository history. Questions or privacy concerns: see <a href="support.html">Support</a>. Security reports: private vulnerability reporting on the <a href="https://github.com/shubhamsinghshubham777/iBoard/security">GitHub Security tab</a>.</p>
+</main>
+<footer>iBoard is not affiliated with or endorsed by Apple Inc.</footer>
+</body>
+</html>

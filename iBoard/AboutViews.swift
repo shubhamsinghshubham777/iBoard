@@ -23,14 +23,14 @@ enum LegalContent {
         Item(title: "Contributor Covenant 2.1", body: "The project code of conduct is adapted from the Contributor Covenant (contributor-covenant.org), licensed under CC BY 4.0."),
     ]
 
-    static let dataStatus = "No third-party language data is bundled in this build. The sources below are planned for the word lists; each will be listed here with its exact version and licence when it ships."
+    static let dataStatus = "iBoard bundles the language data below. Each file is a derived word list or n-gram model; it contains counts, never text from your device."
 
     static let plannedData: [Item] = [
-        Item(title: "SCOWL / English Speller Database", body: "English word list. MIT-like licence; its notice will be shipped."),
-        Item(title: "Google Books Ngrams v3", body: "English frequencies. CC BY 3.0."),
-        Item(title: "Leipzig Corpora Collection", body: "Register and Hindi frequency ranking. CC BY, verified per corpus at build time."),
-        Item(title: "Aksharantar (AI4Bharat)", body: "Roman spellings for Hindi. CC0 / CC BY, per split."),
-        Item(title: "Unicode CLDR annotations", body: "Emoji keywords in English and Hindi. Unicode-3.0 licence."),
+        Item(title: "English word list: SCOWL 2020.12.07", body: "Copyright 2000-2018 Kevin Atkinson (http://wordlist.aspell.net/). Permissive notice; includes material from Princeton WordNet, Ispell/VarCon and others. Full notices ship in Data/english/LICENSE.md in the source repository."),
+        Item(title: "English frequencies: Leipzig Corpora Collection", body: "English news 2023 and 2024, Universität Leipzig, Wortschatz. CC BY 4.0. D. Goldhahn, T. Eckart, U. Quasthoff, LREC 2012. The derived English data files are distributed under CC BY 4.0."),
+        Item(title: "Hinglish data (CC BY-SA 4.0)", body: "Built from Leipzig Hindi news 2019 and 2020 (CC BY 4.0), AI4Bharat Aksharantar Hindi pairs (CC BY / CC0, including rows from Google Dakshina, CC BY-SA 4.0; Madhani et al. 2022, Roark et al. 2020) and word lists written by the iBoard project (CC0). The derived Hinglish files are licensed CC BY-SA 4.0 (creativecommons.org/licenses/by-sa/4.0/) and were changed from the sources: romanized, counted, pruned and quantized."),
+        Item(title: "Emoji data: Unicode and CLDR", body: "Emoji 18.0 (emoji-test.txt) and CLDR 49 annotations in English and Hindi. Copyright Unicode, Inc. Unicode License v3. Romanized-Hindi keywords added by the iBoard project (Apache-2.0)."),
+        Item(title: "Project-authored lists", body: "Test and seed word lists written for iBoard, CC0 1.0."),
     ]
 }
 
@@ -65,7 +65,7 @@ struct AttributionsView: View {
     var body: some View {
         List {
             Section { Text(LegalContent.dataStatus) }
-            Section("Planned data sources") {
+            Section("Bundled data") {
                 ForEach(LegalContent.plannedData) { l in item(l) }
             }
         }
@@ -91,7 +91,9 @@ struct AboutView: View {
             }
             Section("About") {
                 LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
-                Text("iBoard is a privacy-first, open-source keyboard.").foregroundStyle(.secondary)
+                LabeledContent("Build", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1")
+                Text("iBoard is a privacy-first, open-source keyboard. Not affiliated with or endorsed by Apple Inc.").foregroundStyle(.secondary)
+                Link("Source code and issues", destination: URL(string: "https://github.com/shubhamsinghshubham777/iBoard")!)
             }
         }
         .navigationTitle("About")
