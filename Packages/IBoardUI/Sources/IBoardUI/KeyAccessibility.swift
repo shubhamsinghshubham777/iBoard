@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 import IBoardLayout
 
 /// M13-01: VoiceOver names for keys. Pure so it is testable on macOS; the key grid builds one accessibility element
@@ -11,6 +14,39 @@ public enum KeyAccessibility {
         /// True for keys that type a character; VoiceOver then uses the keyboard-key trait.
         public var typesCharacter: Bool
     }
+
+    /// Voice Control names ("tap delete", "tap enter"): the first is the visible label; extras are common spoken synonyms.
+    /// A letter key keeps just its letter (the shifted form is not spoken separately).
+    public static func inputLabels(for identity: KeyIdentity, shift: ShiftState, returnEnabled: Bool = true) -> [String] {
+        let base = info(for: identity, shift: shift, returnEnabled: returnEnabled).label
+        switch identity {
+        case .letter(let s): return [s.lowercased()]
+        case .delete: return [base, "backspace"]
+        case .returnKey: return base == "return" ? [base, "enter"] : [base, "return", "enter"]
+        case .shift: return [base, "caps", "capital"]
+        case .space: return [base, "spacebar"]
+        case .globe: return [base, "globe", "switch keyboard"]
+        case .emoji: return [base, "emoji keyboard"]
+        case .layerSwitch(let k):
+            switch k {
+            case .letters: return [base, "ABC"]
+            case .numbers, .numberPad, .decimalPad, .phonePad: return [base, "123"]
+            case .symbols: return [base, "symbols"]
+            }
+        default: return [base]
+        }
+    }
+
+#if canImport(UIKit)
+    /// Accessibility traits for a key: keyboard key, plus `.notEnabled` for a dimmed return key and `.selected` for an
+    /// active shift. Pure so the element tests do not need a window.
+    public static func traits(for identity: KeyIdentity, shift: ShiftState, returnEnabled: Bool = true) -> UIAccessibilityTraits {
+        var t: UIAccessibilityTraits = [.keyboardKey]
+        if case .returnKey = identity, !returnEnabled { t.insert(.notEnabled) }
+        if case .shift = identity, shift != .off { t.insert(.selected) }
+        return t
+    }
+#endif
 
     public static func info(for identity: KeyIdentity, shift: ShiftState, returnEnabled: Bool = true) -> Info {
         switch identity {

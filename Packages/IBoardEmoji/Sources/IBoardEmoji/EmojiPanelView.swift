@@ -224,7 +224,7 @@ public final class EmojiPanelView: UIView {
         } else { top = 0 }
         let y = EmojiSections.clampedOffset(Double(top), contentHeight: Double(grid.contentSize.height),
                                             viewportHeight: Double(grid.bounds.height))
-        grid.setContentOffset(CGPoint(x: 0, y: y), animated: animated)
+        grid.setContentOffset(CGPoint(x: 0, y: y), animated: animated && !UIAccessibility.isReduceMotionEnabled)
     }
 
     private func highlight(_ t: Tab?) { bar.setSelected(t) }
@@ -296,6 +296,8 @@ extension EmojiPanelView: UICollectionViewDataSource, UICollectionViewDelegateFl
     public func collectionView(_ cv: UICollectionView, viewForSupplementaryElementOfKind kind: String, at ip: IndexPath) -> UICollectionReusableView {
         let h = cv.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: Self.headerID, for: ip) as! EmojiHeader
         h.label.text = mode == .browse && ip.section < sectionInfo.sections.count ? sectionInfo.sections[ip.section].title : ""
+        h.isAccessibilityElement = !(h.label.text ?? "").isEmpty
+        h.accessibilityLabel = h.label.text
         return h
     }
 
@@ -375,7 +377,8 @@ private final class EmojiHeader: UICollectionReusableView {
             label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
             label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4), // hugs the emoji below, not the header's centre
         ])
-        isAccessibilityElement = false
+        isAccessibilityElement = true
+        accessibilityTraits = .header // VoiceOver "Headings" rotor jumps between categories
     }
     @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
 }
@@ -393,6 +396,7 @@ private final class EmojiCell: UICollectionViewCell {
             label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
         ])
         isAccessibilityElement = true
+        accessibilityTraits = .button
     }
     @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
 
@@ -411,6 +415,7 @@ private final class EmojiCell: UICollectionViewCell {
         label.font = .systemFont(ofSize: small ? 15 : Self.emojiPointSize)
         label.contentScaleFactor = small ? (traitCollection.displayScale > 0 ? traitCollection.displayScale : 3) : Self.emojiRasterScale
         accessibilityLabel = l
+        accessibilityUserInputLabels = [l]
     }
 }
 #endif

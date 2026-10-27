@@ -113,7 +113,7 @@ final class EmojiCategoryBar: UIView {
             let content = 16 + CGFloat(Self.chips.count) * Self.chipWidth + CGFloat(Self.chips.count - 1) * 4
             let centre = 8 + CGFloat(i) * (Self.chipWidth + 4) + Self.chipWidth / 2
             let x = min(max(centre - list.bounds.width / 2, 0), max(content - list.bounds.width, 0))
-            if abs(list.contentOffset.x - x) > 0.5 { list.setContentOffset(CGPoint(x: x, y: 0), animated: animated) }
+            if abs(list.contentOffset.x - x) > 0.5 { list.setContentOffset(CGPoint(x: x, y: 0), animated: animated && !UIAccessibility.isReduceMotionEnabled) }
         }
     }
 }
