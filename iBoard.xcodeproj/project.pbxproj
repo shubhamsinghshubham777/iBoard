@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		072129F92D9E5B427337DE58 /* ClipboardHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF350BABED64EE056983837C /* ClipboardHost.swift */; };
+		16D32C4024AC426DD56F9481 /* SyncKeychainItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A403EFFE5E3CE31A57F543F /* SyncKeychainItem.swift */; };
 		180AE19B8493AECE9386B4A4 /* OnboardingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */; };
 		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
 		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
@@ -48,6 +49,7 @@
 		CA048403036AD09EBB58189E /* EmojiHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCBB8B92552A6FDAFB167E3 /* EmojiHost.swift */; };
 		D179194A9D0E16249D644D4F /* PerfMetricsHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */; };
 		D21F7DCDF18236487C10461E /* AboutViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460B693149FED8759AAD2248 /* AboutViews.swift */; };
+		D60A67E6A61F56C899321D21 /* SyncSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D782D2A584E65ACA02496242 /* SyncSettingsModelTests.swift */; };
 		E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579BC49C39E33BB6D4F5780B /* KeyboardViewController.swift */; };
 		E45E532A680D35E2B3E680BB /* ThemePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1844700032908B476959FE /* ThemePreviewView.swift */; };
 		E5FE00EF799D37EFBA988634 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A203E87E0867C30AF959FB /* SettingsView.swift */; };
@@ -97,22 +99,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +132,7 @@
 		27A203E87E0867C30AF959FB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		28F4239BEE521E378F7112E1 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		29D74A64C1D3FB7BA0CD5D3D /* lm.iblm */ = {isa = PBXFileReference; path = lm.iblm; sourceTree = "<group>"; };
+		2A403EFFE5E3CE31A57F543F /* SyncKeychainItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncKeychainItem.swift; sourceTree = "<group>"; };
 		324A76E56980BB0F7DD375F1 /* DebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlay.swift; sourceTree = "<group>"; };
 		38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfMetricsHook.swift; sourceTree = "<group>"; };
 		4021068ED546815593C37204 /* DictionaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryStore.swift; sourceTree = "<group>"; };
@@ -162,6 +165,7 @@
 		CD7C21085C40332AA7A01200 /* iBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardApp.swift; sourceTree = "<group>"; };
 		D40023EC7AA27019C0077FA2 /* DictionaryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryViews.swift; sourceTree = "<group>"; };
 		D4A29BC0E785F7DA06C54B57 /* iBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D782D2A584E65ACA02496242 /* SyncSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsModelTests.swift; sourceTree = "<group>"; };
 		DD5AB664BB14DEFF640D46AA /* IBoardTheme */ = {isa = PBXFileReference; lastKnownFileType = folder; name = IBoardTheme; path = Packages/IBoardTheme; sourceTree = SOURCE_ROOT; };
 		DFB3F93194948A5EAAF035CF /* CaptureVerificationCodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureVerificationCodeIntent.swift; sourceTree = "<group>"; };
 		E50C8FEC837C260E09B7CB1C /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
@@ -209,6 +213,7 @@
 			children = (
 				B9ECAB65BC0422F84297743E /* iBoardTests.swift */,
 				96E62CC90E50BAC252FCAC90 /* OnboardingTests.swift */,
+				D782D2A584E65ACA02496242 /* SyncSettingsModelTests.swift */,
 			);
 			path = iBoardTests;
 			sourceTree = "<group>";
@@ -231,6 +236,7 @@
 				8842ADAFC09F10311FD66887 /* OTPSetupView.swift */,
 				69AA6A25C4E527764E6DE230 /* PrivacyInfo.xcprivacy */,
 				27A203E87E0867C30AF959FB /* SettingsView.swift */,
+				2A403EFFE5E3CE31A57F543F /* SyncKeychainItem.swift */,
 				E50C8FEC837C260E09B7CB1C /* SyncSettingsView.swift */,
 				CA1844700032908B476959FE /* ThemePreviewView.swift */,
 				CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */,
@@ -547,6 +553,7 @@
 				796C736BDA07FBDA04E645E1 /* OnboardingView.swift in Sources */,
 				E5FE00EF799D37EFBA988634 /* SettingsView.swift in Sources */,
 				655B634540E2A4679B078509 /* SwipeTraceRecorderView.swift in Sources */,
+				16D32C4024AC426DD56F9481 /* SyncKeychainItem.swift in Sources */,
 				E9F818B243DDD80AE2DEA346 /* SyncSettingsView.swift in Sources */,
 				E45E532A680D35E2B3E680BB /* ThemePreviewView.swift in Sources */,
 				A74AF87C028F5092E6F6FAE9 /* ThemeStudioView.swift in Sources */,
@@ -568,6 +575,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				180AE19B8493AECE9386B4A4 /* OnboardingTests.swift in Sources */,
+				D60A67E6A61F56C899321D21 /* SyncSettingsModelTests.swift in Sources */,
 				5DF4C35410D27ABA8ADC4EF7 /* iBoardTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
