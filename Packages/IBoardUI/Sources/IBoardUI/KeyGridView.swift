@@ -496,7 +496,8 @@ final class GlyphCache {
             let hintAttrs: [NSAttributedString.Key: Any] = [.font: hintFont, .foregroundColor: color.withAlphaComponent(0.4)]
             let textSize = (text as NSString).size(withAttributes: attrs)
             let hintSize = (hint as NSString).size(withAttributes: hintAttrs)
-            let width = ceil(max(textSize.width, hintSize.width * 2 + 4)) + 2
+            // Side margin of the centred letter is at least the hint's width, so the hint never overlaps the glyph.
+            let width = ceil(textSize.width + hintSize.width * 2 + 6)
             let height = keyHeight // full key height so the hint can sit near the top edge
             let baselineY = keyHeight * Self.baselineRatio
             let format = UIGraphicsImageRendererFormat()
