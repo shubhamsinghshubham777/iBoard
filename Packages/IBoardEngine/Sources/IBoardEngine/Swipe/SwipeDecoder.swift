@@ -125,6 +125,7 @@ public struct SwipeDecoder: Sendable {
             var score: Double
             var side: LexiconSide = .primary
             var prior: Double = 0
+            var penalty: Double = 0
         }
         struct LangSide {
             var side: LexiconSide
@@ -158,8 +159,9 @@ public struct SwipeDecoder: Sendable {
                 let sp = spatialLogLikelihood(vertices: verts, gesture: gesture, gShape: gShape, anchors: anchors,
                                               poly: &poly, template: &template)
                 let base = baseLog(c.id, lang.lexicon, lang.model, lang.context)
+                let pen = c.apostrophe ? p.contractionPenalty : 0
                 scored.append(Scored(id: c.id, word: nil, vertices: verts, spatial: sp, base: base,
-                                     score: sp + p.lmWeight * (base + lang.prior), side: lang.side, prior: lang.prior))
+                                     score: sp + p.lmWeight * (base + lang.prior) - pen, side: lang.side, prior: lang.prior, penalty: pen))
             }
         }
         if dual {
@@ -192,7 +194,7 @@ public struct SwipeDecoder: Sendable {
                 s.word = word
                 if let ps = personal.score(word: word, context: contextWords) {
                     let m = PersonalInterpolation.mix(baseLogProb: s.base, personal: ps)
-                    s.score = s.spatial + p.lmWeight * (m + s.prior)
+                    s.score = s.spatial + p.lmWeight * (m + s.prior) - s.penalty
                     keep.append(s)
                     usedPersonal.insert(keep.count - 1)
                     mixed[keep.count - 1] = m
@@ -323,6 +325,7 @@ public struct SwipeDecoder: Sendable {
         var pos = 0
         var count = 0
         for sc in word.unicodeScalars {
+            if Self.isApostrophe(sc.value) { continue }
             guard let li = letterIndex[sc.value] else { return nil }
             if count == 0, !startOK[li] { return nil }
             guard let hit = Search.lowerBound(hits[li], pos) else { return nil }
@@ -336,10 +339,15 @@ public struct SwipeDecoder: Sendable {
 
     // MARK: Trie search
 
+    /// Apostrophes (straight and typographic) are not swipe keys: lexicon words keep them in the trie, but the
+    /// search passes through them at no cost and no path vertex (i'll, didn't, it's).
+    static func isApostrophe(_ s: UInt32) -> Bool { s == 0x27 || s == 0x2019 }
+
     private struct Cand {
         var id: Lexicon.WordID
         var offset: Int
         var count: Int
+        var apostrophe = false
     }
 
     private struct Search {
@@ -352,6 +360,7 @@ public struct SwipeDecoder: Sendable {
         let maxVisits: Int
         let maxLength: Int
         var stack: [Int] = []
+        var apostrophes = 0
         var cands: [Cand] = []
         var pool: [Int32] = []
         var visits = 0
@@ -374,6 +383,16 @@ public struct SwipeDecoder: Sendable {
         }
 
         mutating func visit(cursor: TrieCursor, pos: Int, depth: Int) {
+            // Zero-width apostrophe edges: descend without consuming a key (never ends a word here).
+            for a in [UInt32(0x27), UInt32(0x2019)] {
+                if truncated { return }
+                guard let child = lexicon.child(of: cursor, label: a), lexicon.hasChildren(child) else { continue }
+                visits += 1
+                if visits > maxVisits { truncated = true; return }
+                apostrophes += 1
+                visit(cursor: child, pos: pos, depth: depth)
+                apostrophes -= 1
+            }
             for li in allowed {
                 if truncated { return }
                 if depth == 0, !startOK[li] { continue }
@@ -387,7 +406,7 @@ public struct SwipeDecoder: Sendable {
                     var last = -1
                     for k in stack where k != last { pool.append(Int32(k)); last = k }
                     if pool.count - off >= 2 {
-                        cands.append(Cand(id: w, offset: off, count: pool.count - off))
+                        cands.append(Cand(id: w, offset: off, count: pool.count - off, apostrophe: apostrophes > 0))
                     } else {
                         pool.removeLast(pool.count - off)
                     }

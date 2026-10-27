@@ -37,7 +37,7 @@ enum SwipeSynth {
     static func trace(_ word: String, layout: KeyboardLayout, profile: SwipeProfile,
                       rng: inout SplitMix64) -> [SwipePoint]? {
         var keys: [KeyboardKey] = []
-        for ch in word {
+        for ch in word where ch != "'" && ch != "\u{2019}" {   // apostrophes are not swipe keys
             guard let k = layout.firstKey(.letter(String(ch))) else { return nil }
             if keys.last?.id != k.id { keys.append(k) }
         }

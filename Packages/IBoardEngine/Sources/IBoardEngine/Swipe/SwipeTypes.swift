@@ -64,6 +64,9 @@ public struct SwipeParameters: Sendable, Equatable {
     public var dwellMinSeconds = 0.06
 
     // Scoring
+    /// Log-score charged to words containing an apostrophe: the apostrophe is invisible in the path, so a
+    /// contraction explains the swipe with a free extra letter; the charge offsets that (want vs wasn't).
+    public var contractionPenalty = 0.5
     /// Weight of the language-model log-probability against the spatial log-likelihood.
     public var lmWeight = 0.4
     /// Share of the unigram probability mixed into the contextual (bigram / trigram) probability before it is scored,
