@@ -122,7 +122,7 @@ enum SwipeTuning {
         }
         let a = run(old), b = run(SwipeParameters())
         print(a.line("English real lexicon, OLD params (lmW 1.0, mix 0)"))
-        print(b.line("English real lexicon, NEW params (lmW 0.5, mix 0.3)"))
+        print(b.line("English real lexicon, NEW params (current defaults)"))
         #expect(b.top1Rate >= a.top1Rate - 0.01)
         #expect(b.top3Rate >= a.top3Rate - 0.01)
     }
