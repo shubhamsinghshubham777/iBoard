@@ -117,4 +117,12 @@ import IBoardOTP
         #expect(ClipboardCode.extract(from: nil) == nil)
         #expect(ClipboardCode.extract(from: String(repeating: "1 ", count: 400)) == nil)
     }
+
+    @Test func clipboardItemChipOnlyInEmptyPlainFields() {
+        let on = ChipPlanner.plan(codes: [], info: .empty, field: field(), clipboardItem: "see you at 5")
+        #expect(on[2]?.source == .clipboardItem && on[2]?.insert == "see you at 5")
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field(empty: false), clipboardItem: "x y") == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [], info: .empty, field: field("password", secure: true), clipboardItem: "x y") == [nil, nil, nil])
+        #expect(ChipPlanner.plan(codes: [code], info: .empty, field: field(), clipboardItem: "x y")[2]?.source == .code(id: code.id))
+    }
 }

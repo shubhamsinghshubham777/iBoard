@@ -18,3 +18,4 @@ WRITE|iBoardKeyboard/EmojiHost.swift|emoji recents/skin-tone preferences (emoji,
 WRITE|iBoardKeyboard/DebugOverlay.swift|overlay visibility flag
 WRITE|Packages/IBoardUI/Sources/IBoardUI/DuoPolicy.swift|per-orientation split and fill-to-fold booleans (layout preferences, no text)
 WRITE|Packages/IBoardUI/Sources/IBoardUI/CoachMarks.swift|first-run tip progress (one integer, no text)
+WRITE|Packages/IBoardUI/Sources/IBoardUI/ClipboardHistory.swift|F9 clipboard history: copied (not typed) text, extension container only, Full Access only, max 20 items, TTL 1 h / 10 min for codes, expired items removed on save, never synced

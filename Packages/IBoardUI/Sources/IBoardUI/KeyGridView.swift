@@ -43,6 +43,7 @@ public final class KeyGridView: UIView {
     public var keysHidden = false {
         didSet {
             guard keysHidden != oldValue else { return }
+            invalidateAccessibility()
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             for l in keyLayers { l.isHidden = keysHidden }
@@ -80,6 +81,7 @@ public final class KeyGridView: UIView {
     public func apply(layout new: KeyboardLayout, shift newShift: ShiftState? = nil) {
         if let newShift { shift = newShift }
         layout = new
+        invalidateAccessibility()
         let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 3
         glyphs.configure(skin: skin, scale: scale, keyHeight: new.metrics.keyHeight)
 
@@ -121,6 +123,7 @@ public final class KeyGridView: UIView {
     public func setReturnKeyEnabled(_ enabled: Bool) {
         guard enabled != returnKeyEnabled else { return }
         returnKeyEnabled = enabled
+        invalidateAccessibility()
         guard let layout else { return }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -135,6 +138,7 @@ public final class KeyGridView: UIView {
         guard state != shift, let layout else { shift = state; return }
         let old = shift
         shift = state
+        invalidateAccessibility()
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for (i, key) in layout.keys.enumerated() {
@@ -317,6 +321,59 @@ public final class KeyGridView: UIView {
         case .globe: return .symbol("globe", onAction: false)
         case .emoji: return .symbol("face.smiling", onAction: false)
         }
+    }
+
+    // MARK: VoiceOver (M13-01)
+
+    private var a11yElements: [UIAccessibilityElement]?
+
+    /// Drops the cached elements (layout, shift or return-key state changed). Cheap; rebuilt on demand by VoiceOver only.
+    private func invalidateAccessibility() {
+        guard a11yElements != nil else { return }
+        a11yElements = nil
+        UIAccessibility.post(notification: .layoutChanged, argument: nil)
+    }
+
+    public override var isAccessibilityElement: Bool {
+        get { false }
+        set {}
+    }
+
+    /// One element per key. The keys are plain layers (no views), so this is what VoiceOver and Voice Control see.
+    public override var accessibilityElements: [Any]? {
+        get {
+            if keysHidden { return [] }
+            if let a11yElements { return a11yElements }
+            guard let layout else { return [] }
+            let built: [UIAccessibilityElement] = layout.keys.map { key in
+                let info = KeyAccessibility.info(for: key.identity, shift: shift, returnEnabled: returnKeyEnabled)
+                let e = KeyElement(accessibilityContainer: self)
+                e.accessibilityLabel = info.label
+                e.accessibilityValue = info.value
+                e.accessibilityTraits = [.keyboardKey]
+                e.accessibilityFrameInContainerSpace = key.frame
+                let center = CGPoint(x: key.frame.midX, y: key.frame.midY)
+                e.onActivate = { [weak self] in self?.activateKey(at: center) }
+                return e
+            }
+            a11yElements = built
+            return built
+        }
+        set {}
+    }
+
+    /// A VoiceOver double tap: the same began / ended pair a finger would send, so the input machine is unchanged.
+    private func activateKey(at point: CGPoint) {
+        guard let touchHandler else { return }
+        let id = -7
+        let t = ProcessInfo.processInfo.systemUptime
+        touchHandler(.began, id, point, t)
+        touchHandler(.ended, id, point, t + 0.02)
+    }
+
+    private final class KeyElement: UIAccessibilityElement {
+        var onActivate: (() -> Void)?
+        override func accessibilityActivate() -> Bool { onActivate?(); return true }
     }
 
     // MARK: Touches (allocation-free path: values only)

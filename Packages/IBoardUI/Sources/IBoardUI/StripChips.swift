@@ -20,6 +20,8 @@ public struct StripChip: Equatable, Sendable {
         case info
         /// M6-05: "Paste code" offer; the pasteboard is read only when the user taps it (P-25), `insert` is empty.
         case clipboardCode
+        /// M9-03: the newest clipboard history item, pasted on tap.
+        case clipboardItem
     }
     public var display: String
     public var insert: String
@@ -55,7 +57,8 @@ public enum ChipPlanner {
     /// `clipboardOffer`: Full Access is on, the user enabled the fallback and no fresh code is stored; a code field then
     /// shows a "Paste code" chip that reads the pasteboard on tap (never before).
     public static func plan(codes: [StoredCode], info: PersonalInfo, field: ChipField,
-                            suggestions: [SuggestionSlot?] = [nil, nil, nil], clipboardOffer: Bool = false) -> [StripChip?] {
+                            suggestions: [SuggestionSlot?] = [nil, nil, nil], clipboardOffer: Bool = false,
+                            clipboardItem: String? = nil) -> [StripChip?] {
         var out: [StripChip?] = [nil, nil, nil]
         if field.isSecure, !field.isOneTimeCode { return out }
         if clipboardOffer, codes.isEmpty, field.codeIsProminent {
@@ -74,6 +77,11 @@ public enum ChipPlanner {
                 for (i, v) in values.prefix(3).enumerated() { out[i] = StripChip(display: v, insert: v, source: .info, emphasized: false) }
                 return out
             }
+        }
+        if let clip = clipboardItem, field.isEmpty, !field.isSecure, codes.isEmpty {
+            out[2] = StripChip(display: "\u{1F4CB} " + ClipboardHistory.preview(clip, maxLength: 14), insert: clip,
+                               source: .clipboardItem, emphasized: false)
+            return out
         }
         if let c = codes.first, !(suggestions.count > 2 && suggestions[2]?.role == .phrase) {
             out[2] = StripChip(display: label(c), insert: c.code, source: .code(id: c.id), emphasized: false)

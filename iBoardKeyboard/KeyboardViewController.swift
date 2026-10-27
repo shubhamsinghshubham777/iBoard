@@ -91,6 +91,11 @@ final class KeyboardViewController: UIInputViewController {
     private var chipPlan: [StripChip?] = [nil, nil, nil]
     /// M6-05: the pasteboard held no code; no more offers until the field changes.
     private var clipboardMissed = false
+    /// M9-03: clipboard history (Full Access only), loaded lazily and kept in the extension container.
+    private var clipboard = ClipboardHistory()
+    private lazy var clipboardStore = ClipboardStore(url: EngineHost.localDirectory().appendingPathComponent("clipboard.json"))
+    private var clipboardLoaded = false
+    private var clipboardReading = false
     private var chipTimer: Timer?
     /// Emoji panel + search (M9-01/M9-02 wired): opened by the emoji button at the trailing end of the strip.
     private let emoji = EmojiHost()
@@ -136,6 +141,7 @@ final class KeyboardViewController: UIInputViewController {
         applyAppCommands()
         personalInfo = PersonalInfoReader().load() // F7: saved by the app, read-only here (works without Full Access)
         reloadCodes()
+        recordClipboardIfChanged()
         startChipTimer()
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
@@ -159,6 +165,13 @@ final class KeyboardViewController: UIInputViewController {
         grid.frame = view.bounds
         grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         grid.accessibilityIdentifier = "key-grid"
+        strip.onAccessibilityActivate = { [weak self] local in
+            guard let self else { return }
+            let p = CGPoint(x: self.strip.frame.minX + local.x, y: self.strip.frame.minY + local.y)
+            let t = ProcessInfo.processInfo.systemUptime
+            self.handleTouch(.began, -8, p, t)
+            self.handleTouch(.ended, -8, p, t + 0.02)
+        }
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
@@ -372,6 +385,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Keyboard hidden: close the typing session, learn the last words, and (Full Access) refresh the app's snapshot.
     private func settleOnDisappear() {
         insights.endSession()
+        if clipboardLoaded { clipboardStore.save(clipboard) } // drops expired items from disk
         coordinator.flushLearner()
         guard let host else { return }
         let shareSnapshot = hasFullAccess && sharedSnapshotDirty
@@ -438,7 +452,7 @@ final class KeyboardViewController: UIInputViewController {
         // A code can arrive while the keyboard is visible (the Message automation runs in the background).
         chipTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] t in
             guard let self else { t.invalidate(); return }
-            MainActor.assumeIsolated { self.reloadCodes() }
+            MainActor.assumeIsolated { self.reloadCodes(); self.recordClipboardIfChanged() }
         }
     }
 
@@ -454,10 +468,33 @@ final class KeyboardViewController: UIInputViewController {
 
     private func replanChips() {
         let plan = ChipPlanner.plan(codes: freshCodes, info: personalInfo, field: currentChipField(), suggestions: lastStrip.slots,
-                                   clipboardOffer: hasFullAccess && !clipboardMissed)
+                                   clipboardOffer: hasFullAccess && !clipboardMissed,
+                                   clipboardItem: hasFullAccess ? clipboard.newest(at: Date())?.text : nil)
         guard plan != chipPlan else { return }
         chipPlan = plan
         renderStrip()
+    }
+
+    /// M9-03: records a new pasteboard item while the keyboard is visible. `changeCount` is free to read; the string is
+    /// read only when it changed, off the main thread (the first read may show the system paste prompt, P-25).
+    private func recordClipboardIfChanged() {
+        guard hasFullAccess, !clipboardReading else { return }
+        if !clipboardLoaded { clipboard = clipboardStore.load(); clipboardLoaded = true }
+        let count = UIPasteboard.general.changeCount
+        guard clipboard.needsRead(changeCount: count) else { return }
+        // Never record from secure fields' context: nothing is read while a password field is focused.
+        if textDocumentProxy.isSecureTextEntry ?? false { return }
+        clipboardReading = true
+        Task.detached { [weak self] in
+            let text = UIPasteboard.general.hasStrings ? UIPasteboard.general.string : nil
+            await MainActor.run {
+                guard let self else { return }
+                self.clipboardReading = false
+                self.clipboard.record(text, changeCount: count, at: Date())
+                self.clipboardStore.save(self.clipboard)
+                self.replanChips()
+            }
+        }
     }
 
     /// M6-05: reads the pasteboard only now (the first read may show the system paste prompt, P-25), off the main
