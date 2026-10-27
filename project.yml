@@ -47,7 +47,14 @@ targets:
   iBoardKeyboard:
     type: app-extension
     platform: iOS
-    sources: [iBoardKeyboard]
+    sources:
+      - iBoardKeyboard
+      # Hinglish lexicon + LM (M7-01, CC BY-SA 4.0 data): copied to <bundle>/hinglish/ because the file names
+      # collide with the bundled English fixture; mmap'd lazily by EngineHost.
+      - path: Data/hinglish/lexicon.iblex
+        buildPhase: { copyFiles: { destination: resources, subpath: hinglish } }
+      - path: Data/hinglish/lm.iblm
+        buildPhase: { copyFiles: { destination: resources, subpath: hinglish } }
     dependencies:
       - package: IBoardCore
       - package: IBoardLayout

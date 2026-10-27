@@ -279,7 +279,7 @@ final class KeyboardViewController: UIInputViewController {
                 self.applyAppCommands()
                 #if DEBUG
                 self.engineStatus = loaded.engine == nil
-                    ? "engine: none (stub)" : "engine: bundled \(loaded.wordCount) words"
+                    ? "engine: none (stub)" : "engine: bundled \(loaded.wordCount) words + hinglish \(loaded.hinglishWordCount)"
                 self.personalStore = loaded.learner
                 self.personalMode = loaded.storageMode == .appGroup ? "app-group" : "local"
                 #endif
