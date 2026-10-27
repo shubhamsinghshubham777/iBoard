@@ -10,19 +10,36 @@ import IBoardUI
 ///   real data lands). If they are missing or fail to open the keyboard runs without an engine: no suggestions,
 ///   but contractions, smart punctuation and personal learning still work. Never crashes, never blocks.
 /// - The personal store is extension-local unless Full Access is granted (P-23: shared writes fail without it).
+/// - The engine takes its personal snapshot from the same store the learner writes to (`refreshPersonal`), and the
+///   learned touch model (F14) from an extension-local file. Both stay in the extension container.
 enum EngineHost {
     struct Loaded: Sendable {
         var engine: EngineBridge?
         /// Swipe decoder sharing the lexicon / model with `engine`; reads the personal model per swipe.
         var swipe: SwipeEngine?
         var learner: PersonalLearner
+        var store: PersonalStore
         var wordCount: Int
         var storageMode: PersonalStorageMode
+        var touchModel: AdaptiveTouchModel
+        var touchStore: AdaptiveTouchFileStore
+        var commands: AppCommandApplier
     }
 
-    /// Blocking: call from a background task only.
-    static func load(layout: KeyboardLayout, hasFullAccess: Bool) -> Loaded {
-        var bridge: EngineBridge?
+    /// Extension-local state (always writable) and the App Group directory (writable only with Full Access).
+    static func localDirectory() -> URL {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return support.appendingPathComponent("iBoard", isDirectory: true)
+    }
+
+    static func appGroupRoot() -> URL? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SettingsStore.appGroup)
+    }
+
+    /// Runs on a background task only (blocking file work).
+    static func load(layout: KeyboardLayout, hasFullAccess: Bool) async -> Loaded {
+        var actor: EngineActor?
         var lexicon: Lexicon?
         var lm: NGramModel?
         var words = 0
@@ -34,18 +51,18 @@ enum EngineHost {
                 .flatMap { try? NGramModel(url: $0, lexicon: lex, verifyChecksum: false) }
             lexicon = lex
             lm = model
-            bridge = EngineBridge(EngineActor(layout: layout, lexicon: lex, model: model))
+            actor = EngineActor(layout: layout, lexicon: lex, model: model)
             words = lex.wordCount
         }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        let local = support.appendingPathComponent("iBoard/personal", isDirectory: true)
-        let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SettingsStore.appGroup)?
-            .appendingPathComponent("personal", isDirectory: true)
-        let storage = PersonalStorageFactory.make(hasFullAccess: hasFullAccess, localDirectory: local, appGroupDirectory: group)
+        let local = localDirectory()
+        let root = appGroupRoot()
+        let storage = PersonalStorageFactory.make(
+            hasFullAccess: hasFullAccess, localDirectory: local.appendingPathComponent("personal", isDirectory: true),
+            appGroupDirectory: root?.appendingPathComponent("personal", isDirectory: true))
         if storage.mode == .appGroup {
             // Full Access was granted after data was collected locally: carry it over once (NOT TESTED).
-            let localStorage = FilePersonalStorage(directory: local, mode: .extensionLocal)
+            let localStorage = FilePersonalStorage(directory: local.appendingPathComponent("personal", isDirectory: true),
+                                                   mode: .extensionLocal)
             if (try? storage.readSnapshot()) == nil, (try? storage.readJournal())?.isEmpty ?? true {
                 _ = try? PersonalStorageFactory.migrate(from: localStorage, to: storage)
             }
@@ -56,6 +73,33 @@ enum EngineHost {
         if let lexicon {
             swipe = SwipeEngine(layout: layout, lexicon: lexicon, model: lm, personal: { await store.scorer() })
         }
-        return Loaded(engine: bridge, swipe: swipe, learner: learner, wordCount: words, storageMode: storage.mode)
+        // The engine reads the personal model from the store (learned words, phrase chip, never-correct list).
+        if let actor { await actor.refreshPersonal(from: store) }
+        try? FileManager.default.createDirectory(at: local, withIntermediateDirectories: true)
+        let touchStore = AdaptiveTouchFileStore(url: local.appendingPathComponent("touch-model.json"))
+        let commands = AppCommandApplier(
+            store: store, loadQueue: { CommandQueueStore().load() }, applied: DefaultsAppliedSequence(),
+            importDirectory: root?.appendingPathComponent(ImportPayloadStore.directoryName, isDirectory: true))
+        return Loaded(engine: actor.map { EngineBridge($0, store: store) }, swipe: swipe, learner: learner, store: store,
+                      wordCount: words, storageMode: storage.mode, touchModel: touchStore.load(), touchStore: touchStore,
+                      commands: commands)
+    }
+
+    /// Insight counters: the keyboard's own copy always, the shared copy for the app only with Full Access (P-23).
+    enum Insights {
+        static func loadLocal() -> InsightCounters { InsightsStore(defaults: .standard).load() ?? InsightCounters() }
+        static func save(_ c: InsightCounters, hasFullAccess: Bool) {
+            InsightsStore(defaults: .standard).save(c)
+            if hasFullAccess { InsightsStore().save(c) }
+        }
+    }
+
+    /// With Full Access: writes `shared/dictionary.iboarddict` for the companion app (docs/APP_COMMANDS.md).
+    static func writeSharedSnapshot(store: PersonalStore) async {
+        guard let dir = appGroupRoot()?.appendingPathComponent("shared", isDirectory: true) else { return }
+        await store.compact()
+        let data = await store.exportDictionary()
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? data.write(to: dir.appendingPathComponent("dictionary.iboarddict"), options: .atomic)
     }
 }

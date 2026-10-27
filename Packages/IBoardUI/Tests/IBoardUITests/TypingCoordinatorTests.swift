@@ -18,16 +18,23 @@ private final class FakeProxy: TextProxy {
 
 private final class FakeEngine: SuggestionEngine {
     private let counter = Mutex<UInt64>(0)
-    let handler: @Sendable (EngineRequest) -> EngineResult?
+    let handler: @Sendable (EngineRequest) -> Suggestions?
     let requests = Mutex<[EngineRequest]>([])
-    init(_ handler: @escaping @Sendable (EngineRequest) -> EngineResult?) { self.handler = handler }
+    init(_ handler: @escaping @Sendable (EngineRequest) -> Suggestions?) { self.handler = handler }
     func beginRequest() -> UInt64 { counter.withLock { $0 += 1; return $0 } }
-    func submit(_ r: EngineRequest) async -> EngineResult? {
+    func submit(_ r: EngineRequest) async -> Suggestions? {
         requests.withLock { $0.append(r) }
         guard counter.withLock({ $0 }) == r.sequence else { return nil }
         return handler(r)
     }
     func updateLayout(_ layout: KeyboardLayout) async {}
+    let refreshes = Mutex<Int>(0)
+    /// Sample count of the model handed to each `applyTouchModel` call.
+    let touchModelCalls = Mutex<[Int]>([])
+    func refreshPersonal() async { refreshes.withLock { $0 += 1 } }
+    func applyTouchModel(_ model: AdaptiveTouchModel?, context: TouchModelContext?) async {
+        touchModelCalls.withLock { $0.append(model.flatMap { m in context.map { m.sampleCount(in: $0) } } ?? 0) }
+    }
 }
 
 private enum Event: Equatable, Sendable {
@@ -48,22 +55,22 @@ private final class FakeLearner: PersonalLearning {
     func flush() async { add(.flush) }
 }
 
-private func slot(_ t: String, _ role: SuggestionSlot.Role, quotes: Bool = false) -> StripSlot {
-    StripSlot(text: t, role: role, showsQuotes: quotes)
+private func slot(_ t: String, _ role: SuggestionSlot.Role, quotes: Bool = false) -> SuggestionSlot {
+    SuggestionSlot(text: t, role: role, showsQuotes: quotes)
 }
 
 /// Engine that proposes "the" for "teh" with high confidence and nothing else.
 private func tehEngine() -> FakeEngine {
     FakeEngine { r in
         guard case .hits(let h) = r.touches, !h.isEmpty else {
-            return EngineResult(sequence: r.sequence, literal: "", slots: [slot("i", .best), slot("the", .alternative)])
+            return Suggestions(sequence: r.sequence, literal: "", slots: [slot("i", .best), slot("the", .alternative)])
         }
         if h.count == 3 {
-            return EngineResult(sequence: r.sequence, literal: "teh",
+            return Suggestions(sequence: r.sequence, literal: "teh",
                                slots: [slot("teh", .literal, quotes: true), slot("the", .best), slot("ten", .alternative)],
                                autocorrect: AutocorrectProposal(word: "the", confidence: 0.999, literalIsWord: false))
         }
-        return EngineResult(sequence: r.sequence, literal: String(repeating: "x", count: h.count),
+        return Suggestions(sequence: r.sequence, literal: String(repeating: "x", count: h.count),
                            slots: [slot("x", .literal)])
     }
 }
@@ -361,5 +368,99 @@ struct TypingCoordinatorRealEngineTests {
         #expect(proxy.text == "hon")
         #expect(c.content.texts.contains("honest"))
         #expect(!c.content.isPrediction)
+    }
+}
+
+
+// MARK: Engine integration (personal refresh, touch model)
+
+private func knownWordEngine() -> FakeEngine {
+    FakeEngine { r in
+        guard case .hits(let h) = r.touches, !h.isEmpty else { return Suggestions(sequence: r.sequence) }
+        return Suggestions(sequence: r.sequence, literal: "to", slots: [slot("to", .literal)])
+    }
+}
+
+@MainActor
+@Suite("TypingCoordinator engine integration")
+struct EngineIntegrationTests {
+    @Test func sentenceBoundaryAndIdleFlushRefreshThePersonalSnapshot() async {
+        let r = Rig()
+        await r.type("hi.")
+        #expect(r.engine.refreshes.withLock { $0 } >= 1)
+        let before = r.engine.refreshes.withLock { $0 }
+        r.coordinator.flushLearner()
+        await r.coordinator.waitForIdle()
+        #expect(r.engine.refreshes.withLock { $0 } == before + 1)
+    }
+
+    @Test func wordCommitsAreThrottled() async {
+        let r = Rig()
+        await r.type("aa ")
+        let first = r.engine.refreshes.withLock { $0 }
+        #expect(first == 1)
+        await r.type("bb ")
+        await r.type("cc ")
+        #expect(r.engine.refreshes.withLock { $0 } == first) // same instant: skipped
+        r.clock.t += 5
+        await r.type("dd ")
+        #expect(r.engine.refreshes.withLock { $0 } == first + 1)
+    }
+
+    @Test func personalLearningNeverRefreshesWithoutALearner() async {
+        let proxy = FakeProxy()
+        let engine = tehEngine()
+        let c = TypingCoordinator(input: InputController(proxy: proxy))
+        c.setEngine(engine)
+        c.flushLearner()
+        await c.waitForIdle()
+        #expect(engine.refreshes.withLock { $0 } == 0)
+    }
+
+    @Test func confidentWordsTrainTheTouchModelAndItReachesTheEngine() async {
+        let r = Rig(engine: knownWordEngine())
+        r.coordinator.setTouchModel(AdaptiveTouchModel(), store: nil)
+        await r.coordinator.waitForIdle()
+        let initial = r.engine.touchModelCalls.withLock { $0.count }
+        #expect(r.engine.touchModelCalls.withLock { $0.allSatisfy { $0 == 0 } })
+        await r.type("to ")
+        #expect(r.coordinator.learnedTouchSamples == 2)
+        r.coordinator.flushLearner()
+        await r.coordinator.waitForIdle()
+        #expect(r.engine.touchModelCalls.withLock { $0.count } == initial + 1)
+        #expect(r.engine.touchModelCalls.withLock { $0.last } == 2)
+    }
+
+    @Test func incognitoAndExcludedFieldsDoNotTrainTheTouchModel() async {
+        let r = Rig(engine: knownWordEngine())
+        r.coordinator.setTouchModel(AdaptiveTouchModel(), store: nil)
+        r.coordinator.setIncognito(true)
+        await r.type("to ")
+        #expect(r.coordinator.learnedTouchSamples == 0)
+        r.coordinator.setIncognito(false)
+        r.coordinator.fieldDidChange(FieldConfig(learning: FieldTraits(keyboardType: .url)))
+        await r.type("to ")
+        #expect(r.coordinator.learnedTouchSamples == 0)
+    }
+
+    @Test func correctedWordsDoNotTrainTheTouchModel() async {
+        let r = Rig() // "teh" has an autocorrect proposal
+        r.coordinator.setTouchModel(AdaptiveTouchModel(), store: nil)
+        await r.type("teh ")
+        #expect(r.coordinator.learnedTouchSamples == 0)
+    }
+
+    @Test func touchModelIsSavedAtFlushAndSurvivesReload() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("tm-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let store = AdaptiveTouchFileStore(url: url)
+        let r = Rig(engine: knownWordEngine())
+        r.coordinator.setTouchModel(store.load(), store: store)
+        await r.type("to ")
+        r.coordinator.flushLearner()
+        for _ in 0..<50 where !FileManager.default.fileExists(atPath: url.path) { try await Task.sleep(for: .milliseconds(20)) }
+        let reloaded = store.load()
+        let ctx = TouchModelContext(orientation: r.layout.traits.orientation, displayClass: r.layout.traits.displayClass)
+        #expect(reloaded.sampleCount(in: ctx) == 2)
     }
 }

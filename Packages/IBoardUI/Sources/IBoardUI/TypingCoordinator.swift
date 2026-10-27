@@ -12,50 +12,39 @@ import IBoardLayout
 
 // MARK: - Seams (so tests can fake the actors)
 
-/// One strip chip. Own type because `SuggestionSlot` has no public initialiser (tests could not build one).
-public struct StripSlot: Sendable, Equatable {
-    public var text: String
-    public var role: SuggestionSlot.Role
-    public var showsQuotes: Bool
-    public init(text: String, role: SuggestionSlot.Role, showsQuotes: Bool = false) {
-        self.text = text
-        self.role = role
-        self.showsQuotes = showsQuotes
-    }
-}
-
-/// The part of `Suggestions` the keyboard uses.
-public struct EngineResult: Sendable, Equatable {
-    public var sequence: UInt64
-    public var literal: String
-    public var slots: [StripSlot]
-    public var autocorrect: AutocorrectProposal?
-    public init(sequence: UInt64, literal: String, slots: [StripSlot], autocorrect: AutocorrectProposal? = nil) {
-        self.sequence = sequence
-        self.literal = literal
-        self.slots = slots
-        self.autocorrect = autocorrect
-    }
-    init(_ s: Suggestions) {
-        self.init(sequence: s.sequence, literal: s.literal,
-                  slots: s.slots.map { StripSlot(text: $0.text, role: $0.role, showsQuotes: $0.showsQuotes) },
-                  autocorrect: s.autocorrect)
-    }
-}
-
 public protocol SuggestionEngine: Sendable {
     func beginRequest() -> UInt64
-    func submit(_ request: EngineRequest) async -> EngineResult?
+    func submit(_ request: EngineRequest) async -> Suggestions?
     func updateLayout(_ layout: KeyboardLayout) async
+    /// The personal store changed (a learning batch was applied): take fresh scorer / phrase snapshots.
+    func refreshPersonal() async
+    /// Apply the learned touch model (F14) for `context`; nil goes back to the base parameters.
+    func applyTouchModel(_ model: AdaptiveTouchModel?, context: TouchModelContext?) async
 }
 
-/// Adapts the engine actor to the seam.
+extension SuggestionEngine {
+    public func refreshPersonal() async {}
+    public func applyTouchModel(_ model: AdaptiveTouchModel?, context: TouchModelContext?) async {}
+}
+
+/// Binds the engine actor to the seam together with the personal store it refreshes from. The engine's own
+/// types (`Suggestions`, `SuggestionSlot`, `EngineRequest`) are used directly.
 public struct EngineBridge: SuggestionEngine {
     public let actor: EngineActor
-    public init(_ actor: EngineActor) { self.actor = actor }
+    public let store: PersonalStore?
+    public init(_ actor: EngineActor, store: PersonalStore? = nil) {
+        self.actor = actor
+        self.store = store
+    }
     public func beginRequest() -> UInt64 { actor.beginRequest() }
-    public func submit(_ request: EngineRequest) async -> EngineResult? { await actor.submit(request).map(EngineResult.init) }
+    public func submit(_ request: EngineRequest) async -> Suggestions? { await actor.submit(request) }
     public func updateLayout(_ layout: KeyboardLayout) async { await actor.updateLayout(layout) }
+    public func refreshPersonal() async {
+        if let store { await actor.refreshPersonal(from: store) }
+    }
+    public func applyTouchModel(_ model: AdaptiveTouchModel?, context: TouchModelContext?) async {
+        await actor.applyTouchModel(model, context: context)
+    }
 }
 
 public protocol PersonalLearning: Sendable {
@@ -76,13 +65,13 @@ extension PersonalLearner: PersonalLearning {}
 /// What the three strip slots show, and what each slot means when tapped.
 public struct StripContent: Equatable, Sendable {
     public var texts: [String]
-    public var slots: [StripSlot?]
+    public var slots: [SuggestionSlot?]
     /// Next-word predictions (no word being typed).
     public var isPrediction: Bool
 
     public static let empty = StripContent(texts: ["", "", ""], slots: [nil, nil, nil], isPrediction: false)
 
-    public init(texts: [String], slots: [StripSlot?], isPrediction: Bool) {
+    public init(texts: [String], slots: [SuggestionSlot?], isPrediction: Bool) {
         self.texts = texts
         self.slots = slots
         self.isPrediction = isPrediction
@@ -90,7 +79,7 @@ public struct StripContent: Equatable, Sendable {
 
     /// Typing: engine order `[literal, best, alternative]` is already the display order (best in the middle).
     /// Prediction: the most likely word goes in the middle.
-    public init(_ s: EngineResult) {
+    public init(_ s: Suggestions) {
         let isPrediction = s.literal.isEmpty
         var order = Array(s.slots.prefix(3)).map { Optional($0) }
         while order.count < 3 { order.append(nil) }
@@ -147,6 +136,12 @@ public enum ContextWords {
     }
 }
 
+/// What the insight counters learn from typing: counts only.
+public enum InsightEvent: Sendable, Equatable {
+    case word(swiped: Bool)
+    case autocorrect(accepted: Bool)
+}
+
 // MARK: - Ordered background work
 
 @MainActor
@@ -195,12 +190,29 @@ public final class TypingCoordinator {
     /// Text before an in-word apostrophe ("don’" of "don’t"): the token is learned whole and never autocorrected.
     private var tokenPrefix = ""
     private var prevWords: [String] = []
-    private var lastSuggestions: EngineResult?
+    private var lastSuggestions: Suggestions?
     private var awaitingContinue = false
     private var lastCommit: (text: String, trailing: String, hits: [KeyHit])?
     private var perfPending: (sequence: UInt64, interval: PerfInterval)?
     private var latestRequest: UInt64 = 0
     private var lastFieldTraits: FieldTraits?
+    /// Aggregate typing events for the insight counters (F16). Carries no text. Not sent while incognito or in
+    /// excluded fields.
+    public var onInsight: ((InsightEvent) -> Void)?
+    private var autocorrectPendingAccept = false
+    private func emitInsight(_ e: InsightEvent) {
+        guard !incognito, config.autocorrectEnabled else { return }
+        onInsight?(e)
+    }
+    private var lastPersonalRefresh: TimeInterval = -.infinity
+    /// Minimum time between personal snapshot refreshes triggered by single word commits.
+    public var personalRefreshInterval: TimeInterval = 3
+
+    // Adaptive touch model (F14, M2-07 follow-up). Aggregate offsets only, never text.
+    private var touchModel = AdaptiveTouchModel()
+    private var touchModelStore: AdaptiveTouchFileStore?
+    private var touchModelDirty = false
+    private var touchModelApplied = 0
 
     // Swipe typing (M4-03). Memory only.
     private var swipeDecoder: (any SwipeDecoding)?
@@ -223,6 +235,7 @@ public final class TypingCoordinator {
     public func setEngine(_ engine: (any SuggestionEngine)?) {
         self.engine = engine
         if let engine, let l = lettersLayout { engineQueue.enqueue { await engine.updateLayout(l) } }
+        pushTouchModel()
         if engine != nil { requestPrediction() } else { setContent(.empty) }
     }
 
@@ -262,12 +275,83 @@ public final class TypingCoordinator {
     public func setLayout(_ layout: KeyboardLayout) {
         guard layout.kind == .letters else { return }
         guard layout != lettersLayout else { return }
+        let oldContext = touchContext
         lettersLayout = layout
         var map: [String: Int] = [:]
         for (i, k) in layout.keys.enumerated() { if case .letter(let s) = k.identity { map[s] = i } }
         letterKey = map
         if let engine { engineQueue.enqueue { await engine.updateLayout(layout) } }
         if let swipeDecoder { swipeQueue.enqueue { await swipeDecoder.updateLayout(layout) } }
+        if touchContext != oldContext { pushTouchModel() }
+    }
+
+    /// Installs the learned touch model (loaded by the host from extension-local storage). It is applied to the
+    /// engine at once, again after every `touchModelApplyEvery` newly learned words, and saved with the idle flush.
+    public func setTouchModel(_ model: AdaptiveTouchModel, store: AdaptiveTouchFileStore?) {
+        touchModel = model
+        touchModelStore = store
+        touchModelDirty = false
+        pushTouchModel()
+    }
+
+    public var learnedTouchSamples: Int {
+        guard let ctx = touchContext else { return 0 }
+        return touchModel.sampleCount(in: ctx)
+    }
+
+    /// Wipes the learned touch model and its file (reset personal data).
+    public func resetTouchModel() {
+        touchModel.resetAll()
+        touchModelStore?.delete()
+        touchModelDirty = false
+        pushTouchModel()
+    }
+
+    private var touchContext: TouchModelContext? {
+        lettersLayout.map { TouchModelContext(orientation: $0.traits.orientation, displayClass: $0.traits.displayClass) }
+    }
+
+    private func pushTouchModel() {
+        guard let engine else { return }
+        let model = touchModel, ctx = touchContext
+        touchModelApplied = model.sampleCount(in: ctx ?? TouchModelContext(orientation: .portrait, displayClass: .phone))
+        engineQueue.enqueue { await engine.applyTouchModel(model, context: ctx) }
+    }
+
+    /// Records the touch offsets of a committed, uncorrected word when the engine was sure of it.
+    private func recordTouches(word w: String, hits: [KeyHit]) {
+        guard !incognito, config.autocorrectEnabled, let layout = lettersLayout, let ctx = touchContext,
+              w.count == hits.count, w.count >= 2 else { return }
+        // The engine does not expose the literal posterior: "literal is a known word and no better reading was
+        // proposed" is the available evidence of a confident decode.
+        guard let s = lastSuggestions, s.literal.lowercased() == w.lowercased(), s.autocorrect == nil,
+              let first = s.slots.first, first.role == .literal, !first.showsQuotes else { return }
+        var samples: [TouchSample] = []
+        for (ch, h) in zip(w, hits) {
+            guard h.keyIndex < layout.keys.count, let k = letterKey[String(ch).lowercased()] else { return }
+            let hitKey = layout.keys[h.keyIndex]
+            let point = CGPoint(x: hitKey.frame.midX + h.normalized.x * hitKey.frame.width,
+                                y: hitKey.frame.midY + h.normalized.y * hitKey.frame.height)
+            samples.append(TouchSample(key: layout.keys[k].identity, point: point, keyFrame: layout.keys[k].frame))
+        }
+        let before = touchModel.sampleCount(in: ctx)
+        let rejection = touchModel.record(CommittedWordTouches(samples: samples, confidence: 0.95), in: ctx)
+        guard rejection == nil else { return }
+        touchModelDirty = true
+        if touchModel.sampleCount(in: ctx) / Self.touchModelApplyEvery > before / Self.touchModelApplyEvery { pushTouchModel() }
+    }
+
+    static let touchModelApplyEvery = 20
+
+    private func saveTouchModelIfNeeded() {
+        guard touchModelDirty else { return }
+        touchModelDirty = false
+        if let store = touchModelStore {
+            let model = touchModel
+            // Tiny file (<= 256 KB); off the main thread.
+            Task.detached(priority: .utility) { try? store.save(model) }
+        }
+        pushTouchModel()
     }
 
     public func setIncognito(_ on: Bool) {
@@ -397,6 +481,7 @@ public final class TypingCoordinator {
         }
         let endsSentence = e.insert.first.map { Self.terminators.contains($0) } ?? false
         if !token.isEmpty {
+            if source == .typed, tokenPrefix.isEmpty { recordTouches(word: token, hits: hits) }
             commit(committed, source: source)
             lastCommit = (committed, e.insert, hits)
             if !endsSentence { prevWords = Array((prevWords + [committed.lowercased()]).suffix(2)) }
@@ -405,7 +490,7 @@ public final class TypingCoordinator {
         }
         if endsSentence {
             prevWords = []
-            if let learner { learnerQueue.enqueue { await learner.sentenceBoundary() } }
+            enqueueLearner(refresh: .always) { await $0.sentenceBoundary() }
         }
         word = ""
         tokenPrefix = ""
@@ -444,6 +529,8 @@ public final class TypingCoordinator {
             word = edit.insert
             hits = saved.count == word.count ? saved : (synthesizedHits(for: word) ?? [])
             if hits.count != word.count { word = ""; hits = [] }
+            autocorrectPendingAccept = false
+            emitInsight(.autocorrect(accepted: false))
             if let learner {
                 let original = edit.insert
                 learnerQueue.enqueue { await learner.autocorrectReverted(original: original) }
@@ -504,7 +591,7 @@ public final class TypingCoordinator {
         guard input.returnKey() else { return false }
         noteTyped(); autocorrectState.noteOtherInput()
         if !token.isEmpty { commit(token, source: .typed) }
-        if let learner { learnerQueue.enqueue { await learner.sentenceBoundary() } }
+        enqueueLearner(refresh: .always) { await $0.sentenceBoundary() }
         resetSession()
         lastCommit = nil
         prevWords = []
@@ -613,9 +700,9 @@ public final class TypingCoordinator {
         hits = []
         lastSuggestions = nil
         // Strip: the best word in the middle, the next two beside it; tapping one replaces the word.
-        var order: [StripSlot?] = [nil, nil, nil]
+        var order: [SuggestionSlot?] = [nil, nil, nil]
         for (i, w) in words.enumerated() {
-            let slot = StripSlot(text: w, role: i == 0 ? .best : .alternative)
+            let slot = SuggestionSlot(text: w, role: i == 0 ? .best : .alternative)
             order[i == 0 ? 1 : (i == 1 ? 0 : 2)] = slot
         }
         swipeStripShown = true
@@ -695,6 +782,10 @@ public final class TypingCoordinator {
         }
         if awaitingContinue {
             awaitingContinue = false
+            if autocorrectPendingAccept {
+                autocorrectPendingAccept = false
+                emitInsight(.autocorrect(accepted: true)) // the user typed on: the correction stood
+            }
             if let learner { learnerQueue.enqueue { await learner.typingContinued() } }
         }
         scheduleIdleFlush()
@@ -702,8 +793,30 @@ public final class TypingCoordinator {
 
     private func commit(_ text: String, source: CommitSource) {
         awaitingContinue = true
+        autocorrectPendingAccept = source == .autocorrected
+        emitInsight(.word(swiped: source == .swipe))
+        enqueueLearner(refresh: .throttled) { await $0.wordCommitted(text, source: source) }
+    }
+
+    private enum PersonalRefresh { case never, throttled, always }
+
+    /// Runs `op` on the learner in order, then (per `refresh`) hands the engine a fresh personal snapshot so learned
+    /// words show up in suggestions. `.throttled` skips the refresh when one ran less than `personalRefreshInterval`
+    /// ago; the idle flush always refreshes, so nothing waits long.
+    private func enqueueLearner(refresh: PersonalRefresh, _ op: @escaping @Sendable (any PersonalLearning) async -> Void) {
         guard let learner else { return }
-        learnerQueue.enqueue { await learner.wordCommitted(text, source: source) }
+        var doRefresh = false
+        switch refresh {
+        case .never: break
+        case .always: doRefresh = true
+        case .throttled: doRefresh = now() - lastPersonalRefresh >= personalRefreshInterval
+        }
+        if doRefresh { lastPersonalRefresh = now() }
+        let engine = doRefresh ? engine : nil
+        learnerQueue.enqueue {
+            await op(learner)
+            await engine?.refreshPersonal()
+        }
     }
 
     private func scheduleIdleFlush() {
@@ -716,8 +829,8 @@ public final class TypingCoordinator {
     }
 
     public func flushLearner() {
-        guard let learner else { return }
-        learnerQueue.enqueue { await learner.flush() }
+        saveTouchModelIfNeeded()
+        enqueueLearner(refresh: .always) { await $0.flush() }
     }
 
     // MARK: Autocorrect
@@ -774,7 +887,7 @@ public final class TypingCoordinator {
         }
     }
 
-    private func deliver(_ s: EngineResult?, sequence: UInt64) {
+    private func deliver(_ s: Suggestions?, sequence: UInt64) {
         guard let s, sequence == latestRequest else { return }
         if let p = perfPending, p.sequence == sequence {
             Perf.end(p.interval)

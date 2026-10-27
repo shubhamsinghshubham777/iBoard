@@ -32,6 +32,16 @@ final class KeyboardViewController: UIInputViewController {
     private var autoShiftPending = false
     private lazy var coordinator = TypingCoordinator(input: input)
     private var engineLoadStarted = false
+    /// The loaded engine / personal store / command applier, nil until the background load finished.
+    private var host: EngineHost.Loaded?
+    /// Typing insight counters (F16): aggregate counts only, kept extension-locally; shared with the app only with
+    /// Full Access (P-23).
+    private lazy var insights: InsightRecorder = {
+        let r = InsightRecorder(counters: EngineHost.Insights.loadLocal())
+        r.persist = { [weak self] c in EngineHost.Insights.save(c, hasFullAccess: self?.hasFullAccess ?? false) }
+        return r
+    }()
+    private var sharedSnapshotDirty = false
     private var lastDocumentID: UUID?
     private var stripTouchID: Int?
     /// Swipe typing capture (M4-01): one finger at a time; trail drawn by `grid.trail`.
@@ -63,6 +73,7 @@ final class KeyboardViewController: UIInputViewController {
         refreshAppearanceAndTraits()
         coordinator.setIncognito(UserDefaults.standard.bool(forKey: Self.incognitoKey))
         applyFieldConfig(forceFieldChange: true)
+        applyAppCommands()
         #if DEBUG
         // Debug-only exposure for UI tests / inspection: no typed text involved.
         grid.accessibilityValue = "haptics=\(settings.haptics) fullAccess=\(hasFullAccess)"
@@ -85,6 +96,10 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
         coordinator.shiftActive = { [weak self] in (self?.grid.shift ?? .off) != .off } // not `machine`: this runs inside machine calls
         coordinator.onAsyncEdit = { [weak self] in self?.scheduleAutoShift() }
+        coordinator.onInsight = { [weak self] event in
+            self?.insights.handle(event)
+            self?.sharedSnapshotDirty = true
+        }
         coordinator.onStripChange = { [weak self] content in self?.strip.slotTexts = content.texts }
         registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitVerticalSizeClass.self]) { (self: KeyboardViewController, _) in
             self.refreshAppearanceAndTraits()
@@ -184,12 +199,15 @@ final class KeyboardViewController: UIInputViewController {
         engineLoadStarted = true
         let fullAccess = hasFullAccess
         Task.detached(priority: .userInitiated) { [weak self] in
-            let loaded = EngineHost.load(layout: layout, hasFullAccess: fullAccess)
+            let loaded = await EngineHost.load(layout: layout, hasFullAccess: fullAccess)
             await MainActor.run { [weak self] in
                 guard let self else { return }
+                self.host = loaded
                 self.coordinator.setEngine(loaded.engine)
                 self.coordinator.setSwipeDecoder(loaded.swipe)
                 self.coordinator.setLearner(loaded.learner)
+                self.coordinator.setTouchModel(loaded.touchModel, store: loaded.touchStore)
+                self.applyAppCommands()
                 #if DEBUG
                 self.engineStatus = loaded.engine == nil
                     ? "engine: none (stub)" : "engine: bundled \(loaded.wordCount) words"
@@ -197,6 +215,39 @@ final class KeyboardViewController: UIInputViewController {
                 self.personalMode = loaded.storageMode == .appGroup ? "app-group" : "local"
                 #endif
             }
+        }
+    }
+
+    /// Applies commands the app queued (docs/APP_COMMANDS.md) once per appearance, never per keystroke. Without
+    /// Full Access the queue is still readable (P-23) and everything happens extension-locally.
+    private func applyAppCommands() {
+        guard let host else { return } // runs again right after the load finishes
+        Task { [weak self] in
+            let report = await host.commands.applyPending()
+            guard let self else { return }
+            if report.resetInsights { self.insights.reset(at: Date().timeIntervalSince1970) }
+            if report.clearedPersonalData { self.coordinator.resetTouchModel() }
+            if report.applied > 0 {
+                await host.engine?.refreshPersonal()
+                self.sharedSnapshotDirty = true
+                if self.hasFullAccess { await EngineHost.writeSharedSnapshot(store: host.store) }
+            }
+        }
+    }
+
+    /// Keyboard hidden: close the typing session, learn the last words, and (Full Access) refresh the app's snapshot.
+    private func settleOnDisappear() {
+        insights.endSession()
+        coordinator.flushLearner()
+        guard let host else { return }
+        let shareSnapshot = hasFullAccess && sharedSnapshotDirty
+        sharedSnapshotDirty = false
+        let recorder = insights
+        Task {
+            await self.coordinator.waitForIdle()
+            recorder.noteUnigramCount(await host.store.stats().unigrams)
+            recorder.flush()
+            if shareSnapshot { await EngineHost.writeSharedSnapshot(store: host.store) }
         }
     }
 
@@ -264,6 +315,7 @@ final class KeyboardViewController: UIInputViewController {
         swipeCapture.cancel()
         grid.trail.clear()
         coordinator.keyboardWillDisappear()
+        settleOnDisappear()
         grid.clearHighlights()
         updateRepeatTimer()
     }
