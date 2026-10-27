@@ -20,6 +20,8 @@ enum EngineHost {
         var learner: PersonalLearner
         var store: PersonalStore
         var wordCount: Int
+        /// Words in the mmap'd Hinglish secondary lexicon (0 when it is not bundled / failed to open).
+        var hinglishWordCount: Int
         var storageMode: PersonalStorageMode
         var touchModel: AdaptiveTouchModel
         var touchStore: AdaptiveTouchFileStore
@@ -43,15 +45,17 @@ enum EngineHost {
         var lexicon: Lexicon?
         var lm: NGramModel?
         var words = 0
+        var secondary: SecondaryLanguage?
         if let lexURL = Bundle.main.url(forResource: "lexicon", withExtension: "iblex"),
            let lex = try? Lexicon(url: lexURL, verifyChecksum: false) {
+            secondary = loadHinglish()
             // Checksum verification would fault in every page of a large mmapped lexicon (memory budget); the
             // bundle is code-signed, so integrity is already covered.
             let model = Bundle.main.url(forResource: "lm", withExtension: "iblm")
                 .flatMap { try? NGramModel(url: $0, lexicon: lex, verifyChecksum: false) }
             lexicon = lex
             lm = model
-            actor = EngineActor(layout: layout, lexicon: lex, model: model)
+            actor = EngineActor(layout: layout, lexicon: lex, model: model, secondary: secondary)
             words = lex.wordCount
         }
         let local = localDirectory()
@@ -71,7 +75,8 @@ enum EngineHost {
         let learner = PersonalLearner(store: store)
         var swipe: SwipeEngine?
         if let lexicon {
-            swipe = SwipeEngine(layout: layout, lexicon: lexicon, model: lm, personal: { await store.scorer() })
+            swipe = SwipeEngine(layout: layout, lexicon: lexicon, model: lm, personal: { await store.scorer() },
+                                secondary: secondary)
         }
         // The engine reads the personal model from the store (learned words, phrase chip, never-correct list).
         if let actor { await actor.refreshPersonal(from: store) }
@@ -81,8 +86,19 @@ enum EngineHost {
             store: store, loadQueue: { CommandQueueStore().load() }, applied: DefaultsAppliedSequence(),
             importDirectory: root?.appendingPathComponent(ImportPayloadStore.directoryName, isDirectory: true))
         return Loaded(engine: actor.map { EngineBridge($0, store: store) }, swipe: swipe, learner: learner, store: store,
-                      wordCount: words, storageMode: storage.mode, touchModel: touchStore.load(), touchStore: touchStore,
+                      wordCount: words, hinglishWordCount: secondary?.lexicon.wordCount ?? 0, storageMode: storage.mode, touchModel: touchStore.load(), touchStore: touchStore,
                       commands: commands)
+    }
+
+    /// Hinglish (romanised Hindi) as the code-switched secondary language: `hinglish/lexicon.iblex` + `lm.iblm`
+    /// (docs/HINGLISH.md, ~7 MB). Both are mmap'd (pages fault in on use, checksums skipped like the English files);
+    /// opened here, so on the background load task only. Missing or unreadable: English only, no crash.
+    static func loadHinglish() -> SecondaryLanguage? {
+        guard let lexURL = Bundle.main.url(forResource: "lexicon", withExtension: "iblex", subdirectory: "hinglish"),
+              let lex = try? Lexicon(url: lexURL, verifyChecksum: false) else { return nil }
+        let model = Bundle.main.url(forResource: "lm", withExtension: "iblm", subdirectory: "hinglish")
+            .flatMap { try? NGramModel(url: $0, lexicon: lex, verifyChecksum: false) }
+        return SecondaryLanguage(lexicon: lex, model: model)
     }
 
     /// Insight counters: the keyboard's own copy always, the shared copy for the app only with Full Access (P-23).

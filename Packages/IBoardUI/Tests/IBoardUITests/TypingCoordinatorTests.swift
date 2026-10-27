@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import Synchronization
 import Testing
+import IBoardCore
 import IBoardEngine
 import IBoardLayout
 @testable import IBoardUI
@@ -462,5 +463,79 @@ struct EngineIntegrationTests {
         let reloaded = store.load()
         let ctx = TouchModelContext(orientation: r.layout.traits.orientation, displayClass: r.layout.traits.displayClass)
         #expect(reloaded.sampleCount(in: ctx) == 2)
+    }
+}
+
+// MARK: App settings v3 (keyboard integration)
+
+private func engine(confidence: Double) -> FakeEngine {
+    FakeEngine { r in
+        guard case .hits(let h) = r.touches, h.count == 3 else {
+            return Suggestions(sequence: r.sequence, literal: "", slots: [slot("i", .best)])
+        }
+        return Suggestions(sequence: r.sequence, literal: "teh",
+                           slots: [slot("teh", .literal, quotes: true), slot("the", .best)],
+                           autocorrect: AutocorrectProposal(word: "the", confidence: confidence, literalIsWord: false))
+    }
+}
+
+@MainActor
+@Suite("Settings policy")
+struct SettingsPolicyTests {
+    @Test func levelsMapToThresholds() {
+        #expect(SettingsPolicy.autocorrect(for: .off).enabled == false)
+        #expect(SettingsPolicy.autocorrect(for: .conservative) == .init(enabled: true, aggressiveness: .conservative))
+        #expect(SettingsPolicy.autocorrect(for: .balanced).aggressiveness.threshold == 0.90)
+        #expect(SettingsPolicy.autocorrect(for: .aggressive).aggressiveness.threshold == 0.80)
+    }
+
+    @Test func offReplacesNothingButKeepsSuggestions() async {
+        let r = Rig()
+        r.coordinator.autocorrectionEnabled = false
+        await r.type("teh ")
+        #expect(r.proxy.text == "teh ")
+        let r2 = Rig(engine: FakeEngine { _ in nil })
+        r2.coordinator.autocorrectionEnabled = false
+        await r2.type("dont ")
+        #expect(r2.proxy.text == "dont ") // contractions are replacements too
+    }
+
+    @Test func aggressivenessDecidesWhichConfidenceIsApplied() async {
+        for (level, applied) in [(AutocorrectLevel.conservative, false), (.balanced, true), (.aggressive, true)] {
+            let r = Rig(engine: engine(confidence: 0.93))
+            r.coordinator.autocorrectSettings.aggressiveness = SettingsPolicy.autocorrect(for: level).aggressiveness
+            await r.type("teh ")
+            #expect((r.proxy.text == "the ") == applied, "level \(level)")
+        }
+        let low = Rig(engine: engine(confidence: 0.85))
+        low.coordinator.autocorrectSettings.aggressiveness = SettingsPolicy.autocorrect(for: .balanced).aggressiveness
+        await low.type("teh ")
+        #expect(low.proxy.text == "teh ")
+        let high = Rig(engine: engine(confidence: 0.85))
+        high.coordinator.autocorrectSettings.aggressiveness = SettingsPolicy.autocorrect(for: .aggressive).aggressiveness
+        await high.type("teh ")
+        #expect(high.proxy.text == "the ")
+    }
+
+    @Test func hapticsNeedFullAccess() {
+        var s = IBoardSettings.defaults
+        s.haptics = true
+        #expect(SettingsPolicy.hapticsActive(settings: s, hasFullAccess: false) == false)
+        #expect(SettingsPolicy.hapticsActive(settings: s, hasFullAccess: true))
+        s.haptics = false
+        #expect(SettingsPolicy.hapticsActive(settings: s, hasFullAccess: true) == false)
+    }
+
+    @Test func doubleSpaceAndSmartPunctuationSwitches() async {
+        var c = FieldConfig()
+        c.punctuation.doubleSpacePeriod = false
+        c.punctuation.smartQuotes = .no
+        let r = Rig(config: c)
+        await r.type("hello")
+        r.coordinator.insert(" ")
+        r.coordinator.insert(" ")
+        #expect(r.proxy.text == "hello  ")
+        r.coordinator.insert("\"")
+        #expect(r.proxy.text.hasSuffix("\""))
     }
 }

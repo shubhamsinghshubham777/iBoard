@@ -12,7 +12,9 @@ import IBoardTheme
 public final class SuggestionStripView: UIView {
     public static let slotCount = 3
 
-    public var appearance: ThemeAppearance = .light { didSet { if appearance != oldValue { applyColors() } } }
+    /// Colours / weights from the selected theme (Native by default).
+    public var skin: KeyboardSkin = .native(.light) { didSet { if skin != oldValue { applyColors() } } }
+    public var appearance: ThemeAppearance { skin.appearance }
 
     /// Slot text (static placeholders until F2 supplies candidates). Ignored while the alternates row shows.
     public var slotTexts: [String] = ["", "", ""] { didSet { relayout() } }
@@ -30,13 +32,48 @@ public final class SuggestionStripView: UIView {
     /// Cell index of the action row at `x` (strip-local), nil when no row is showing.
     public func actionIndex(forLocalX x: CGFloat) -> Int? {
         guard !actionTitles.isEmpty, bounds.width > 0 else { return nil }
-        let x0 = actionsOriginX(bounds.width)
-        guard x >= x0 else { return nil }
-        let i = Int((x - x0) / ((bounds.width - x0) / CGFloat(actionTitles.count)))
+        let area = overlayRects(w: bounds.width).actions
+        guard x >= area.minX, x < area.maxX else { return nil }
+        let i = Int((x - area.minX) / (area.width / CGFloat(actionTitles.count)))
         return i >= 0 && i < actionTitles.count ? i : nil
     }
 
+    /// Duo split (D-20): usable x ranges in STRIP-local coordinates (the fold band lies between them). Empty or one
+    /// entry = a single run across the whole strip. With two, the left one holds slots 0 and 1, the right one slot 2.
+    public var segments: [CGRect] = [] { didSet { if segments != oldValue { relayout() } } }
+
     public private(set) var selection: AlternatesSelection?
+
+    /// Slot rectangles (strip-local, full height) for the current segments.
+    func slotRects(width w: CGFloat, height h: CGFloat) -> [CGRect] {
+        if segments.count == 2 {
+            let l = segments[0], r = segments[1]
+            let half = l.width / 2
+            return [CGRect(x: l.minX, y: 0, width: half, height: h), CGRect(x: l.minX + half, y: 0, width: half, height: h),
+                    CGRect(x: r.minX, y: 0, width: r.width, height: h)]
+        }
+        let slotW = w / CGFloat(Self.slotCount)
+        return (0..<Self.slotCount).map { CGRect(x: CGFloat($0) * slotW, y: 0, width: slotW, height: h) }
+    }
+
+    /// The slot under a strip-local x (the nearest slot over the fold band).
+    public func slotIndex(forLocalX x: CGFloat) -> Int {
+        let rects = slotRects(width: bounds.width, height: max(bounds.height, 1))
+        if let i = rects.firstIndex(where: { x >= $0.minX && x < $0.maxX }) { return i }
+        if x >= (rects.last?.maxX ?? 0) { return rects.count - 1 }
+        return x < (rects.first?.minX ?? 0) ? 0 : (segments.count == 2 ? 1 : rects.count - 1)
+    }
+
+    /// Where the banner / action row may draw (strip-local): the whole strip, or the runs of a split.
+    private func overlayRects(w: CGFloat) -> (banner: CGRect, actions: CGRect) {
+        let h = bounds.height
+        if segments.count == 2 {
+            // Banner left, actions right; an action row without a banner takes the left run.
+            return (segments[0].with(h), bannerText != nil ? segments[1].with(h) : segments[0].with(h))
+        }
+        let x0 = actionsOriginX(w)
+        return (CGRect(x: 0, y: 0, width: x0 == 0 ? w : x0, height: h), CGRect(x: x0, y: 0, width: w - x0, height: h))
+    }
 
     private let slotLabels = (0..<SuggestionStripView.slotCount).map { _ in UILabel() }
     private let dividers = (0..<SuggestionStripView.slotCount - 1).map { _ in CALayer() }
@@ -46,6 +83,7 @@ public final class SuggestionStripView: UIView {
     private let bannerLabel = UILabel()
     private var actionLabels: [UILabel] = []
     private var tokens = NativeThemeTokens.light
+    private let chipLayers = (0..<SuggestionStripView.slotCount).map { _ in CALayer() }
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -63,6 +101,11 @@ public final class SuggestionStripView: UIView {
         bannerLabel.isHidden = true
         addSubview(bannerLabel)
         for d in dividers { layer.addSublayer(d) }
+        for c in chipLayers {
+            c.cornerCurve = .continuous
+            c.isHidden = true
+            layer.insertSublayer(c, at: 0)
+        }
         for e in emphasisLayers {
             e.cornerCurve = .continuous
             e.isHidden = true
@@ -127,13 +170,15 @@ public final class SuggestionStripView: UIView {
     // MARK: Layout
 
     private func applyColors() {
-        tokens = NativeThemeTokens.tokens(for: appearance)
-        let label = UIColor(cgColor: tokens.keyLabel.cgColor)
+        tokens = skin.tokens
+        let label = UIColor(cgColor: skin.stripLabel.cgColor)
         for l in slotLabels { l.textColor = label }
         for l in altLabels { l.textColor = label }
+        backgroundColor = skin.stripKind == .filled ? UIColor(cgColor: skin.stripBackground.cgColor) : .clear
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        for d in dividers { d.backgroundColor = tokens.keyLabel.cgColor.copy(alpha: 0.18) }
+        for d in dividers { d.backgroundColor = skin.stripSeparator.cgColor }
+        for c in chipLayers { c.backgroundColor = tokens.keyFill.cgColor }
         highlightLayer.backgroundColor = tokens.actionKeyFill.cgColor
         for e in emphasisLayers { e.backgroundColor = tokens.actionKeyFill.cgColor }
         CATransaction.commit()
@@ -148,8 +193,8 @@ public final class SuggestionStripView: UIView {
         bannerLabel.isHidden = bannerText == nil
         bannerLabel.text = bannerText
         bannerLabel.textColor = label
-        let x0 = actionsOriginX(w)
-        bannerLabel.frame = CGRect(x: 6, y: 0, width: (actionTitles.isEmpty ? w : x0) - 12, height: h)
+        let areas = overlayRects(w: w)
+        bannerLabel.frame = CGRect(x: areas.banner.minX + 6, y: 0, width: areas.banner.width - 12, height: h)
         bannerLabel.font = .systemFont(ofSize: actionTitles.isEmpty ? 15 : 12)
         while actionLabels.count < actionTitles.count {
             let l = UILabel()
@@ -167,8 +212,8 @@ public final class SuggestionStripView: UIView {
             l.text = actionTitles[i]
             let enabled = i < actionEnabled.count ? actionEnabled[i] : true
             l.textColor = label.withAlphaComponent(enabled ? 1 : 0.3)
-            let cell = (w - x0) / CGFloat(n)
-            l.frame = CGRect(x: x0 + CGFloat(i) * cell, y: 0, width: cell, height: h)
+            let cell = areas.actions.width / CGFloat(n)
+            l.frame = CGRect(x: areas.actions.minX + CGFloat(i) * cell, y: 0, width: cell, height: h)
         }
     }
 
@@ -181,28 +226,33 @@ public final class SuggestionStripView: UIView {
         let alt = selection
         let overlay = bannerText != nil || !actionTitles.isEmpty
         layoutOverlay(w: w, h: h)
-        let slotW = w / CGFloat(Self.slotCount)
+        let rects = slotRects(width: w, height: h)
         for (i, l) in slotLabels.enumerated() {
-            l.frame = CGRect(x: CGFloat(i) * slotW, y: 0, width: slotW, height: h)
+            l.frame = rects[i]
             l.text = i < slotTexts.count ? slotTexts[i] : ""
             l.isHidden = alt != nil || overlay
             let on = alt == nil && !overlay && emphasizedSlots.contains(i) && !(l.text ?? "").isEmpty
-            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
-            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : .regular)
+            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
+            l.font = .systemFont(ofSize: 16, weight: on ? .semibold : skin.fontWeight.uiWeight)
+            let chip = chipLayers[i]
+            chip.isHidden = skin.stripKind != .chips || alt != nil || overlay || on || (l.text ?? "").isEmpty
+            chip.frame = l.frame.insetBy(dx: 3, dy: 5)
+            chip.cornerRadius = min(chip.frame.height, chip.frame.width) / 3
             let e = emphasisLayers[i]
             e.isHidden = !on
             e.frame = l.frame.insetBy(dx: 4, dy: 5)
             e.cornerRadius = min(e.frame.height, e.frame.width) / 3
         }
         for (i, d) in dividers.enumerated() {
-            d.frame = CGRect(x: slotW * CGFloat(i + 1) - 0.25, y: h * 0.25, width: 0.5, height: h * 0.5)
-            d.isHidden = alt != nil || overlay
+            // No divider across the fold band (between the two runs).
+            d.frame = CGRect(x: rects[i].maxX - 0.25, y: h * 0.25, width: 0.5, height: h * 0.5)
+            d.isHidden = alt != nil || overlay || (segments.count == 2 && i == 1)
         }
         guard let alt else { highlightLayer.isHidden = true; return }
         for (i, l) in altLabels.enumerated() where i < alt.options.count {
             l.frame = alt.cellFrame(i).offsetBy(dx: -frame.minX, dy: -frame.minY)
             let on = alt.highlighted == i
-            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : tokens.keyLabel).cgColor)
+            l.textColor = UIColor(cgColor: (on ? tokens.actionKeyLabel : skin.stripLabel).cgColor)
         }
         if let hi = alt.highlighted {
             highlightLayer.isHidden = false
@@ -213,5 +263,10 @@ public final class SuggestionStripView: UIView {
             highlightLayer.isHidden = true
         }
     }
+}
+
+private extension CGRect {
+    /// The same horizontal run with a full-height frame.
+    func with(_ height: CGFloat) -> CGRect { CGRect(x: minX, y: 0, width: width, height: height) }
 }
 #endif

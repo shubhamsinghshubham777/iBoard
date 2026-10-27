@@ -111,3 +111,57 @@ drop them). Recents/skin tones live in the extension's own defaults (`iboard.emo
 DEBUG overlay line `emoji: <mode> +X MB (peak +Y)`.
 
 Files needing `xcodegen generate` (project.yml gained the IBoardEmoji package): `iBoardKeyboard/EmojiHost.swift`.
+
+## Settings v3, Hinglish, Duo split, themes (keyboard integration round)
+
+**Settings (`IBoardSettings` v3), read in `viewWillAppear` (`applySettings`, App Group defaults, works without Full
+Access).** `flickHints` (OR the old local key), `hapticIntensity` -> `UIImpactFeedbackGenerator` light / medium /
+heavy and only with `haptics` AND Full Access (`SettingsPolicy.hapticsActive`), `autocorrect` -> `SettingsPolicy.autocorrect`
+(`off` = nothing replaced, contractions included, suggestions stay; conservative / balanced / aggressive = policy thresholds
+0.97 / 0.90 / 0.80), `doubleSpacePeriod`, `smartPunctuation` (quotes and dashes), `swipeTyping` (gates `allowSwipe`),
+`incognitoByDefault` (an explicit keyboard-local choice from the DEBUG corner toggle wins), `numberRow` (already honoured).
+`emojiSuggestions`: NOTHING TO GATE yet, there is no emoji prediction on the strip (M9-02 is open); the flag is read
+but unused. Verified: `swift test` (SettingsPolicyTests) and on the simulator `autocorrect: off` left `teh dont ` untouched.
+
+**Hinglish (`EngineHost.loadHinglish`).** `Data/hinglish/lexicon.iblex` + `lm.iblm` are copied into
+`iBoardKeyboard.appex/hinglish/` by `project.yml` (copyFiles build phase, the names collide with the English fixture in
+the flat bundle) and opened with mmap on the background load task as a `SecondaryLanguage` for `EngineActor` and
+`SwipeEngine` (which now builds the code-switch context). Simulator iPhone 12, DEBUG overlay, fresh process, idle:
+24.4 MB footprint before, 24.0-24.5 MB with Hinglish (pages fault in on use, checksums are skipped); 24.9 MB after a
+few words, 25.2 MB on the Duo simulator. Typing `nahi kya` stayed as typed, `teh` still became `the`, `mera` stayed.
+NOT TESTED: footprint after long typing sessions, swipe typing in Hinglish, accuracy (M7-04), a real device.
+
+**Duo (`DuoPolicy.swift`, `KeyboardViewController`).** No device names: `DisplayMetrics.displayClass` uses the shortest
+screen side (>= 600 pt inner, >= 450 pt outer, else phone; outer is 466 pt, the widest phone 440 pt) and the screen
+shape for orientation. Split: pinch (spread = split, pinch together = merge) stored per orientation in the extension's
+own defaults (`iboard.local.duoSplit.*`, P-23), else an explicit `duoSplitPortrait/Landscape` the app saved (read from
+the raw blob, because decoding cannot tell "saved false" from "default"), else the layout default (split in inner
+landscape). `LayoutSettings.defaults(for:)` supplies the inner-portrait number row. The strip (`SuggestionStripView.segments`)
+puts slots 0 and 1 in the left run and slot 2 in the right run; banner and action row stay inside the runs; no divider
+crosses the fold. Dragging the resize handle on the inner display in landscape snaps to half the display height and sets
+`fillToFold` (`DuoGeometry.snappedHeight`). DEBUG overlay line `display:` shows class, orientation, screen and view
+sizes. Verified on a duo7 simulator (iOS 27.1, outer display, `simctl io screenshot --display`, `axe touch` works on the outer
+display): class `duoOuter`, screen 466x678, extension view 452 wide (14 pt narrower than the screen). The inner display
+is black in the simulator's closed pose, so the inner split could only be looked at by forcing the display class on a phone
+simulator (DEBUG default `iBoard.debug.displayClass`, portrait 390 pt, number row + split + strip as expected, strip taps
+reach slots on both sides). NOT TESTED: pinch (axe has no pinch), the fold snap, real inner landscape, rotation, hinge.
+Not handled: the long-press alternates row in the strip can still span the fold band.
+
+**Themes (`KeyboardSkin`, `ThemeBackdropView`).** The keyboard reads `ThemeStore().loadSelected()` (Native on any problem),
+resolves it with `ThemeAccessibilitySettings.resolved` (Reduce Transparency, Increase Contrast = darker system colours,
+Bold Text, observed live) into a `KeyboardSkin` and gives it to the grid (fills, label colours, font sizes / weight /
+family, corner radius scale, border, shadow, trail), the strip (labels, separators, plain / chips / filled) and a
+backdrop view under both (solid, gradient, photo; `systemMaterial` draws nothing, P-22). Native is token-identical
+(`KeyboardSkinTests.nativeSkinIsTokenIdentical`) and looks unchanged on the simulator. Two Native details recorded: the
+Native preset's strip separator (15 % / 20 %) is not what the shipped strip drew (18 % of the label colour), so Native keeps
+the 18 % look and any other separator is drawn as the theme says; the backdrop opacity follows the app preview
+(`translucency * 0.5 + 0.5`, 1 = opaque, also what Reduce Transparency sets), which contradicts the doc comment in
+`Theme.swift` ("1 = most translucent"). Photos come only from `ThemePhotos/<token>-p|l.jpg` in the App Group, decoded with
+ImageIO, blurred once at half resolution off the main thread, a missing file shows the system look. Simulator (gradient + chips
+strip + shadow keys, and a blurred dimmed photo, written by hand into the group container): footprint 24.5 MB Native idle,
+28.1 MB gradient, 28.0 MB photo (33.5 MB before the half-resolution blur). NOT TESTED: Reduce Transparency / Increase
+Contrast / Bold Text on a device or simulator (logic is unit-tested), reading photo files without Full Access on a
+device (P-23 untested), custom font families, pressed colours of themes, landscape photo.
+
+Files needing `xcodegen generate`: `iBoardKeyboard/EngineHost.swift` edits only, but `project.yml` now has the Hinglish
+copyFiles entries; new Swift files are all inside `Packages/IBoardUI`.

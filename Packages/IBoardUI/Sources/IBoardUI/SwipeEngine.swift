@@ -29,11 +29,16 @@ public actor SwipeEngine: SwipeDecoding {
     private let parameters: SwipeParameters
     private let personal: (@Sendable () async -> (any PersonalScoreProvider)?)?
     private var layout: KeyboardLayout
+    private let secondary: SecondaryLanguage?
+    private let codeSwitch: CodeSwitchParameters
 
     /// - Parameter personal: asked once per decode for the current personal-model snapshot (nil: no personal model).
     public init(layout: KeyboardLayout, lexicon: Lexicon, model: NGramModel? = nil,
                 parameters: SwipeParameters = SwipeParameters(),
-                personal: (@Sendable () async -> (any PersonalScoreProvider)?)? = nil) {
+                personal: (@Sendable () async -> (any PersonalScoreProvider)?)? = nil,
+                secondary: SecondaryLanguage? = nil, codeSwitch: CodeSwitchParameters = CodeSwitchParameters()) {
+        self.secondary = secondary
+        self.codeSwitch = codeSwitch
         self.layout = layout
         self.lexicon = lexicon
         self.model = model
@@ -49,15 +54,28 @@ public actor SwipeEngine: SwipeDecoding {
         guard layout.kind == .letters else { return nil }
         let snapshot = await personal?()
         // Cheap (one pass over ~30 letter keys); rebuilt per swipe so the personal snapshot is current.
-        let decoder = SwipeDecoder(layout: layout, lexicon: lexicon, model: model, personal: snapshot, parameters: parameters)
-        let ids = previousWords.suffix(2).map { lexicon.lookup($0) }
-        let ctx: LMContext
-        switch ids.count {
-        case 2: ctx = LMContext(older: ids[0], recent: ids[1])
-        case 1: ctx = LMContext(recent: ids[0])
-        default: ctx = .none
+        let decoder = SwipeDecoder(layout: layout, lexicon: lexicon, model: model, personal: snapshot, parameters: parameters,
+                                   secondary: secondary, codeSwitch: codeSwitch)
+        let ctxWords = Array(previousWords.suffix(2))
+        var ctx: LMContext
+        var secondaryContext = SecondaryContext.neutral
+        if let secondary {
+            // Code-switching (M7-02): language odds from the previous words (+ the personal lean), n-gram context
+            // per lexicon. Nothing typed is stored.
+            let bias = snapshot.map { CodeSwitch.personalBias(from: $0, primary: lexicon, secondary: secondary, parameters: codeSwitch) } ?? 0
+            let c = CodeSwitch.context(previousWords: previousWords, primary: lexicon, secondary: secondary,
+                                       parameters: codeSwitch, personalBias: bias)
+            ctx = c.primary
+            secondaryContext = c.secondary
+        } else {
+            let ids = ctxWords.map { lexicon.lookup($0) }
+            switch ids.count {
+            case 2: ctx = LMContext(older: ids[0], recent: ids[1])
+            case 1: ctx = LMContext(recent: ids[0])
+            default: ctx = .none
+            }
         }
-        let r = decoder.decode(points: points, context: ctx, contextWords: Array(previousWords.suffix(2)))
+        let r = decoder.decode(points: points, context: ctx, contextWords: ctxWords, secondaryContext: secondaryContext)
         guard r.isSwipe, !r.candidates.isEmpty else { return nil }
         var seen = Set<String>()
         let words = r.candidates.map(\.word).filter { seen.insert($0).inserted }.prefix(3)
