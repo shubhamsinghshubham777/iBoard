@@ -622,8 +622,9 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Result (2026-10-27):** `OTPWriter`/`OTPReader` store (code, sender, time; last 3; TTL 10 min; App Group `iBoard.otp.` keys; keyboard read-only) with 11 tests, and `iBoard/Intents/CaptureVerificationCodeIntent.swift` (background); App Intents metadata is generated in the build. The same flow was device-verified in M0-06; this production intent itself was not re-run on the phone yet.
 - [~] **M6-03 Keyboard code chip** — Freshness, oneTimeCode prominence, insert + clear. Depends: M6-02, M2-04.
   **Partial (2026-10-27):** code chip in the strip (slot 2; emphasised slot 0 for `one-time-code` fields), insert on tap, consumed ids kept in memory (cannot delete from the shared store); simulator-verified without Full Access using a seeded code. Not tested on the real device with the production intent; clipboard fallback not built.
-- [ ] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
+- [~] **M6-04 Bundled shortcuts + onboarding flow** — Signed SMS and Email shortcuts, guided setup, self-test.
   Depends: M6-02, M1-08.
+  **Partial (2026-10-27):** guided OTP setup (6 steps for Message or Email, wording from P-27) + self-test screen polling `OTPReader` (2 min, shows code on screen only); signed `.shortcut` carrying the automation trigger is NOT DETERMINED — `shortcuts sign` works on a hand-written trigger-less plist, but no real automation export could be inspected (Mac Shortcuts library is privacy-blocked); owner could export the working automation to settle it. On-screen behaviour NOT tested. `docs/ONBOARDING.md`.
 - [ ] **M6-05 Clipboard code fallback** — Depends: M6-03, M0-09.
 - [~] **M6-06 Personal-info chips (F7)** — Depends: M2-04, M1-08.
   **Partial (2026-10-27):** personal-info chips (reader/model in IBoardUI): `name` chip verified in Safari on the simulator; email/telephone/address only unit-tested (Safari did not appear to pass `emailAddress`); the app-side editor does not exist.
@@ -631,6 +632,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 ### M7 — Hinglish
 - [~] **M7-01 Hinglish lexicon & LM** (variant clusters). Depends: M0-11, M2-01.
   **Partial (2026-10-27):** real data built: `Data/hinglish/lexicon.iblex` 4.0 MB (56,235 words, 18k variant clusters) + `lm.iblm` 3.0 MB (150k bigrams, 60k trigrams); sources Leipzig Hindi (CC BY), AI4Bharat Aksharantar (mixed; treated as CC BY-SA 4.0 because ~25k rows derive from Dakshina), authored CC0 lists; byte-identical rebuilds; `docs/HINGLISH.md`. Quality on real Hinglish text unmeasured; the keyboard does not bundle it yet.
+  **Update (2026-10-27):** Hinglish lexicon + LM are bundled in the keyboard as a `SecondaryLanguage` (copyFiles phase to `<appex>/hinglish/`, mmap'd, background load); footprint on the simulator ≈24 MB before and after (30 MB target); `nahi kya` kept, `teh`→`the`; Hinglish swipe, long sessions, accuracy and device NOT tested.
 - [~] **M7-02 Code-switch scoring in decoders** — Depends: M7-01, M2-03, M4-02.
   **Partial (2026-10-27):** `SecondaryLanguage` dual-lexicon scoring in TapDecoder/SwipeDecoder/EngineActor (previous-word language prior + personal bias; backward compatible); 227 engine tests; dual-lexicon latency measured on macOS release only with a synthetic English proxy. Not wired into the keyboard.
 - [~] **M7-03 Autocorrect protection for Hinglish** — Depends: M7-02.
@@ -656,9 +658,11 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
 - [ ] **M9-03 Clipboard manager** — Depends: M0-05, M1-06.
 
 ### M10 — Companion app (F16, F17)
-- [ ] **M10-01 Onboarding** — Depends: M6-04.
+- [~] **M10-01 Onboarding** — Depends: M6-04.
+  **Partial (2026-10-27):** onboarding (enable keyboard, Full Access matrix from P-23, OTP setup link, typing test) as a first-launch full-screen cover; builds; on-screen NOT tested; `iBoardTests/OnboardingTests.swift` compiles but was not run.
 - [~] **M10-02 Settings for all features** — Depends: features shipped so far.
   **Partial (2026-10-27):** `IBoardSettings` v3 (haptic intensity, flick hints, autocorrect level, double-space period, smart punctuation, swipe on/off, incognito default, spelling variant from locale, Duo split flags, emoji suggestions) + `SettingsView`; 35 core tests; on-screen NOT tested; the keyboard does not read the new fields yet.
+  **Update (2026-10-27):** keyboard now honours settings v3 (flick hints, haptic strength gated on Full Access, autocorrect level 0.97/0.90/0.80/off, double-space period, smart punctuation, swipe on/off, incognito default); `emojiSuggestions` read but unused; several switches NOT tested on the simulator.
 - [~] **M10-03 Dictionary manager** — Depends: M3-07.
   **Partial (2026-10-27):** dictionary manager screens (search/sort/add/forget/pin over the shared snapshot, queued edits labelled 'queued', empty state when Full Access is off); builds; on-screen NOT tested.
 - [~] **M10-04 Typing insights (F16)** — Depends: M3-02.
@@ -673,6 +677,7 @@ Task format: `- [ ] ID — title` · `Depends:` · `Done when:` (acceptance). Ke
   **Partial (2026-10-27):** inner-portrait wide layout (full width, key cap 56, number row on) — ESTIMATED.
 - [~] **M11-03 Inner landscape split + split strip + pinch toggle** — Depends: M11-02, M4-03.
   **Partial (2026-10-27):** inner-landscape split (two halves, centre gap ≥27 pt fold band, hit regions continue across the gap, invariant test that nothing lies in the band); strip split and pinch toggle not wired in the keyboard — ESTIMATED. `LayoutSettings.centreGap` now live.
+  **Update (2026-10-27):** keyboard now applies the Duo split: display class from screen metrics (shortest side ≥600 pt inner, ≥450 outer), pinch toggles split per orientation (stored locally), strip slots around the fold band, handle drag on the inner display snaps to fill-to-fold; on a real Duo simulator the outer display reports 466×678 and a 452 pt-wide extension view; interactions NOT tested (axe cannot drive the Duo sim).
 - [~] **M11-04 Laptop "fill to fold" snap** — Depends: M11-03, M1-07.
   **Partial (2026-10-27):** laptop fill-to-fold layout (half inner landscape height, no split, number row, key cap 72); the arrow/edit column is reserved space only and the snap handle is not wired — ESTIMATED.
 - [ ] **M11-05 Device Hub pose verification** — All poses × orientations; screenshots in `docs/reference/duo/`.
@@ -767,7 +772,7 @@ license here; never vendor non-open-source skills.
 | R-07 | Duo fold invisible to extensions (P-14) → can't react to folding live. | Rule-based split (D-20); duplicate FB25187339; adopt API when available. |
 | R-08 | Gesture conflicts (flick vs swipe) feel unpredictable. | Recorded-trace tests; tunable thresholds; flicks can be disabled. |
 | R-09 | App Review rejects due to Full Access messaging or Shortcuts onboarding. | Follow 4.4.1 strictly; core works without Full Access; no app launching from keyboard. |
-| R-11 | Debug-build macOS timing tests (e.g. `ReaderBenchmarks`) fail intermittently under machine load and pass alone. | Treat as load-sensitive; consider asserting only in release (M0-12 follow-up). |
+| R-11 | ~~Debug-build macOS timing tests failed intermittently under load.~~ **Fixed 2026-10-27:** budgets are enforced only in release (`Benchmark.assertBudget`), debug only prints; CI runs a release-budgets job. | Keep release thresholds unchanged. |
 | R-10 | `adjustTextPosition` units differ by host. **Measured (P-24): UTF-16 units in Notes/Messages; WhatsApp unreliable.** | M0-08; grapheme-aware cursor logic with per-host fallbacks. |
 | Q-01 | ~~Physical base iPhone 12?~~ **Answered 2026-10-26:** yes — "Shubham’s iPhone", iPhone13,2, iOS 27.0 (24A437), Developer Mode on, paired over Wi-Fi (UDID `00008101-0014596A1E01001E`). | Use for every 👤 perf gate; agents can deploy with `xcrun devicectl` when it's reachable. |
 | Q-02 | ~~Public GitHub repo name/owner.~~ **Answered:** `shubhamsinghshubham777/iBoard`, public (D-30). **Commit email decided 2026-10-26:** keep `shubhamsinghshubham777@gmail.com` (owner wants it public). | 👤 repo name before M13-06. |
@@ -786,6 +791,8 @@ translation · themes gallery/sharing · iOS widgets for insights.
 ## 15. Progress log
 
 Newest first. Format: `YYYY-MM-DD · task · summary · verification · follow-ups`.
+
+- **2026-10-27 · round 7 merged (keyboard settings/Hinglish/Duo/theme skin, onboarding + OTP guide, quality pass) ·** Three worktree agents merged cleanly. Verification after merge: `swift test` green — Core 35, Layout 40, Engine 227, OTP 11, Theme 18, UI 206, Sync 8, Emoji 21, LexiconBuilder 7; `scripts/build.sh` green; new `scripts/audit-privacy.sh` passes after two reviewed allowlist entries for Duo split booleans. Quality pass also: release-only benchmark budgets (R-11 fixed), CI with 4 jobs (not run on GitHub yet), README/CONTRIBUTING/`docs/ARCHITECTURE.md`, accessibility review (`docs/ACCESSIBILITY_REVIEW.md`, code reading only). Still in flight: English-lexicon data agent (worktree `agent-a8fc6ff6bd3c02bb4`). Next: bundle the real English lexicon, then the owner's bug-fix round (docs/HANDOFF.md §2).
 
 - **2026-10-27 · handoff note ·** Owner tested the round-6 build on the iPhone 12 and reported 8 issues (listed in `docs/HANDOFF.md` §2). Root cause of 'gesture typing types nothing': the bundled English lexicon is the 219-word synthetic fixture (14 KB); an agent is building a real English lexicon (`Data/english/`). Round 7 (KBD7 keyboard settings/Hinglish/Duo split/theme rendering, ONBOARD, QUALITY) and the English-data agent are in flight in worktrees; the bug-fix round starts after they merge. Added `docs/HANDOFF.md` for context continuity.
 

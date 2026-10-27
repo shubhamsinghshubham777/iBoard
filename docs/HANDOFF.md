@@ -10,7 +10,8 @@ does not: what is in flight, how work is run and merged, tool quirks, and the ow
 - All package tests were green at the last merge (Core 35, Layout 40, Engine 227, OTP 11, Theme 18, UI 185, Sync 8, Emoji 21,
   LexiconBuilder 7) and `scripts/build.sh` succeeds. Known flaky: macOS debug timing tests (`ReaderBenchmarks`) fail under
   load, pass alone (R-11; round-7 QUALITY agent is fixing).
-- **In-flight agents (round 7), each in its own worktree, NOT merged yet** (branch = worktree name):
+- **Round 7 (KBD7, ONBOARD, QUALITY) was MERGED on 2026-10-27**; only the English-data agent below is still in flight (its table row is the only live one).
+- **In-flight agents, each in its own worktree** (branch = worktree name):
   | Agent | Worktree / branch | Scope |
   |---|---|---|
   | KBD7 | `.claude/worktrees/wf_b8b92d0f-b8b-1` / `worktree-wf_b8b92d0f-b8b-1` | keyboard reads settings v3, bundles Hinglish, Duo split + pinch, theme rendering; owns simulators `kbd7` and `duo7` |
