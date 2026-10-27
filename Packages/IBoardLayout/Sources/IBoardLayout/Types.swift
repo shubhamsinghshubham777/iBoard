@@ -108,9 +108,9 @@ public struct CurrencySymbols: Sendable, Equatable, Codable {
     public static let inr = CurrencySymbols(primary: "₹", others: ["$", "£", "€"])
 }
 
-/// Reserved seam for the iPhone Duo centre gap (D-20, F18). NOT implemented: the engine ignores it today and always
-/// produces one continuous key area. A later task will make the row builder place keys into two column segments
-/// around `centerX +- width/2`; the type exists now so call sites and settings storage do not change.
+/// The iPhone Duo centre gap (D-20, F18): a vertical band, in container coordinates, that no key cap or strip
+/// control may enter. Used by the inner-display split layout; `width` is raised to `DuoGeometry.foldBandWidth` when
+/// smaller. Touch regions deliberately continue across the band so swipes and drifting fingers keep resolving.
 public struct CentreGap: Sendable, Equatable, Codable {
     public var centerX: CGFloat
     public var width: CGFloat
@@ -119,6 +119,33 @@ public struct CentreGap: Sendable, Equatable, Codable {
         self.centerX = centerX
         self.width = width
     }
+}
+
+/// Constants of the Duo layout rules. Every number here is a guess until M0-10 measures the real keyboard (and P-14
+/// says extensions get no hinge data, so the split is rule-based): see "ESTIMATED" in docs/LAYOUT_ENGINE.md.
+public enum DuoGeometry {
+    /// ESTIMATED fold band width (ROADMAP F18: "default 27 pt, tune on device").
+    public static let foldBandWidth: CGFloat = 27
+    /// ESTIMATED: how close (pt) a dragged height must be to the half-height to snap to it.
+    public static let snapTolerance: CGFloat = 24
+
+    /// Laptop "fill to fold" height: half of the inner landscape height (D-20; 669 -> 334.5).
+    public static func fillToFoldHeight(innerLandscapeHeight: CGFloat) -> CGFloat { innerLandscapeHeight / 2 }
+
+    /// Resize-handle snap: returns the fold height when `proposed` is within `snapTolerance` of it, else `proposed`.
+    public static func snappedHeight(proposed: CGFloat, innerLandscapeHeight: CGFloat) -> (height: CGFloat, snapped: Bool) {
+        let target = fillToFoldHeight(innerLandscapeHeight: innerLandscapeHeight)
+        return abs(proposed - target) <= snapTolerance ? (target, true) : (proposed, false)
+    }
+}
+
+/// How the key area is arranged. Derived, never stored: see `LayoutMetrics.duoMode`.
+public enum DuoMode: Sendable, Equatable {
+    case standard
+    /// Two key halves around a centre gap (fold band already widened to at least `foldBandWidth`).
+    case split(CentreGap)
+    /// Laptop pose: height snapped to the fold; one block, number row on, wider keys, reserved edit/arrow column.
+    case fillToFold
 }
 
 public struct LayoutSettings: Sendable, Equatable, Codable {
@@ -130,26 +157,65 @@ public struct LayoutSettings: Sendable, Equatable, Codable {
     /// Comma and period keys flanking the space bar on the letters layer (off in Native; not shown for email/URL).
     public var punctuationKeys: Bool
     public var currency: CurrencySymbols
-    /// Reserved (see `CentreGap`); currently ignored.
+    /// Position/width of the split gap (D-20). Only used when the split is active (Duo inner display and
+    /// `isSplit(for:)`); nil = centred in the container with `DuoGeometry.foldBandWidth`.
     public var centreGap: CentreGap?
+    /// Per-orientation split flag (pinch toggle, remembered by the host). Only honoured on the Duo inner display.
+    public var splitPortrait: Bool
+    public var splitLandscape: Bool
+    /// Laptop pose "fill to fold" mode; the host sets it while the height is snapped. Duo inner landscape only;
+    /// wins over split.
+    public var fillToFold: Bool
 
     public init(
         numberRow: Bool = false,
         heightScale: CGFloat = 1,
         punctuationKeys: Bool = false,
         currency: CurrencySymbols = .usd,
-        centreGap: CentreGap? = nil
+        centreGap: CentreGap? = nil,
+        splitPortrait: Bool = false,
+        splitLandscape: Bool = false,
+        fillToFold: Bool = false
     ) {
         self.numberRow = numberRow
         self.heightScale = heightScale
         self.punctuationKeys = punctuationKeys
         self.currency = currency
         self.centreGap = centreGap
+        self.splitPortrait = splitPortrait
+        self.splitLandscape = splitLandscape
+        self.fillToFold = fillToFold
     }
 
-    /// Defaults per F1/F18: number row off, except on for Duo inner portrait.
+    private enum CodingKeys: String, CodingKey {
+        case numberRow, heightScale, punctuationKeys, currency, centreGap, splitPortrait, splitLandscape, fillToFold
+    }
+
+    // Tolerant decoding: settings stored before the Duo fields existed still load.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        numberRow = try c.decode(Bool.self, forKey: .numberRow)
+        heightScale = try c.decode(CGFloat.self, forKey: .heightScale)
+        punctuationKeys = try c.decode(Bool.self, forKey: .punctuationKeys)
+        currency = try c.decode(CurrencySymbols.self, forKey: .currency)
+        centreGap = try c.decodeIfPresent(CentreGap.self, forKey: .centreGap)
+        splitPortrait = try c.decodeIfPresent(Bool.self, forKey: .splitPortrait) ?? false
+        splitLandscape = try c.decodeIfPresent(Bool.self, forKey: .splitLandscape) ?? false
+        fillToFold = try c.decodeIfPresent(Bool.self, forKey: .fillToFold) ?? false
+    }
+
+    public func isSplit(for orientation: LayoutOrientation) -> Bool {
+        orientation == .portrait ? splitPortrait : splitLandscape
+    }
+
+    /// Defaults per F1/F18/D-20: Duo inner portrait = full width with the number row on; Duo inner landscape =
+    /// split. Everything else off.
     public static func defaults(for traits: LayoutTraits) -> LayoutSettings {
-        LayoutSettings(numberRow: traits.displayClass == .duoInner && traits.orientation == .portrait)
+        let inner = traits.displayClass == .duoInner
+        return LayoutSettings(
+            numberRow: inner && traits.orientation == .portrait,
+            splitLandscape: inner
+        )
     }
 }
 

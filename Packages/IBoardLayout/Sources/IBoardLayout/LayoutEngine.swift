@@ -7,7 +7,14 @@ public struct KeyboardLayout: Sendable, Equatable {
     public let bounds: CGRect
     /// Frame of the suggestion strip (not a key; touches there are not resolved by the hit model).
     public let stripFrame: CGRect
-    /// Area the key touch regions tile: `bounds` below the strip.
+    /// Suggestion strip pieces: one (== `stripFrame`) normally, two around the fold in split mode. Strip controls
+    /// must live inside these, never in `foldBand`.
+    public let stripSegments: [CGRect]
+    /// Full-height band no key cap or strip control enters (split mode only; touch regions still cross it).
+    public let foldBand: CGRect?
+    /// Laptop "fill to fold": frame reserved for the arrow/edit column (keys for it are not defined yet).
+    public let auxiliaryColumn: CGRect?
+    /// Area the key touch regions tile: `bounds` below the strip (minus the auxiliary column in fill-to-fold mode).
     public let keyArea: CGRect
     public let keys: [KeyboardKey]
     public let metrics: LayoutMetrics
@@ -55,20 +62,41 @@ public enum LayoutEngine {
         kind: LayoutKind,
         settings: LayoutSettings = LayoutSettings()
     ) -> KeyboardLayout {
-        // `settings.centreGap` is the D-20 seam: deliberately ignored for now.
         let m = LayoutMetrics.resolve(
             containerSize: containerSize, safeArea: safeArea, traits: traits, kind: kind, settings: settings
         )
+        let settings = LayoutMetrics.effectiveSettings(settings, mode: m.mode)
         let bounds = CGRect(origin: .zero, size: containerSize)
         let strip = CGRect(x: 0, y: 0, width: containerSize.width, height: m.stripHeight)
+        var keyAreaWidth = containerSize.width
+        var aux: CGRect?
+        if m.mode == .fillToFold {
+            keyAreaWidth = m.auxColumnMinX
+            aux = CGRect(
+                x: m.auxColumnMinX, y: m.stripHeight + m.topGap, width: m.auxColumnWidth,
+                height: max(containerSize.height - m.bottomInset - m.stripHeight - m.topGap, 0)
+            )
+        }
         let keyArea = CGRect(
-            x: 0, y: m.stripHeight, width: containerSize.width,
+            x: 0, y: m.stripHeight, width: keyAreaWidth,
             height: max(containerSize.height - m.stripHeight, 0)
         )
+        var band: CGRect?
+        var stripSegments = [strip]
+        if case .split(let gap) = m.mode {
+            let b = CGRect(x: gap.centerX - gap.width / 2, y: 0, width: gap.width, height: containerSize.height)
+            band = b
+            stripSegments = [
+                CGRect(x: 0, y: 0, width: b.minX, height: m.stripHeight),
+                CGRect(x: b.maxX, y: 0, width: containerSize.width - b.maxX, height: m.stripHeight),
+            ]
+        }
 
         var placer = Placer(metrics: m, firstRowY: m.stripHeight + m.topGap)
         if kind.isPad {
             placer.buildPad(kind: kind, traits: traits)
+        } else if case .split = m.mode {
+            placer.buildSplit(kind: kind, traits: traits, settings: settings)
         } else {
             placer.buildLetters(kind: kind, traits: traits, settings: settings)
         }
@@ -80,7 +108,8 @@ public enum LayoutEngine {
             KeyboardKey(id: i, identity: p.identity, frame: p.frame, touchRegion: regions[i], row: p.row)
         }
         return KeyboardLayout(
-            kind: kind, traits: traits, bounds: bounds, stripFrame: strip, keyArea: keyArea,
+            kind: kind, traits: traits, bounds: bounds, stripFrame: strip, stripSegments: stripSegments,
+            foldBand: band, auxiliaryColumn: aux, keyArea: keyArea,
             keys: keys, metrics: m, hitModel: hit
         )
     }
@@ -91,7 +120,8 @@ public enum LayoutEngine {
     /// body height (everything below the strip) x width growth x display factor x `settings.heightScale`.
     /// - Width growth (phones): 1 + 0.25 x (clamp(width, 390, 440) / 390 - 1), ESTIMATED from the small native
     ///   height increase on larger iPhones.
-    /// - Display factor: Duo outer 0.9 ("lower default height ratio", ESTIMATED), everything else 1.
+    /// - Display factor: Duo outer portrait 0.88 ("lower default height ratio", ESTIMATED), everything else 1.
+    /// - Laptop "fill to fold" height is not a function of width: the host uses `DuoGeometry.fillToFoldHeight`.
     public static func preferredHeight(
         width: CGFloat,
         safeArea: LayoutInsets = .zero,
@@ -100,11 +130,17 @@ public enum LayoutEngine {
         settings: LayoutSettings = LayoutSettings()
     ) -> CGFloat {
         let ref = LayoutMetrics.reference(kind: kind, orientation: traits.orientation)
-        let body = ref.body(rows: LayoutMetrics.rowCount(kind: kind, settings: settings))
+        let mode = LayoutMetrics.duoMode(
+            containerSize: CGSize(width: width, height: 0), traits: traits, kind: kind, settings: settings
+        )
+        let body = ref.body(rows: LayoutMetrics.rowCount(
+            kind: kind, settings: LayoutMetrics.effectiveSettings(settings, mode: mode)
+        ))
         let growth: CGFloat = traits.displayClass == .phone
             ? 1 + 0.25 * (min(max(width, 390), 440) / 390 - 1)
             : 1
-        let factor: CGFloat = traits.displayClass == .duoOuter ? 0.9 : 1
+        let factor: CGFloat = traits.displayClass == .duoOuter && traits.orientation == .portrait
+            ? LayoutMetrics.duoOuterHeightFactorPortrait : 1
         return ref.stripHeight + body * growth * factor * settings.heightScale + safeArea.bottom
     }
 }
@@ -230,6 +266,110 @@ private struct Placer {
             add(.space, x: midLeft, w: midRight - midLeft, row: row)
         }
         add(.returnKey(traits.returnKey), x: returnX, w: sideW, row: row)
+    }
+
+    // MARK: Split (Duo inner)
+
+    private struct SItem {
+        var id: KeyIdentity
+        /// nil = flexible: shares the half's leftover width.
+        var width: CGFloat?
+    }
+
+    /// Place one row as two halves. `left` / `right` are in reading order; identities are appended left half first,
+    /// so the overall key order equals the non-split layout's (the swipe decoder and touch model rely on it).
+    private mutating func addSplitRow(left: [SItem], right: [SItem], row: Int) {
+        func place(_ items: [SItem], from lo: CGFloat, to hi: CGFloat, hugsHi: Bool) {
+            guard !items.isEmpty else { return }
+            let g = m.columnGap
+            let fixedSum = items.reduce(CGFloat(0)) { $0 + ($1.width ?? 0) }
+            let flexCount = items.filter { $0.width == nil }.count
+            let gaps = CGFloat(items.count - 1) * g
+            let flexW = flexCount > 0 ? max(hi - lo - fixedSum - gaps, 0) / CGFloat(flexCount) : 0
+            let total = fixedSum + gaps + flexW * CGFloat(flexCount)
+            // A row without flexible keys is aligned to the fold side of its half.
+            var x = (flexCount == 0 && hugsHi) ? hi - total : lo
+            for it in items {
+                let w = it.width ?? flexW
+                add(it.id, x: x, w: w, row: row)
+                x += w + g
+            }
+        }
+        place(left, from: m.splitLeftMinX, to: m.splitLeftMaxX, hugsHi: true)
+        place(right, from: m.splitRightMinX, to: m.splitRightMaxX, hugsHi: false)
+    }
+
+    private func fixedKeys(_ ids: [KeyIdentity]) -> [SItem] { ids.map { SItem(id: $0, width: m.keyWidth) } }
+
+    mutating func buildSplit(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings) {
+        var row = 0
+        func flex(_ id: KeyIdentity) -> SItem { SItem(id: id, width: nil) }
+        func halves(_ ids: [KeyIdentity], _ n: Int) -> ([SItem], [SItem]) {
+            (fixedKeys(Array(ids[0..<n])), fixedKeys(Array(ids[n...])))
+        }
+        switch kind {
+        case .letters:
+            if settings.numberRow {
+                let (l, r) = halves(Self.symbols(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]), 5)
+                addSplitRow(left: l, right: r, row: row); row += 1
+            }
+            let l1 = Self.letters("qwertyuiop"), l2 = Self.letters("asdfghjkl"), l3 = Self.letters("zxcvbnm")
+            let (a1, b1) = halves(l1, 5)
+            addSplitRow(left: a1, right: b1, row: row); row += 1
+            let (a2, b2) = halves(l2, 5)
+            addSplitRow(left: a2, right: b2, row: row); row += 1
+            let (a3, b3) = halves(l3, 4)
+            addSplitRow(left: [flex(.shift)] + a3, right: b3 + [flex(.delete)], row: row); row += 1
+        case .numbers, .symbols:
+            let first: [String]
+            let second: [String]
+            if kind == .numbers {
+                first = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+                second = ["-", "/", ":", ";", "(", ")", settings.currency.primary, "&", "@", "\""]
+            } else {
+                first = ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]
+                second = ["_", "\\", "|", "~", "<", ">"] + settings.currency.others + ["•"]
+            }
+            let (a1, b1) = halves(Self.symbols(first), 5)
+            addSplitRow(left: a1, right: b1, row: row); row += 1
+            let (a2, b2) = halves(Self.symbols(second), 5)
+            addSplitRow(left: a2, right: b2, row: row); row += 1
+            let (a3, b3) = halves(Self.symbols([".", ",", "?", "!", "'"]), 3)
+            addSplitRow(
+                left: [flex(.layerSwitch(kind == .numbers ? .symbols : .numbers))] + a3,
+                right: b3 + [flex(.delete)], row: row
+            ); row += 1
+        default:
+            break
+        }
+        buildSplitBottomRow(kind: kind, traits: traits, settings: settings, row: row)
+        rowCount = row + 1
+    }
+
+    /// Bottom row split. ESTIMATED arrangement: there is exactly one space key (identity unchanged), kept in the
+    /// left half; return takes the right half. 123 and globe are function-key width.
+    private mutating func buildSplitBottomRow(kind: LayoutKind, traits: LayoutTraits, settings: LayoutSettings, row: Int) {
+        let toggleTarget: LayoutKind = kind == .letters ? .numbers : .letters
+        let fw = m.functionKeyWidth
+        var left = [SItem(id: .layerSwitch(toggleTarget), width: fw)]
+        if traits.needsInputModeSwitchKey { left.append(SItem(id: .globe, width: fw)) }
+        var right: [SItem] = []
+        let ret = SItem(id: .returnKey(traits.returnKey), width: nil)
+        let isLetters = kind == .letters
+        if isLetters && traits.keyboardKind == .url {
+            left += [SItem(id: .symbol("."), width: nil), SItem(id: .symbol("/"), width: nil)]
+            right = [SItem(id: .domainSuffix(".com"), width: nil), ret]
+        } else if isLetters && traits.keyboardKind == .emailAddress {
+            left.append(SItem(id: .space, width: nil))
+            right = [SItem(id: .symbol("@"), width: m.tailKeyWidth), SItem(id: .symbol("."), width: m.tailKeyWidth), ret]
+        } else if isLetters && settings.punctuationKeys {
+            left += [SItem(id: .symbol(","), width: m.tailKeyWidth), SItem(id: .space, width: nil)]
+            right = [SItem(id: .symbol("."), width: m.tailKeyWidth), ret]
+        } else {
+            left.append(SItem(id: .space, width: nil))
+            right = [ret]
+        }
+        addSplitRow(left: left, right: right, row: row)
     }
 
     mutating func buildPad(kind: LayoutKind, traits: LayoutTraits) {
