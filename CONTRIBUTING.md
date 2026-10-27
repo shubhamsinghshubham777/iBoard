@@ -41,10 +41,34 @@ Maintainers push agent work directly to `main`; external contributors should ope
 - Keep layout size-agnostic: no `UIScreen.main`, no reliance on orientation or idiom checks.
 - Measure against the performance budgets rather than guessing.
 
-## Building
+## Building and testing
 
-See the build steps in [README.md](README.md). Per-user settings go in the untracked `Config/Local.xcconfig`.
-`project.yml` (XcodeGen) is the source of truth for the Xcode project.
+Build steps are in [README.md](README.md). Per-user settings go in the untracked `Config/Local.xcconfig`.
+`project.yml` (XcodeGen) is the source of truth for the Xcode project: after adding a source file or target, run
+`xcodegen generate` and commit the project change deliberately.
+
+Before pushing:
+
+```sh
+scripts/test.sh --packages-only   # privacy audit + swift test in every package and Tools/LexiconBuilder
+scripts/build.sh                  # app + keyboard compile for the iOS Simulator
+```
+
+- `scripts/audit-privacy.sh` fails on any new logging call, network API, analytics name, pasteboard access or
+  file/UserDefaults write in shipped code. If a change legitimately needs one, add a reviewed entry to
+  `scripts/audit-privacy.allowlist` with a reason showing no typed text is involved. It is a tripwire, not proof: the
+  hard rules above still apply.
+- Benchmark tests enforce performance budgets only in release (`swift test -c release -Xswiftc -enable-testing`);
+  debug runs report numbers. Say whether a number came from macOS, a simulator or a device, and never present a
+  simulator figure as a device figure.
+- Write tests with Swift Testing (`@Test`, `#expect`). State plainly what you did not test.
+
+## Working with coding agents
+
+Agents follow `CLAUDE.md` / `AGENTS.md`, which point at `ROADMAP.md`. When several run in parallel, each works in its
+own worktree with a disjoint file list, does not edit `ROADMAP.md` (the orchestrator records facts, risks and the
+progress log), does not commit regenerated `iBoard.xcodeproj` changes (it lists files needing `xcodegen generate`
+instead), and never touches the owner's physical device while it is being tested.
 
 ## Conduct and security
 

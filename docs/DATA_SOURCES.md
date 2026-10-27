@@ -8,6 +8,24 @@ exact version/URL/checksum and emit a licence manifest (feeds M10-05).
 Recommendation legend: **USE** (permissive, attribution only), **SIGN-OFF** (needs owner approval: CC BY-SA,
 non-commercial, research-only, or unclear), **AVOID**.
 
+## 00. Data actually in the repository (as built, 2026-10-27)
+
+The sections below are the research shortlist. This table is what the repo really contains. Where it differs from the
+shortlist, this table wins.
+
+| Data | Where | Origin and licence | In the keyboard extension? |
+|---|---|---|---|
+| English lexicon + LM (placeholder) | `iBoardKeyboard/Resources/lexicon.iblex`, `lm.iblm` (14 KB, 1.5 KB) | 219 synthetic words and 43 phrases authored for this repo, CC0-1.0. Same files as `Packages/IBoardEngine/Tests/IBoardEngineTests/Fixtures/small`. NOT real English data | Yes (placeholder). Real English data (SCOWL, Google Books, Leipzig EN per section 5) is not built yet |
+| Engine test fixtures | `Packages/IBoardEngine/Tests/.../Fixtures/{small,bench,hinglish-small}` | Synthetic, CC0-1.0 (bench is pseudo-words, hinglish-small is 151 made-up words and 50 phrases) | No (tests only) |
+| Hinglish lexicon + LM | `Data/hinglish/lexicon.iblex` (56,235 words, 4.0 MB), `lm.iblm` (150,006 bigrams + 60,000 trigrams, 3.0 MB), `clusters.tsv` | Built by `Tools/HinglishData` + `Tools/LexiconBuilder` from Leipzig Hindi news 2019/2020 (CC BY 4.0), AI4Bharat Aksharantar Hindi pairs (CC BY / CC0; includes rows sourced from Google Dakshina, CC BY-SA 4.0) and project-authored CC0 lists. Because Dakshina rows are in the mix, the derived files are released under **CC BY-SA 4.0** (`Data/hinglish/LICENSE.md`, `licenses.json`). Raw inputs are not committed; their SHA-256 are in `provenance.json` | **Not yet** (built and engine-tested only). Bundling it means shipping a CC BY-SA 4.0 data file inside the app: the Settings > Licenses screen (M10-05) and the owner/lawyer question in section 0 apply |
+| Hinglish authored inputs | `Tools/HinglishData/data/*.tsv` | Project-authored (about 440 variant clusters, English words used in Hinglish, mixed phrases), CC0-1.0 | No (build inputs) |
+| Emoji catalog | `Packages/IBoardEmoji/Sources/IBoardEmoji/Resources/emoji.json` (about 0.43 MB; 1,923 base emoji, 9 groups) | Unicode `emoji-test.txt` (Emoji 18.0) + CLDR 49 annotations en and hi via cldr-json, Unicode License v3; full text in `Packages/IBoardEmoji/LICENSE-UNICODE.txt`; details in `docs/EMOJI_DATA.md` | Yes (loaded only while the emoji panel is open) |
+| Emoji Hinglish keyword overlay | `Packages/IBoardEmoji/Tools/hinglish_overlay.json`, merged into `emoji.json` | Project-authored, Apache-2.0 | Yes (inside `emoji.json`) |
+| Evaluation corpora | none | Dakshina, Birkbeck etc. are never committed (sections 2.2, 4) | No |
+
+Everything shipped under a share-alike licence today: nothing yet (the Hinglish data is the only CC BY-SA item and is
+not bundled). Attribution texts live in `NOTICE`, `Data/hinglish/LICENSE.md`, `Packages/IBoardEmoji/LICENSE-UNICODE.txt`.
+
 ## 0. Why share-alike matters here
 
 D-02/R-06: Hinglish and many frequency lists derive from Wikipedia/subtitle text under CC BY-SA. Consequences:

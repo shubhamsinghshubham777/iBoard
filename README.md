@@ -4,8 +4,13 @@ A free, open-source (Apache-2.0), privacy-first keyboard for iOS 27 that aims to
 on day one** and then quietly become better: it learns your words and phrases, reads one-time codes, edits text with
 fluid gestures, and types Hinglish as naturally as English, all on-device.
 
-> **Status: early development.** There is no release, no App Store build and no screenshots yet. Most features below
-> are planned, not built. See [ROADMAP.md](ROADMAP.md) for what exists today.
+> **Status: early development.** There is no release, no App Store build and no screenshots yet. The keyboard
+> extension builds and runs with a native-look layout, tap decoding, autocorrect (against a tiny 219-word placeholder
+> English lexicon), a personal learning store, swipe decoding, one-time-code and personal-info chips, an emoji panel
+> and shift+space selection. Hinglish data is built and tested in the engine package but not yet bundled into the
+> keyboard, and the iPhone Duo fold layout is not wired in. Real-device behaviour is still being verified. See
+> [ROADMAP.md](ROADMAP.md) for the exact state and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits
+> together.
 
 ## Goals
 
@@ -46,23 +51,49 @@ brew install xcodegen
 cp Config/Local.xcconfig.example Config/Local.xcconfig   # ignored by version control
 # edit Config/Local.xcconfig and set DEVELOPMENT_TEAM to your Apple team ID
 xcodegen generate
-xcodebuild -project iBoard.xcodeproj -scheme iBoard -destination 'generic/platform=iOS Simulator' build
+scripts/build.sh                                         # app + keyboard, iOS Simulator
 ```
+
+`scripts/build.sh` creates `Config/Local.xcconfig` from the example if it is missing and re-runs `xcodegen` when
+`project.yml` is newer than the project. The raw equivalent is
+`xcodebuild -project iBoard.xcodeproj -scheme iBoard -destination 'generic/platform=iOS Simulator' build`.
 
 Notes:
 
-- `project.yml` is the source of truth for `iBoard.xcodeproj`; re-run `xcodegen generate` after adding targets or
-  files outside synchronized folders.
+- `project.yml` is the source of truth for `iBoard.xcodeproj`; re-run `xcodegen generate` after adding source files
+  or targets.
 - Default identifiers are `app.iBoard` (app), `app.iBoard.keyboard` (extension) and `group.app.iBoard` (App Group).
   If you cannot sign those, uncomment and change `IBOARD_BUNDLE_PREFIX` and `IBOARD_APP_GROUP` in
   `Config/Local.xcconfig`.
 - After installing, enable the keyboard in Settings > General > Keyboard > Keyboards.
 
+## Testing
+
+```sh
+scripts/test.sh                  # privacy audit + swift test (every package and Tools/LexiconBuilder) + xcodebuild tests
+scripts/test.sh --packages-only  # no simulator needed
+scripts/test.sh --xcode-only --no-ui
+scripts/audit-privacy.sh         # static check: no logging, network, analytics or stray persistence of typed text
+# enforce the performance budgets (release build):
+cd Packages/IBoardEngine && swift test -c release -Xswiftc -enable-testing --filter Benchmarks
+```
+
+Timing and benchmark tests assert the ROADMAP section 6 budgets only in optimised builds. In a debug `swift test`
+they print their numbers and never fail, because a loaded host machine is not a phone. Simulator and macOS timings are
+never device numbers.
+
 ## Repository layout
 
 - `iBoard/` companion app (SwiftUI); `iBoardKeyboard/` keyboard extension (UIKit)
-- `Packages/` Swift packages: `IBoardCore`, `IBoardEngine`, `IBoardLayout`, `IBoardOTP`, `IBoardTheme`, `IBoardUI`
-- `Config/` shared and local build settings
+- `Packages/` Swift packages, each with its own tests (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)):
+  `IBoardCore` (settings, perf signposts, app-to-keyboard commands), `IBoardLayout` (key geometry, Duo split logic),
+  `IBoardEngine` (lexicon, tap and swipe decoding, autocorrect, personal model), `IBoardUI` (UIKit keyboard views and
+  typing coordinator), `IBoardOTP`, `IBoardTheme`, `IBoardEmoji`, `IBoardSync` (iCloud merge model only, not linked)
+- `Tools/` `LexiconBuilder` (binary lexicon and LM builder), `HinglishData` (Hinglish data pipeline)
+- `Data/hinglish/` built Hinglish lexicon and LM (CC BY-SA 4.0)
+- `Config/` shared and local build settings; `project.yml` is the XcodeGen spec
+- `scripts/` `build.sh`, `test.sh`, `audit-privacy.sh`, `bootstrap-agent-skills.sh`
+- `docs/` design notes, measured platform facts, data sources
 - [ROADMAP.md](ROADMAP.md) plan, locked decisions, performance budgets and progress log
 
 ## Contributing
