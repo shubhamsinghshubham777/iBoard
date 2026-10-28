@@ -104,13 +104,13 @@ struct GestureArbiterTests {
         #expect(arb.end(at: g, time: 0.449) == .tap)
     }
 
-    @Test func flickUpAndDown() {
+    @Test func flickUpOnlyAndDownwardRollIsATap() {
         let kh = r.keyHeight
         // Up and down by 0.5 key height: stays inside the neighbour boundary for the vertical hit test.
         let up = r.line(from: g, to: CGPoint(x: g.x + 2, y: g.y - kh * 0.6), duration: 0.12, steps: 6)
         #expect(r.run(up).final == .flickUp)
         let down = r.line(from: g, to: CGPoint(x: g.x - 2, y: g.y + kh * 0.6), duration: 0.12, steps: 6)
-        #expect(r.run(down).final == .flickDown)
+        #expect(r.run(down).final == .tap) // a fast tap rolls down the key: never a down-flick
     }
 
     @Test func flickThatCrossesAKeyIsAFlickUnlessItFormsAWord() {

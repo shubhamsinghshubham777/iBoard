@@ -141,9 +141,11 @@ public struct GestureArbiter: Sendable {
             return d
         }
         guard start == .letter else { return .tap }
-        if looksLikeFlick(at: p, time: time), abs(p.y - origin.y) >= thresholds.tapMovement {
+        // Only UP flicks exist. A fast tap rolls the fingertip DOWN the key by 10-30 pt in ~100 ms (measured on the
+        // owner's iPhone 12), which as a down-flick typed the key's first accent ('i' became 'i-circumflex').
+        if looksLikeFlick(at: p, time: time), abs(p.y - origin.y) >= thresholds.tapMovement, p.y < origin.y {
             if hasCrossed, likelyWord { return .swipeTyping }
-            return p.y < origin.y ? .flickUp : .flickDown
+            return .flickUp
         }
         if hasCrossed, maxRadius >= thresholds.tapMovement { return .swipeTyping }
         return .tap
