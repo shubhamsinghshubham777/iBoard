@@ -156,6 +156,7 @@
 		A79FA046627E67810DEBBE9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A81A27A8EC462F171D099FC8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AD8E14DD110A1757B0DA4DC2 /* iBoardUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4E0B367CC72E37D2914030E /* URLTypes.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = URLTypes.plist; sourceTree = "<group>"; };
 		B9ECAB65BC0422F84297743E /* iBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iBoardTests.swift; sourceTree = "<group>"; };
 		BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSettingsHost.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
@@ -242,6 +243,7 @@
 				E50C8FEC837C260E09B7CB1C /* SyncSettingsView.swift */,
 				CA1844700032908B476959FE /* ThemePreviewView.swift */,
 				CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */,
+				B4E0B367CC72E37D2914030E /* URLTypes.plist */,
 				546572152E5925D9E25ACC19 /* Intents */,
 				A5973276CAD7B711256E925C /* TraceRecorder */,
 			);
@@ -644,6 +646,7 @@
 				CODE_SIGN_ENTITLEMENTS = iBoard/iBoard.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iBoard/URLTypes.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -767,6 +770,7 @@
 				CODE_SIGN_ENTITLEMENTS = iBoard/iBoard.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iBoard/URLTypes.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = iBoard;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
