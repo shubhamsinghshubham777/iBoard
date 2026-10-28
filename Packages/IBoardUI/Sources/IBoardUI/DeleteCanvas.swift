@@ -19,6 +19,12 @@ public struct DeleteCanvasModel: Sendable, Equatable {
     public static let proxyContextCap = 500
 
     public static func make(base: String, plan: BackspaceSwipePlan) -> DeleteCanvasModel {
+        if plan.characters {
+            // Masked field: show only dots, never the (unreadable, private) text.
+            let n = plan.graphemes
+            return DeleteCanvasModel(kept: "", doomed: String(repeating: "\u{2022}", count: min(n, 40)),
+                                     caption: n == 1 ? "Delete 1 character" : "Delete \(n) characters", contextLimited: false)
+        }
         if base.isEmpty {
             return DeleteCanvasModel(kept: "", doomed: "", caption: "No preview in this field", contextLimited: false)
         }

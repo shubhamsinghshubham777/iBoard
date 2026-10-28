@@ -101,8 +101,20 @@ public struct BackspaceSwipePlan: Sendable, Equatable {
     /// What will be deleted, for the strip preview (in memory only).
     public var preview: String
 
-    public init(words: Int, graphemes: Int, preview: String) {
-        self.words = words; self.graphemes = graphemes; self.preview = preview
+    /// Secure (password) fields: the text is not visible to the keyboard, so the drag deletes single characters.
+    public var characters: Bool
+
+    public init(words: Int, graphemes: Int, preview: String, characters: Bool = false) {
+        self.words = words; self.graphemes = graphemes; self.preview = preview; self.characters = characters
+    }
+
+    /// Extra drag per additional character in a secure field (pt).
+    public static let characterStep: CGFloat = 14
+
+    /// Plan for a field whose text cannot be read: one character, plus one per `characterStep` of drag.
+    public static func characterPlan(extraDistance distance: CGFloat) -> BackspaceSwipePlan {
+        let n = 1 + Int(max(0, distance) / characterStep)
+        return BackspaceSwipePlan(words: 0, graphemes: n, preview: "", characters: true)
     }
 
     /// `distance`: leftwards travel beyond the start threshold (pt), >= 0.

@@ -56,4 +56,13 @@ final class DeleteCanvasTests: XCTestCase {
         let short = DeleteCanvasModel.make(base: "hi there", plan: BackspaceSwipePlan.plan(before: "hi there", extraDistance: 99))
         XCTAssertFalse(short.contextLimited)
     }
+
+    func testSecureFieldDeletesByCharacterAndShowsOnlyDots() {
+        XCTAssertEqual(BackspaceSwipePlan.characterPlan(extraDistance: 0).graphemes, 1)
+        XCTAssertEqual(BackspaceSwipePlan.characterPlan(extraDistance: 14 * 4 + 1).graphemes, 5)
+        let m = DeleteCanvasModel.make(base: "", plan: BackspaceSwipePlan.characterPlan(extraDistance: 30))
+        XCTAssertEqual(m.caption, "Delete 3 characters")
+        XCTAssertEqual(m.doomed, "\u{2022}\u{2022}\u{2022}")
+        XCTAssertTrue(m.kept.isEmpty)
+    }
 }

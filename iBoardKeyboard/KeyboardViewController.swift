@@ -1496,13 +1496,16 @@ final class KeyboardViewController: UIInputViewController {
             emoji.setQuery(String(base.dropLast(plan.graphemes)))
             return
         }
-        if deleteBaseContext == nil { deleteBaseContext = coordinator.contextBeforeForPreview }
-        let base = deleteBaseContext ?? ""
-        let plan = BackspaceSwipePlan.plan(before: base, extraDistance: extra)
+        // Password fields: the text is masked and unreadable, so delete by character, counted from the drag distance.
+        let secure = textDocumentProxy.isSecureTextEntry ?? false
+        if !secure, deleteBaseContext == nil { deleteBaseContext = coordinator.contextBeforeForPreview }
+        let base = secure ? "" : (deleteBaseContext ?? "")
+        let plan = secure ? BackspaceSwipePlan.characterPlan(extraDistance: extra)
+                          : BackspaceSwipePlan.plan(before: base, extraDistance: extra)
         // Dragged back to (nearly) where it started: release cancels, so the canvas goes away (no deletion shown).
         let cancelling = gestureOrigin.x - point.x < GestureThresholds().backspaceCancelWithin
         if case .deleteWords(let old) = dragMode, old == plan, cancelling == deleteCanvas.isHidden { return }
-        if case .deleteWords(let old) = dragMode, old.words != plan.words, plan.words > 0, !cancelling { feedback() } // tick per word
+        if case .deleteWords(let old) = dragMode, (old.words != plan.words || old.graphemes != plan.graphemes), plan.graphemes > 0, !cancelling { feedback() } // tick per word
         dragMode = .deleteWords(plan)
         if cancelling {
             deleteCanvas.hide()
