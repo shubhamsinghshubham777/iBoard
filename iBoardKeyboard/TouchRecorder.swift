@@ -48,6 +48,11 @@ final class TouchRecorder {
                               lagMs: (CACurrentMediaTime() - lastTS) * 1000))
     }
 
+    /// Hit test of a new touch: which view class received it (point in the input view's coordinates).
+    func hit(_ p: CGPoint, _ viewClass: String) {
+        append(TouchLogRecord(type: "hit", ts: CACurrentMediaTime(), x: p.x, y: p.y, kind: viewClass))
+    }
+
     private func append(_ r: TouchLogRecord) { ring.append(r); dirty = true }
 
     func flush() {

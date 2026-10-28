@@ -47,3 +47,16 @@ inserts = sum(x["n"] for x in r if x["type"] == "insert")
 print("touches %d (non-shift/other %d), inserts %d, flagged %d" % (len(touches), typing, inserts, flagged))
 alt = [x for x in r if x["type"].startswith("alt")]
 print("alternates events:", len(alt), "(any alternates during fast typing is a bug)" if alt else "")
+
+# Hit-test records (DEBUG): which view class received each NEW touch. A hit that is not KeyGridView, or a hit with no
+# matching "began", is a touch the key grid never saw.
+hits = [x for x in r if x["type"] == "hit"]
+if hits:
+    classes = {}
+    for h in hits:
+        classes[h["kind"]] = classes.get(h["kind"], 0) + 1
+    began = sum(1 for x in r if x["type"] == "began")
+    print("hit-test receivers:", classes, "| began events:", began)
+    for h in hits:
+        if h["kind"] != "KeyGridView":
+            print("  touch went to %s at (%.0f,%.0f) t=%.3f" % (h["kind"], h["x"], h["y"], h["ts"] - t0))

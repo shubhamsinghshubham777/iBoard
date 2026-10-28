@@ -133,7 +133,11 @@ final class KeyboardViewController: UIInputViewController {
 
     /// P-23: `playInputClick` only sounds when the input view adopts `UIInputViewAudioFeedback`.
     override func loadView() {
-        inputView = ClickInputView(frame: .zero, inputViewStyle: .keyboard)
+        let clickView = ClickInputView(frame: .zero, inputViewStyle: .keyboard)
+        inputView = clickView
+        #if DEBUG
+        clickView.onNewTouchHit = { [weak self] p, cls in self?.touchRecorder.hit(p, cls) }
+        #endif
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -1886,6 +1890,18 @@ extension ReturnKeyKind {
 /// `UIInputView` that opts in to input clicks so `UIDevice.playInputClick()` makes a sound.
 final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
     var enableInputClicksWhenVisible: Bool { true }
+    #if DEBUG
+    /// DEBUG touch hunt: called for every hit test of a NEW touch with the point and the class of the view that got it,
+    /// so touches that never reach the key grid show up in the touch log (class names only).
+    var onNewTouchHit: ((CGPoint, String) -> Void)?
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        if let event, event.type == .touches, event.allTouches?.contains(where: { $0.phase == .began }) == true {
+            onNewTouchHit?(point, hit.map { NSStringFromClass(type(of: $0)) } ?? "nil")
+        }
+        return hit
+    }
+    #endif
 }
 
 /// Adapts the text document proxy to the UIKit-free `TextProxy` used by `InputController`.
