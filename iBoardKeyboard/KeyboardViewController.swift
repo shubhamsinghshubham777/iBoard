@@ -195,7 +195,9 @@ final class KeyboardViewController: UIInputViewController {
         deleteCanvas.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(deleteCanvas)
         // F12: pinch toggles the Duo split for the current orientation. Must not steal or delay key touches.
-        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+        // Only enabled on the Duo inner display (see relayoutIfNeeded): a recognizer that two overlapping fast-typing
+        // fingers can feed is one more thing between the system and the keys.
+        pinch.isEnabled = false
         pinch.cancelsTouchesInView = false
         pinch.delaysTouchesBegan = false
         pinch.delaysTouchesEnded = false
@@ -1159,7 +1161,14 @@ final class KeyboardViewController: UIInputViewController {
         relayoutIfNeeded()
     }
 
+    private let pinch: UIPinchGestureRecognizer = UIPinchGestureRecognizer()
+
+    /// Claim the screen edges so the system's edge gestures do not delay or swallow the first / last key columns' touches
+    /// (Apple Developer Forums 22842: custom keyboards lose edge touches to the system gesture gate).
+    override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { .all }
+
     private func relayoutIfNeeded() {
+        pinch.isEnabled = currentTraits().displayClass == .duoInner
         let size = view.bounds.size
         guard size.width > 0, size.height > 0 else { return }
         let safe = LayoutInsets(
