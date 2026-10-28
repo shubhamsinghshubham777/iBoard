@@ -412,6 +412,22 @@ public final class TypingCoordinator {
         return layout.nearestHit(to: CGPoint(x: f.midX, y: f.midY))
     }
 
+    // MARK: Stale proxy context (P-24)
+
+    /// Our own last context-changing edit: the text before the cursor as the proxy reported it before the edit
+    /// (`base`) and what it must hold afterwards (`result`). `documentContextBefore` lags our insertions, so a fast
+    /// follow-up key that still sees `base` is given `result` instead.
+    private var recentEdit: (base: String, result: String, time: TimeInterval)?
+    private static let recentEditLifetime: TimeInterval = 1.5
+    /// A word was typed right before the pending swipe: the field ends in a letter even if the proxy has not caught up.
+    private var swipeFollowsWord = false
+
+    private func currentContext(_ edit: (base: String, result: String, time: TimeInterval)? = nil) -> String? {
+        let ctx = input.proxy.contextBefore
+        guard let e = edit ?? recentEdit, now() - e.time < Self.recentEditLifetime, (ctx ?? "") == e.base else { return ctx }
+        return e.result
+    }
+
     // MARK: Input events
 
     private static let correctingPunctuation: Set<String> = [".", ",", ";", ":", "!", "?", ")"]
@@ -422,15 +438,16 @@ public final class TypingCoordinator {
         guard !text.isEmpty else { return }
         if deferWhileSwiping({ $0.insert(text) }) { return }
         let swiped = lastSwipe
+        let prior = recentEdit
         noteTyped()
         if let swiped, SwipeSpacing.closers.contains(text) {
             // "hello " + "." -> "hello.": take the implied space back.
-            let ctx = input.proxy.contextBefore
+            let ctx = currentContext(prior)
             if ctx == nil || ctx!.hasSuffix(swiped.word + swiped.trailing) {
                 for _ in 0..<swiped.trailing.count { input.proxy.deleteBackwardOnce() }
                 autocorrectState.noteOtherInput()
                 let left = ctx.map { String($0.dropLast(swiped.trailing.count)) } ?? swiped.word
-                insertSeparatorOrSymbol(text, leftContext: left)
+                insertSeparatorOrSymbol(text, leftContext: left, prior: nil)
                 return
             }
         }
@@ -453,7 +470,7 @@ public final class TypingCoordinator {
             setContent(.empty)
             return
         }
-        insertSeparatorOrSymbol(text)
+        insertSeparatorOrSymbol(text, prior: prior)
     }
 
     /// The word being typed right now (empty after a separator or while a swipe is pending). Memory only.
@@ -487,9 +504,11 @@ public final class TypingCoordinator {
         input.insert(text)
     }
 
-    private func insertSeparatorOrSymbol(_ text: String, leftContext: String? = nil) {
+    private func insertSeparatorOrSymbol(_ text: String, leftContext: String? = nil,
+                                         prior: (base: String, result: String, time: TimeInterval)?) {
         let token = tokenPrefix + word
-        var lc = leftContext ?? input.proxy.contextBefore ?? ""
+        let rawBefore = input.proxy.contextBefore ?? ""
+        var lc = leftContext ?? currentContext(prior) ?? ""
         if !token.isEmpty, !lc.hasSuffix(token) { lc = token }
         let e = SmartPunctuation.edit(forInserting: text, leftContext: lc, traits: config.punctuation)
         var deleteCount = e.deleteBackward
@@ -508,6 +527,7 @@ public final class TypingCoordinator {
         }
         for _ in 0..<deleteCount { input.proxy.deleteBackwardOnce() }
         input.insert(insertText)
+        recentEdit = (rawBefore, String(lc.dropLast(deleteCount)) + insertText, now())
 
         if let original {
             autocorrectState.recordApplied(original: original, corrected: committed, trailing: e.insert, at: now())
@@ -543,10 +563,12 @@ public final class TypingCoordinator {
 
     public func deleteBackward() {
         if deferWhileSwiping({ $0.deleteBackward() }) { return }
+        let ctxNow = currentContext()
+        recentEdit = nil
         if let swiped = lastSwipe {
             lastSwipe = nil
             swipeStripShown = false
-            let ctx = input.proxy.contextBefore
+            let ctx = ctxNow
             let text = swiped.word + swiped.trailing
             if ctx == nil || ctx!.hasSuffix(text) {
                 // Backspace right after a swipe deletes the whole word (F3).
@@ -811,7 +833,10 @@ public final class TypingCoordinator {
         }
         earlySwipe = nil
         if deferWhileSwiping({ $0.swipeEnded(points: points, shift: shift) }) { return }
+        let priorEdit = recentEdit
         noteTyped(clearingSwipe: false)
+        if !(tokenPrefix + word).isEmpty { swipeFollowsWord = true }
+        recentEdit = priorEdit // the proxy may still lag the keys typed before the swipe
         autocorrectState.noteOtherInput()
         endWordLiterally()
         swipePending = true
@@ -823,6 +848,8 @@ public final class TypingCoordinator {
     }
 
     private func applySwipe(_ outcome: SwipeOutcome?, shift: ShiftState) {
+        let followsWord = swipeFollowsWord
+        swipeFollowsWord = false
         defer {
             swipePending = false
             let ops = deferredInput
@@ -834,8 +861,11 @@ public final class TypingCoordinator {
         let words = outcome.words.prefix(3).map { SwipeSpacing.cased($0, shift: shift) }
         let best = words[0]
         // After another swipe the field already ends with the implied space (the proxy may lag a run-loop turn).
-        let lead = lastSwipe != nil ? "" : (SwipeSpacing.needsSpace(before: input.proxy.contextBefore) ? " " : "")
+        let rawBefore = input.proxy.contextBefore ?? ""
+        let before = currentContext()
+        let lead = lastSwipe != nil ? "" : ((followsWord || SwipeSpacing.needsSpace(before: before)) ? " " : "")
         input.insert(lead + best + " ")
+        recentEdit = (rawBefore, (before ?? "") + lead + best + " ", now())
         autocorrectState.noteOtherInput()
         commit(best, source: .swipe)
         prevWords = Array((prevWords + [best.lowercased()]).suffix(2))
@@ -856,7 +886,8 @@ public final class TypingCoordinator {
 
     /// A tap on a swipe alternative: the word just inserted is replaced (F3 re-pick).
     private func repick(_ text: String, replacing swiped: (word: String, trailing: String)) {
-        let ctx = input.proxy.contextBefore
+        let ctx = currentContext()
+        recentEdit = nil
         let old = swiped.word + swiped.trailing
         lastSwipe = nil
         swipeStripShown = false
@@ -946,6 +977,7 @@ public final class TypingCoordinator {
     // MARK: Learner helpers
 
     private func noteTyped(clearingSwipe: Bool = true) {
+        recentEdit = nil
         if clearingSwipe {
             lastSwipe = nil
             swipeStripShown = false
@@ -1104,6 +1136,8 @@ public final class TypingCoordinator {
 
     /// Shift state for the text before the cursor (abbreviation-aware).
     public func autoShift(context: String?) -> ShiftState {
+        // A proxy that still reports the text from before our last edit would auto-capitalise from stale text.
+        let context = recentEdit.flatMap { e in (context ?? "") == e.base ? currentContext() : nil } ?? context
         switch config.punctuation.autocapitalization {
         case .none: return .off
         case .allCharacters: return .capsLock
