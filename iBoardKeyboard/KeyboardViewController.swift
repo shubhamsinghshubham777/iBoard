@@ -1779,6 +1779,9 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func tickRepeat() {
+        // A tick that runs late means the main thread was busy, so touch events (a lift that ends a tap) may still be
+        // queued. Skip it; the next on-time tick fires long presses and repeats, judged by touch timestamps.
+        if let link = repeatLink, CACurrentMediaTime() - link.timestamp > 0.06 { updateRepeatTimer(); return }
         let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
         machine?.tick(now: ProcessInfo.processInfo.systemUptime, emit: sink)
         updateRepeatTimer()

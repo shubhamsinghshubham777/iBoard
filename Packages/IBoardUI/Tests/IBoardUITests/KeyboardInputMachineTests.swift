@@ -429,3 +429,39 @@ private func mergedLayout() -> KeyboardLayout {
     d.tick(0.85)
     #expect(d.sink.events.contains(.openEmoji))
 }
+
+// Fast typing: the display-link tick can run late (main thread busy) before a queued touch-up is processed. A touch
+// that was lifted before the long-press delay is still a tap, never an alternate.
+@Test func lateTickDoesNotTurnAFastTapIntoALongPress() {
+    var d = Driver()
+    d.m.longPressDelay = 0.45
+    d.down(1, .letter("i"), t: 0)
+    d.tick(0.6)            // stalled: the tick sees the key as held 0.6 s although the finger left at 0.1 s
+    d.up(1, t: 0.1)        // the queued lift is processed afterwards, with its true timestamp
+    #expect(d.sink.inserts == ["i"])
+    #expect(!d.sink.events.contains { if case .alternatesEnded = $0 { true } else { false } })
+    #expect(d.m.activeTouchCount == 0)
+}
+
+@Test func genuineLongPressStillWinsWhenLiftedAfterTheDelay() {
+    var d = Driver()
+    d.m.longPressDelay = 0.45
+    d.down(1, .letter("i"), t: 0)
+    d.tick(0.5)
+    d.up(1, t: 0.7)
+    #expect(d.sink.inserts.isEmpty)
+    #expect(d.sink.events.contains { if case .alternatesEnded = $0 { true } else { false } })
+}
+
+@Test func lateTickDuringRolloverKeepsEveryKeyAsATap() {
+    var d = Driver()
+    d.m.longPressDelay = 0.45
+    d.down(1, .letter("y"), t: 0)
+    d.down(2, .letter("p"), t: 0.05)
+    d.up(1, t: 0.09)
+    d.down(3, .letter("i"), t: 0.12)
+    d.tick(0.7)
+    d.up(2, t: 0.15)
+    d.up(3, t: 0.2)
+    #expect(d.sink.inserts == ["y", "p", "i"])
+}

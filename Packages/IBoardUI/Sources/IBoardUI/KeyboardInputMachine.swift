@@ -77,6 +77,10 @@ public struct KeyboardInputMachine: Sendable {
         /// When the long press fires (infinity: this key has no alternates / already fired).
         var longPressAt: TimeInterval = .infinity
         var isAlternates = false
+        /// The key and event-time deadline of a long press that fired, so a lift stamped before the deadline (the
+        /// tick ran late, the lift was still queued) is undone and handled as the tap it was.
+        var firedKey = -1
+        var firedDeadline: TimeInterval = .infinity
         /// This touch is on the shift key (see `isShiftHeld`).
         var isShiftKey = false
         /// The layer this touch left when it pressed 123 / ABC / #+=: lifting on another key types it and returns
@@ -183,6 +187,15 @@ public struct KeyboardInputMachine: Sendable {
         guard let i = slotIndex(for: id) else { return }
         if slots[i].isAlternates {
             slots[i].isAlternates = false
+            if time < slots[i].firedDeadline, slots[i].firedKey >= 0 {
+                // Lifted before the hold time: a fast tap whose long press fired from a late tick.
+                emit(.alternatesCancelled)
+                let identity = layout.keys[slots[i].firedKey].identity
+                slots[i].firedKey = -1
+                perform(identity: identity, slot: i, time: time, emit: emit)
+                release(slot: i, emit: emit)
+                return
+            }
             emit(.alternatesEnded(point ?? .zero))
             release(slot: i, emit: emit)
             return
@@ -223,6 +236,7 @@ public struct KeyboardInputMachine: Sendable {
     public mutating func tick(now: TimeInterval, emit: (KeyEvent) -> Void) {
         for i in 0..<slots.count where slots[i].isActive && !slots[i].isCommitted && now >= slots[i].longPressAt {
             let k = slots[i].keyIndex
+            slots[i].firedDeadline = slots[i].longPressAt
             slots[i].longPressAt = .infinity
             guard k >= 0 else { continue }
             slots[i].isCommitted = true
@@ -234,6 +248,7 @@ public struct KeyboardInputMachine: Sendable {
                 continue
             }
             slots[i].isAlternates = true
+            slots[i].firedKey = k
             emit(.highlight(keyIndex: k, isOn: false))
             slots[i].keyIndex = -1
             emit(.alternatesBegan(keyIndex: k))
@@ -267,6 +282,8 @@ public struct KeyboardInputMachine: Sendable {
         if deleteTouchID == slots[i].touchID { deleteTouchID = -1 }
         slots[i].isActive = false
         slots[i].isAlternates = false
+        slots[i].firedKey = -1
+        slots[i].firedDeadline = .infinity
         slots[i].isShiftKey = false
         slots[i].slideFrom = nil
         slots[i].longPressAt = .infinity
