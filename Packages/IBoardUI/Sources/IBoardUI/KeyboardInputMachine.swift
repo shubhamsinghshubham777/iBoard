@@ -101,6 +101,11 @@ public struct KeyboardInputMachine: Sendable {
 
     private var slots = [Slot](repeating: Slot(), count: KeyboardInputMachine.maxTouches)
     private var orderCounter: UInt64 = 0
+    /// Time of the previous `tick` while a long press was pending. A gap longer than `stallGap` means the host's main
+    /// thread was blocked, so touch events (a lift that ends a tap) may still be queued: the long press waits.
+    private var lastPulse: TimeInterval?
+    public static let stallGap: TimeInterval = 0.12
+    public static let stallRecheck: TimeInterval = 0.05
     private var lastShiftTap: TimeInterval = -.infinity
 
     private var deleteTouchID = -1
@@ -241,6 +246,16 @@ public struct KeyboardInputMachine: Sendable {
 
     /// Run delete repeat. Cheap when nothing repeats.
     public mutating func tick(now: TimeInterval, emit: (KeyEvent) -> Void) {
+        let stalled: Bool
+        if let last = lastPulse, now - last > Self.stallGap { stalled = true } else { stalled = false }
+        var pending = false
+        for i in 0..<slots.count where slots[i].isActive && !slots[i].isCommitted && slots[i].longPressAt < .infinity { pending = true }
+        lastPulse = pending ? now : nil
+        if stalled {
+            for i in 0..<slots.count where slots[i].isActive && !slots[i].isCommitted && now >= slots[i].longPressAt {
+                slots[i].longPressAt = now + Self.stallRecheck
+            }
+        }
         for i in 0..<slots.count where slots[i].isActive && !slots[i].isCommitted && now >= slots[i].longPressAt {
             let k = slots[i].keyIndex
             slots[i].firedDeadline = slots[i].longPressAt

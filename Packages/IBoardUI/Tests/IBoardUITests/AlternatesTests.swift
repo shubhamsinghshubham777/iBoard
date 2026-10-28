@@ -132,3 +132,17 @@ private final class Sink {
     #expect(KeyAlternates.longPressOptions(for: .emoji, clipboardEntry: true) == [KeyAlternates.clipboardGlyph, KeyAlternates.settingsGlyph])
     #expect(KeyFlick.text(for: .emoji, direction: .down, uppercase: false) == nil)
 }
+
+@Test func releaseThatNeverLeftTheOriginKeyInsertsTheKeysOwnLetter() {
+    let origin = CGRect(x: 100, y: 100, width: 36, height: 42)
+    var sel = AlternatesSelection(options: ["î", "ì"], stripFrame: CGRect(x: 0, y: 0, width: 390, height: 44),
+                                  originRegion: origin, originText: "i")
+    #expect(sel.end(at: CGPoint(x: origin.midX, y: origin.midY)) == "i")
+}
+
+@Test func releaseOverTheStripStillPicksTheAccent() {
+    let origin = CGRect(x: 100, y: 100, width: 36, height: 42)
+    var sel = AlternatesSelection(options: ["î", "ì"], stripFrame: CGRect(x: 0, y: 0, width: 390, height: 44),
+                                  originRegion: origin, originText: "i")
+    #expect(sel.end(at: CGPoint(x: 160, y: 20)) == "î")
+}

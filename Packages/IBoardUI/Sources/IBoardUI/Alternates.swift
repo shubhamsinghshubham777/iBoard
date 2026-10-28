@@ -99,13 +99,18 @@ public struct AlternatesSelection: Sendable, Equatable {
     public let originRegion: CGRect
     public private(set) var highlighted: Int?
     private var hasLeftOrigin = false
+    private var enteredStrip = false
     /// One action option (the comma / emoji key's emoji popup): stays selected over the popup cell and the key it came
     /// from, and dragging anywhere else cancels, so releasing there does nothing.
     public let cancelsWhenDraggedAway: Bool
+    /// The key's own character: a release that never left the origin key inserts this, never an accent or nothing.
+    public let originText: String?
 
     public static let maxCellWidth: CGFloat = 44
 
-    public init(options: [String], stripFrame: CGRect, originRegion: CGRect, cancelsWhenDraggedAway: Bool = false) {
+    public init(options: [String], stripFrame: CGRect, originRegion: CGRect, cancelsWhenDraggedAway: Bool = false,
+                originText: String? = nil) {
+        self.originText = originText
         self.cancelsWhenDraggedAway = cancelsWhenDraggedAway
         self.options = options
         self.stripFrame = stripFrame
@@ -135,6 +140,7 @@ public struct AlternatesSelection: Sendable, Equatable {
         if p.y < stripFrame.maxY {
             // Over (or above) the strip: pick the cell by x, clamped to the row ends.
             hasLeftOrigin = true
+            enteredStrip = true
             let i = Int(((p.x - rowFrame.minX) / cellWidth).rounded(.down))
             highlighted = min(max(i, 0), options.count - 1)
         } else if originRegion.contains(p) {
@@ -147,6 +153,7 @@ public struct AlternatesSelection: Sendable, Equatable {
     /// The text to insert on release, or nil when cancelled.
     public mutating func end(at p: CGPoint) -> String? {
         move(to: p)
+        if let t = originText, !cancelsWhenDraggedAway, !enteredStrip, !(hasLeftOrigin && highlighted == nil) { return t }
         guard let h = highlighted, h < options.count else { return nil }
         return options[h]
     }
