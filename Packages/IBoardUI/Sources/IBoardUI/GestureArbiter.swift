@@ -57,6 +57,10 @@ public struct GestureThresholds: Sendable, Equatable {
     public var spacebarDragStart: CGFloat = 12
     /// Backspace drag to the left that starts the word-delete preview (pt).
     public var backspaceDragStart: CGFloat = 20
+    /// A touch that crossed into another key is swipe typing only when it is deliberate: held at least this long (s) or
+    /// travelled at least `swipeMinKeyHeights` key heights. A fast tap that drifts onto a neighbour is still a tap.
+    public var swipeMinDuration: TimeInterval = 0.18
+    public var swipeMinKeyHeights: CGFloat = 1.1
     /// Backspace: at release, a finger less than this far left of the start (it was dragged back right) cancels.
     public var backspaceCancelWithin: CGFloat = 10
 
@@ -106,7 +110,7 @@ public struct GestureArbiter: Sendable {
             if crossedKeys { hasCrossed = true }
             // Crossing a key is swipe typing, unless the whole touch still looks like a short vertical flick: then
             // the decision waits for the lift (a likely word wins) or for the flick window to close.
-            if hasCrossed, maxRadius >= thresholds.tapMovement, !looksLikeFlick(at: p, time: time) { return decide(.swipeTyping) }
+            if hasCrossed, maxRadius >= thresholds.tapMovement, isDeliberate(time: time), !looksLikeFlick(at: p, time: time) { return decide(.swipeTyping) }
             return nil
         case .space:
             if maxRadius > thresholds.spacebarDragStart { return decide(shiftArmed ? .spacebarSelection : .spacebarCursor) }
@@ -147,11 +151,17 @@ public struct GestureArbiter: Sendable {
             if hasCrossed, likelyWord { return .swipeTyping }
             return .flickUp
         }
-        if hasCrossed, maxRadius >= thresholds.tapMovement { return .swipeTyping }
+        if hasCrossed, maxRadius >= thresholds.tapMovement, isDeliberate(time: time) { return .swipeTyping }
         return .tap
     }
 
     // MARK: Rules
+
+    /// Long enough or far enough to be a swipe rather than a sloppy fast tap (measured: fast taps last 33-99 ms and
+    /// roll or drift 10-30 pt onto the neighbouring key).
+    private func isDeliberate(time: TimeInterval) -> Bool {
+        time - t0 >= thresholds.swipeMinDuration || maxRadius >= thresholds.swipeMinKeyHeights * keyHeight
+    }
 
     private mutating func decide(_ g: Gesture) -> Gesture {
         decided = g

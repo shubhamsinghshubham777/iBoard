@@ -68,6 +68,8 @@ public struct KeyboardInputMachine: Sendable {
     public static let doubleTapShiftWindow: TimeInterval = 0.4
     /// A finger must travel this far (pt) from touch-down before sliding onto a neighbour key retargets the press.
     public static let slideSwitchDistance: CGFloat = 10
+    /// A touch that lifts within this many seconds of going down types the key it went DOWN on, wherever it drifted.
+    public static let quickTapWindow: TimeInterval = 0.2
 
     private struct Slot: Sendable {
         var touchID = 0
@@ -87,6 +89,8 @@ public struct KeyboardInputMachine: Sendable {
         var isShiftKey = false
         /// Where the finger went down; a slide shorter than `slideSwitchDistance` keeps the key it went down on.
         var downPoint = CGPoint.zero
+        var downKey = -1
+        var downTime: TimeInterval = 0
         /// The layer this touch left when it pressed 123 / ABC / #+=: lifting on another key types it and returns
         /// there (the system keyboard's slide-from-123 gesture).
         var slideFrom: LayoutKind?
@@ -166,6 +170,8 @@ public struct KeyboardInputMachine: Sendable {
         orderCounter &+= 1
         slots[free] = Slot(touchID: id, keyIndex: hit.keyIndex, order: orderCounter, isActive: true, isCommitted: false)
         slots[free].downPoint = point
+        slots[free].downKey = hit.keyIndex
+        slots[free].downTime = time
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
         if KeyAlternates.hasLongPress(layout.keys[hit.keyIndex].identity) {
             slots[free].longPressAt = time + longPressDelay
@@ -236,6 +242,11 @@ public struct KeyboardInputMachine: Sendable {
             }
         }
         if !slots[i].isCommitted, slots[i].keyIndex >= 0 {
+            // A quick tap that drifted onto a neighbour (fingertip rolling down the key) is the key it went down on.
+            if slots[i].downKey >= 0, slots[i].keyIndex != slots[i].downKey, time - slots[i].downTime < Self.quickTapWindow {
+                emit(.highlight(keyIndex: slots[i].keyIndex, isOn: false))
+                slots[i].keyIndex = slots[i].downKey
+            }
             slots[i].isCommitted = true
             let identity = layout.keys[slots[i].keyIndex].identity
             // Highlight off first so the cap releases even if the action swaps the layer.

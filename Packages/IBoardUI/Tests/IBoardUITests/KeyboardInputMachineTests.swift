@@ -70,7 +70,7 @@ private struct Driver {
     d.down(1, .letter("q"))
     let s = d.sink
     d.m.touchMoved(id: 1, to: d.point(.letter("w"))) { s($0) }
-    d.up(1)
+    d.up(1, t: 0.6)
     #expect(d.sink.inserts == ["w"])
 }
 
@@ -79,7 +79,7 @@ private struct Driver {
     d.down(1, .letter("a"))
     let s = d.sink
     d.m.touchMoved(id: 1, to: CGPoint(x: 200, y: 500)) { s($0) } // far below the keyboard: nearest key is space
-    d.up(1)
+    d.up(1, t: 0.6)
     #expect(d.sink.inserts == [" "])
 }
 
@@ -512,4 +512,28 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     d.up(2, t: 0.15)
     d.up(3, t: 0.2)
     #expect(d.sink.inserts == ["y", "p", "i"])
+}
+
+// Real device log: a fast tap on 'i' lands near the top of the key and the fingertip rolls down onto the row below.
+@Test func quickTapThatRollsOntoTheKeyBelowTypesTheKeyItWentDownOn() {
+    var d = Driver()
+    let i = d.m.layout.firstKey(.letter("i"))!.frame
+    let down = CGPoint(x: i.midX, y: i.minY + 4)
+    let kFrame = d.m.layout.firstKey(.letter("k"))!.frame
+    let up = CGPoint(x: kFrame.midX, y: kFrame.midY)
+    let s = d.sink
+    d.m.touchDown(id: 1, at: down, time: 0) { s($0) }
+    d.m.touchMoved(id: 1, to: up) { s($0) }
+    d.m.touchUp(id: 1, at: up, time: 0.08) { s($0) }
+    #expect(d.sink.inserts == ["i"])
+}
+
+@Test func slowSlideStillTypesTheKeyUnderTheFinger() {
+    var d = Driver()
+    let q = d.m.layout.firstKey(.letter("q"))!.frame, w = d.m.layout.firstKey(.letter("w"))!.frame
+    let s = d.sink
+    d.m.touchDown(id: 1, at: CGPoint(x: q.midX, y: q.midY), time: 0) { s($0) }
+    d.m.touchMoved(id: 1, to: CGPoint(x: w.midX, y: w.midY)) { s($0) }
+    d.m.touchUp(id: 1, at: CGPoint(x: w.midX, y: w.midY), time: 0.5) { s($0) }
+    #expect(d.sink.inserts == ["w"])
 }

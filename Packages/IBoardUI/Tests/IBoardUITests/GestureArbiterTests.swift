@@ -261,6 +261,9 @@ struct GestureArbiterSwipeWordTests {
             guard let pts = TraceFixtures.swipe(w, layout: r.layout, jitter: jitter, keysPerSecond: rng.range(3, 12), rng: &rng) else { continue }
             let first = CGPoint(x: pts[0].x, y: pts[0].y)
             guard r.startKind(at: first) == .letter else { continue } // jitter pushed the start off the letters
+            // Very short, very fast "swipes" (under ~1.1 key heights in under 180 ms) are taps by design (fast-tap drift).
+            let radius = pts.map { hypot($0.x - pts[0].x, $0.y - pts[0].y) }.max() ?? 0
+            guard (pts.last!.t - pts[0].t) >= 0.18 || radius >= 1.1 * Double(r.keyHeight) else { continue }
             out.append(pts.map { Sample(x: $0.x, y: $0.y, t: $0.t) })
         }
         return out
@@ -292,5 +295,24 @@ struct GestureArbiterSwipeWordTests {
             let moved = s.map { Sample(x: $0.x - s[0].x + Double(sp.x), y: $0.y - s[0].y + Double(sp.y), t: $0.t) }
             #expect(r.run(moved).final != .swipeTyping)
         }
+    }
+}
+
+@Suite struct FastTapDriftTests {
+    @Test func fastTapThatCrossedAKeyIsATapNotASwipe() {
+        // 'i' key rolled down 25 pt onto the row below in 70 ms (real log), or drifted 16 pt sideways onto its neighbour.
+        for (dx, dy) in [(-8.0, 25.0), (-16.0, 2.0), (14.0, 3.0)] {
+            var a = GestureArbiter(start: .letter, origin: CGPoint(x: 100, y: 100), time: 0, keyHeight: 50)
+            let p = CGPoint(x: 100 + dx, y: 100 + dy)
+            #expect(a.move(to: p, time: 0.05, crossedKeys: true) == nil)
+            #expect(a.end(at: p, time: 0.08) == .tap)
+        }
+    }
+
+    @Test func deliberateSwipeStillStarts() {
+        var a = GestureArbiter(start: .letter, origin: CGPoint(x: 100, y: 100), time: 0, keyHeight: 50)
+        #expect(a.move(to: CGPoint(x: 170, y: 100), time: 0.06, crossedKeys: true) == .swipeTyping) // >1.1 key heights, fast
+        var b = GestureArbiter(start: .letter, origin: CGPoint(x: 100, y: 100), time: 0, keyHeight: 50)
+        #expect(b.move(to: CGPoint(x: 125, y: 100), time: 0.25, crossedKeys: true) == .swipeTyping) // slow
     }
 }
