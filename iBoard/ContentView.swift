@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var showOnboarding = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var section: Destination? = .home
+    @State private var showSettings = false
 
     enum Destination: String, CaseIterable, Identifiable {
         case home = "Set up", settings = "Settings", theme = "Theme studio", dictionary = "Dictionary"
@@ -31,6 +32,12 @@ struct ContentView: View {
         }
         .onAppear { if !onboardingCompleted { showOnboarding = true } }
         .fullScreenCover(isPresented: $showOnboarding) { OnboardingView() }
+        .onOpenURL { url in // iboard://settings, from the keyboard's quick settings panel
+            guard url.scheme == "iboard", url.host == "settings" else { return }
+            showOnboarding = false
+            section = .settings
+            showSettings = true
+        }
     }
 
     private var compact: some View {
@@ -38,7 +45,7 @@ struct ContentView: View {
             List {
                 homeSections
                 Section {
-                    NavigationLink("Settings") { SettingsView() }
+                    NavigationLink("Settings", isActive: $showSettings) { SettingsView() }
                     NavigationLink("Dictionary") { DictionaryManagerView() }
                     NavigationLink("Typing insights") { InsightsView() }
                     NavigationLink("Privacy, licenses and about") { AboutView() }

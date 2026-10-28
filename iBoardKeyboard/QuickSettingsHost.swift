@@ -13,6 +13,7 @@ final class QuickSettingsHost {
     var onEdit: ((QuickSettingsEdit) -> Void)?
     var onIncognito: ((Bool) -> Void)?
     var onOpenSettings: (() -> Void)?
+    var onOpenAppSettings: (() -> Void)?
     /// The panel closed itself (Done): the controller restores the keys.
     var onClose: (() -> Void)?
 
@@ -25,6 +26,7 @@ final class QuickSettingsHost {
         p.onEdit = { [weak self] in self?.onEdit?($0) }
         p.onIncognito = { [weak self] in self?.onIncognito?($0) }
         p.onOpenSettings = { [weak self] in self?.onOpenSettings?() }
+        p.onOpenAppSettings = { [weak self] in self?.onOpenAppSettings?() }
         p.onClose = { [weak self] in self?.onClose?() }
         parent.addSubview(p)
         panel = p

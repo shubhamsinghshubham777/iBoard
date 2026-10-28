@@ -42,6 +42,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: iBoard/iBoard.entitlements
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: iBoard
+        INFOPLIST_FILE: iBoard/URLTypes.plist
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO

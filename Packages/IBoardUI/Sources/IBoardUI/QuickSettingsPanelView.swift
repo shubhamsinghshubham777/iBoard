@@ -54,6 +54,8 @@ public final class QuickSettingsPanelView: UIView {
     public var onEdit: ((QuickSettingsEdit) -> Void)?
     public var onIncognito: ((Bool) -> Void)?
     public var onOpenSettings: (() -> Void)?
+    /// Opens the iBoard app on its Settings screen (the full settings, not only these quick ones).
+    public var onOpenAppSettings: (() -> Void)?
     public var onClose: (() -> Void)?
 
     private let titleLabel = UILabel()
@@ -66,6 +68,7 @@ public final class QuickSettingsPanelView: UIView {
     private var switches: [UISwitch] = []
     private var segmented: [UISegmentedControl] = []
     private let settingsRow = UIButton(type: .system)
+    private let appSettingsRow = UIButton(type: .system)
     private let footer = UILabel()
     private let hapticSegment = UISegmentedControl(items: HapticPack.allCases.map { QuickSettingsState.hapticTitle($0) })
     private let autocorrectSegment = UISegmentedControl(items: AutocorrectLevel.allCases.map { QuickSettingsState.autocorrectTitle($0) })
@@ -112,6 +115,19 @@ public final class QuickSettingsPanelView: UIView {
         addSwitchRow("Swipe typing", swipeSwitch, #selector(swipeChanged))
         addSwitchRow("Incognito", incognitoSwitch, #selector(incognitoChanged))
         addSwitchRow("Landscape side keys", sideKeysSwitch, #selector(sideKeysChanged))
+
+        var appCfg = UIButton.Configuration.plain()
+        appCfg.image = UIImage(systemName: "slider.horizontal.3")
+        appCfg.imagePadding = 8
+        appCfg.title = "All iBoard settings"
+        appCfg.titleLineBreakMode = .byWordWrapping
+        appCfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)
+        appSettingsRow.configuration = appCfg
+        appSettingsRow.contentHorizontalAlignment = .leading
+        appSettingsRow.accessibilityLabel = "All iBoard settings"
+        appSettingsRow.accessibilityHint = "Opens the iBoard app on its Settings screen"
+        appSettingsRow.addTarget(self, action: #selector(openAppSettingsTapped), for: .touchUpInside)
+        addCard(appSettingsRow)
 
         var cfg = UIButton.Configuration.plain()
         cfg.image = UIImage(systemName: "gearshape")
@@ -234,6 +250,7 @@ public final class QuickSettingsPanelView: UIView {
         onIncognito?(incognitoSwitch.isOn)
     }
     @objc private func openSettingsTapped() { onOpenSettings?() }
+    @objc private func openAppSettingsTapped() { onOpenAppSettings?() }
     @objc private func doneTapped() { onClose?() }
 
     private func emit(_ edit: QuickSettingsEdit) {
@@ -261,6 +278,7 @@ public final class QuickSettingsPanelView: UIView {
         for s in switches { s.onTintColor = accent }
         for s in segmented { s.selectedSegmentTintColor = accent.withAlphaComponent(0.9) }
         settingsRow.tintColor = accent
+        appSettingsRow.tintColor = accent
         for s in segmented {
             s.setTitleTextAttributes([.foregroundColor: label], for: .normal)
             s.setTitleTextAttributes([.foregroundColor: UIColor(cgColor: skin.tokens.actionKeyLabel.cgColor)], for: .selected)
@@ -280,6 +298,9 @@ public final class QuickSettingsPanelView: UIView {
         footer.font = scaled(12)
         let seg = UIFont.systemFont(ofSize: min(scaled(13).pointSize, 16)) // four segments share the width
         for s in segmented { s.setTitleTextAttributes([.font: seg], for: .normal); s.setTitleTextAttributes([.font: seg], for: .selected) }
+        appSettingsRow.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [font = scaled(15)] in
+            var a = $0; a.font = font; return a
+        }
         settingsRow.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [font = scaled(15)] in
             var a = $0; a.font = font; return a
         }

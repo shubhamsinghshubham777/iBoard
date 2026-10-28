@@ -806,6 +806,7 @@ final class KeyboardViewController: UIInputViewController {
             self.feedback(.action)
         }
         quickSettings.onOpenSettings = { [weak self] in self?.openSettingsPage() }
+        quickSettings.onOpenAppSettings = { [weak self] in self?.open(URL(string: "iboard://settings")) }
         quickSettings.onClose = { [weak self] in self?.closeQuickSettings() }
     }
 
@@ -1718,8 +1719,11 @@ final class KeyboardViewController: UIInputViewController {
     /// Opens the iOS Settings page of iBoard (Keyboards, Full Access). Keyboard extensions have no public way to open a
     /// URL, so this walks the responder chain to the host `UIApplication`, the way keyboards have always opened
     /// Settings. Only ever called with `UIApplication.openSettingsURLString`.
-    private func openSettingsPage() {
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+    private func openSettingsPage() { open(URL(string: UIApplication.openSettingsURLString)) }
+
+    /// Only ever called with the iOS Settings URL or iBoard's own `iboard://settings` (the containing app's Settings).
+    private func open(_ url: URL?) {
+        guard let url else { return }
         let selector = NSSelectorFromString("openURL:options:completionHandler:")
         var responder: UIResponder? = self
         while let current = responder {
