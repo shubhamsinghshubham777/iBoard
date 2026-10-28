@@ -59,16 +59,11 @@ final class KeyboardViewController: UIInputViewController {
     private var arbiter: GestureArbiter?
     private var arbiterTouchID = -1
     private var gestureOrigin = CGPoint.zero
-    /// Backspace swipe: the words to delete are marked in the host field while dragging (see `MarkedDeletePreview`).
-    private lazy var markedDelete = MarkedDeletePreview(proxy: ProxyAdapter(controller: self), style: deletePreviewStyle == "marked" ? .marked : .live)
+    /// Backspace swipe (M5-03): the words to delete are shown struck through on a canvas over the upper keyboard while
+    /// dragging; the host field is untouched until release (see `DeleteCanvasView`, docs/agent-reports/swipedelete.md).
+    private let deleteCanvas = DeleteCanvasView()
     /// Left context captured when the drag starts; every plan of the drag is computed from it (the proxy lags edits).
     private var deleteBaseContext: String?
-    /// A host that ignored marked text was seen: no more in-field previews until the keyboard is recreated.
-    private var markedDeleteUnsupported = false
-    /// `UserDefaults` `iBoard.deletePreviewStyle`: "live" (default: words vanish as you drag), "marked" (marked text,
-    /// no visible highlight in tested hosts) or "strip" (suggestion strip only).
-    private var deletePreviewStyle: String { UserDefaults.standard.string(forKey: "iBoard.deletePreviewStyle") ?? "live" }
-    private var markedDeleteEnabled: Bool { deletePreviewStyle != "strip" }
     private var gestureKeyIndex = -1
     private enum DragMode { case none, cursor(SpacebarCursorDrag), selecting(SpacebarCursorDrag), deleteWords(BackspaceSwipePlan) }
     private var dragMode = DragMode.none {
@@ -192,6 +187,9 @@ final class KeyboardViewController: UIInputViewController {
         grid.touchHandler = { [weak self] phase, id, point, time in self?.handleTouch(phase, id, point, time) }
         view.addSubview(grid)
         view.addSubview(strip) // above the grid; not interactive, so touches still reach the grid
+        deleteCanvas.frame = view.bounds
+        deleteCanvas.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(deleteCanvas)
         // F12: pinch toggles the Duo split for the current orientation. Must not steal or delay key touches.
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
         pinch.cancelsTouchesInView = false
@@ -1357,7 +1355,8 @@ final class KeyboardViewController: UIInputViewController {
         let wasDeleting: Bool
         if case .deleteWords = dragMode { wasDeleting = true } else { wasDeleting = false }
         if case .selecting = dragMode { finalizeSelectionDrag() }
-        markedDelete.cancel() // a drag that did not end in a release-delete leaves the words alone
+        deleteCanvas.hide() // a drag that did not end in a release-delete leaves the words alone
+        grid.alpha = 1
         deleteBaseContext = nil
         dragMode = .none
         if wasDeleting { renderStrip() }
@@ -1498,24 +1497,19 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         if deleteBaseContext == nil { deleteBaseContext = coordinator.contextBeforeForPreview }
-        let plan = BackspaceSwipePlan.plan(before: deleteBaseContext ?? "", extraDistance: extra)
-        if case .deleteWords(let old) = dragMode, old == plan { return }
+        let base = deleteBaseContext ?? ""
+        let plan = BackspaceSwipePlan.plan(before: base, extraDistance: extra)
+        // Dragged back to (nearly) where it started: release cancels, so the canvas goes away (no deletion shown).
+        let cancelling = gestureOrigin.x - point.x < GestureThresholds().backspaceCancelWithin
+        if case .deleteWords(let old) = dragMode, old == plan, cancelling == deleteCanvas.isHidden { return }
+        if case .deleteWords(let old) = dragMode, old.words != plan.words, plan.words > 0, !cancelling { feedback() } // tick per word
         dragMode = .deleteWords(plan)
-        if markedDeleteEnabled, !markedDeleteUnsupported {
-            markedDelete.show(plan)
-            if markedDelete.isActive { verifyMarkedDeleteSoon() }
-        }
-        let preview = plan.preview.replacingOccurrences(of: "\n", with: " ")
-        strip.emphasizedSlots = [1]
-        strip.slotTexts = ["", preview, ""]
-    }
-
-    /// The host may ignore marked text: after a run-loop turn check that the marked words are still in the field;
-    /// if not they are typed back, the in-field preview is switched off and the release deletes plainly.
-    private func verifyMarkedDeleteSoon() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
-            guard let self, self.markedDelete.isActive else { return }
-            if !self.markedDelete.verify() { self.markedDeleteUnsupported = true }
+        if cancelling {
+            deleteCanvas.hide()
+            grid.alpha = 1
+        } else {
+            deleteCanvas.show(DeleteCanvasModel.make(base: base, plan: plan), animated: !UIAccessibility.isReduceMotionEnabled)
+            grid.alpha = 0.2 // other keys step back; the finger no longer types
         }
     }
 
@@ -1553,9 +1547,6 @@ final class KeyboardViewController: UIInputViewController {
             extendSelection(step)
         }
         if case .deleteWords = dragMode { updateDeletePreview(at: point) }
-        // Release-delete with the words already marked in the field: remove them now (before the reset cancels).
-        var deletedViaMarks = false
-        if g == .backspaceSwipeDelete, markedDelete.isActive { deletedViaMarks = markedDelete.verify() && markedDelete.commit() > 0 }
         let mode = dragMode
         let startIndex = gestureKeyIndex
         let origin = gestureOrigin
@@ -1568,7 +1559,7 @@ final class KeyboardViewController: UIInputViewController {
         case .backspaceSwipeDelete:
             if emoji.mode == .search { feedback(); return true } // already applied live to the query
             if case .deleteWords(let plan) = mode {
-                if deletedViaMarks { coordinator.finishPreviewedDelete() } else { coordinator.deleteRun(graphemes: plan.graphemes) }
+                coordinator.deleteRun(graphemes: plan.graphemes)
                 feedback()
                 scheduleAutoShift()
             }
