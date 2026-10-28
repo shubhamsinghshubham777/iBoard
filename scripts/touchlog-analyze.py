@@ -6,7 +6,15 @@ Prints one line per touch (hold ms, drift pt, key index at down/up, moves) and f
 never contains characters, only key indices and kinds. Usage: scripts/touchlog-analyze.py [file]"""
 import glob, json, os, sys
 
-path = sys.argv[1] if len(sys.argv) > 1 else max(glob.glob("build/touchlog/*.json"), key=os.path.getmtime)
+def newest_big():
+    files = sorted(glob.glob("build/touchlog/**/*.json", recursive=True), key=os.path.getmtime)
+    # the most recently written file that holds a real typing session (a restarted keyboard leaves tiny files)
+    for f in reversed(files):
+        if len(json.load(open(f))["records"]) >= 100:
+            return f
+    return files[-1]
+
+path = sys.argv[1] if len(sys.argv) > 1 else newest_big()
 d = json.load(open(path))
 r = d["records"]
 t0 = r[0]["ts"]

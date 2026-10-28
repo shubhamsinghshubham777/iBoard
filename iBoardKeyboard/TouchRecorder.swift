@@ -14,6 +14,8 @@ final class TouchRecorder {
     private var timer: Timer?
     private var header = (w: 0.0, h: 0.0, globe: false, delay: 0.45)
     private var lastTS = 0.0
+    /// One file per keyboard process so a restarted keyboard cannot overwrite an earlier session's log.
+    private let startStamp = Int(Date().timeIntervalSince1970)
 
     func configure(container: CGSize, globe: Bool, longPressDelay: TimeInterval) {
         header = (Double(container.width), Double(container.height), globe, longPressDelay)
@@ -61,9 +63,15 @@ final class TouchRecorder {
         dirty = false
         let file = TouchLogFile(containerWidth: header.w, containerHeight: header.h, needsGlobe: header.globe,
                                 longPressDelay: header.delay, records: ring.ordered)
-        let url = dir.appendingPathComponent("Library/Caches/touchlog.json")
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let folder = dir.appendingPathComponent("Library/Caches/touchlog")
+        let url = folder.appendingPathComponent("touchlog-\(startStamp).json")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(file) { try? data.write(to: url, options: .atomic) }
+        if let old = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+            .filter({ $0.lastPathComponent.hasPrefix("touchlog-") }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent }),
+           old.count > 8 {
+            for u in old.dropLast(8) { try? FileManager.default.removeItem(at: u) }
+        }
     }
 }
 #endif
