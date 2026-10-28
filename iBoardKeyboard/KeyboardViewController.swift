@@ -1685,12 +1685,19 @@ final class KeyboardViewController: UIInputViewController {
             let key = layout.keys[keyIndex]
             let options = KeyAlternates.longPressOptions(for: key.identity, uppercase: grid.shift != .off,
                                                          clipboardEntry: hasFullAccess && settings.clipboardHistory) ?? []
-            strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion))
+            strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion,
+                                                       cancelsWhenDraggedAway: key.identity == .commaEmoji))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
             if let text = strip.end(at: p) {
                 if text == KeyAlternates.settingsGlyph { feedback(.action); openQuickSettings(); break }
+                if text == KeyAlternates.emojiGlyph {
+                    // Released on the popup: open the panel (next turn; opening cancels the machine's touches).
+                    feedback(.action)
+                    DispatchQueue.main.async { [weak self] in self?.openEmoji() }
+                    break
+                }
                 if text == KeyAlternates.clipboardGlyph { openClipboardPanel(); feedback(); break }
                 if emoji.mode == .search { _ = emoji.handleKey(insert: text); feedback(); break }
                 coordinator.insertDirect(text)

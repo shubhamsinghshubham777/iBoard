@@ -406,18 +406,18 @@ private func mergedLayout() -> KeyboardLayout {
     #expect(!d.sink.events.contains(.openEmoji))
 }
 
-@Test func commaEmojiKeyLongPressOpensEmojiAndTypesNothing() {
+private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true } else { false } }
+
+@Test func commaEmojiKeyLongPressShowsThePopupAndDoesNotOpenEmojiYet() {
     var d = Driver(mergedLayout())
     d.m.longPressDelay = 0.45
     d.down(1, .commaEmoji)
     d.tick(0.3)
-    #expect(!d.sink.events.contains(.openEmoji))
+    #expect(!d.sink.events.contains(where: began))
     d.tick(0.5)
-    #expect(d.sink.events.filter { $0 == .openEmoji }.count == 1)
-    d.up(1, t: 0.7)
+    #expect(d.sink.events.filter(began).count == 1)
+    #expect(!d.sink.events.contains(.openEmoji))
     #expect(d.sink.inserts.isEmpty)
-    #expect(d.sink.events.filter { $0 == .openEmoji }.count == 1)
-    #expect(d.m.activeTouchCount == 0)
 }
 
 @Test func commaEmojiKeyHonoursTheConfiguredLongPressDelay() {
@@ -425,9 +425,32 @@ private func mergedLayout() -> KeyboardLayout {
     d.m.longPressDelay = 0.8
     d.down(1, .commaEmoji)
     d.tick(0.6)
-    #expect(!d.sink.events.contains(.openEmoji))
+    #expect(!d.sink.events.contains(where: began))
     d.tick(0.85)
-    #expect(d.sink.events.contains(.openEmoji))
+    #expect(d.sink.events.contains(where: began))
+}
+
+@Test func emojiPopupConfirmsOnTheCellOrKeyAndCancelsWhenDraggedAway() {
+    let strip = CGRect(x: 0, y: 0, width: 390, height: 44)
+    let key = CGRect(x: 60, y: 120, width: 40, height: 50)
+    var sel = AlternatesSelection(options: [KeyAlternates.emojiGlyph], stripFrame: strip, originRegion: key, cancelsWhenDraggedAway: true)
+    #expect(sel.highlighted == 0)
+    sel.move(to: CGPoint(x: 80, y: 140))                 // still on the key
+    #expect(sel.highlighted == 0)
+    sel.move(to: CGPoint(x: 300, y: 150))                // dragged off to other keys
+    #expect(sel.highlighted == nil)
+    #expect(sel.end(at: CGPoint(x: 300, y: 150)) == nil)
+    sel.move(to: CGPoint(x: 195, y: 20))                 // onto the popup cell
+    #expect(sel.end(at: CGPoint(x: 195, y: 20)) == KeyAlternates.emojiGlyph)
+}
+
+@Test func lateTickOnTheCommaEmojiKeyStillTypesAComma() {
+    var d = Driver(mergedLayout())
+    d.m.longPressDelay = 0.45
+    d.down(1, .commaEmoji, t: 0)
+    d.tick(0.7)
+    d.up(1, t: 0.1)
+    #expect(d.sink.inserts == [","])
 }
 
 // Fast typing: the display-link tick can run late (main thread busy) before a queued touch-up is processed. A touch

@@ -11,11 +11,14 @@ public enum KeyAlternates {
     public static let settingsGlyph = "\u{2699}\u{FE0E}"
     /// Also on the emoji key (Full Access + clipboard history on): opens the clipboard history panel. Not text.
     public static let clipboardGlyph = "\u{1F4CB}"
+    /// The merged comma / emoji key's long-press choice: releasing on it opens the emoji panel (drag away to cancel).
+    public static let emojiGlyph = "\u{263A}\u{FE0E}"
     /// SF Symbol drawn for an action option (the glyph strings above are only identifiers, never inserted). nil: plain text.
     public static func symbolName(for option: String) -> String? {
         switch option {
         case settingsGlyph: "gearshape"
         case clipboardGlyph: "doc.on.clipboard"
+        case emojiGlyph: "face.smiling"
         default: nil
         }
     }
@@ -65,6 +68,7 @@ public enum KeyAlternates {
     /// What a long press offers: for letters the key's hint symbol (its number / symbol, drawn faintly on the key) comes
     /// first, then the accented forms; other keys offer their `options`. nil: nothing to offer.
     public static func longPressOptions(for identity: KeyIdentity, uppercase: Bool = false, clipboardEntry: Bool = false) -> [String]? {
+        if case .commaEmoji = identity { return [emojiGlyph] }
         if case .emoji = identity { return clipboardEntry ? [clipboardGlyph, settingsGlyph] : [settingsGlyph] } // the keyboard's way to the iOS Settings page for iBoard
         guard case .letter = identity else { return options(for: identity, uppercase: uppercase) }
         let accents = options(for: identity, uppercase: uppercase) ?? []
@@ -95,10 +99,14 @@ public struct AlternatesSelection: Sendable, Equatable {
     public let originRegion: CGRect
     public private(set) var highlighted: Int?
     private var hasLeftOrigin = false
+    /// One action option (the comma / emoji key's emoji popup): stays selected over the popup cell and the key it came
+    /// from, and dragging anywhere else cancels, so releasing there does nothing.
+    public let cancelsWhenDraggedAway: Bool
 
     public static let maxCellWidth: CGFloat = 44
 
-    public init(options: [String], stripFrame: CGRect, originRegion: CGRect) {
+    public init(options: [String], stripFrame: CGRect, originRegion: CGRect, cancelsWhenDraggedAway: Bool = false) {
+        self.cancelsWhenDraggedAway = cancelsWhenDraggedAway
         self.options = options
         self.stripFrame = stripFrame
         self.originRegion = originRegion
@@ -120,6 +128,10 @@ public struct AlternatesSelection: Sendable, Equatable {
 
     public mutating func move(to p: CGPoint) {
         guard !options.isEmpty else { return }
+        if cancelsWhenDraggedAway {
+            highlighted = cellFrame(0).contains(p) || originRegion.contains(p) ? 0 : nil
+            return
+        }
         if p.y < stripFrame.maxY {
             // Over (or above) the strip: pick the cell by x, clamped to the row ends.
             hasLeftOrigin = true

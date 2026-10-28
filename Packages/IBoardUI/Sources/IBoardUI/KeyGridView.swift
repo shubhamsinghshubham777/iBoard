@@ -320,7 +320,9 @@ public final class KeyGridView: UIView {
             return .symbol("phone.fill", onAction: false)
         case .globe: return .symbol("globe", onAction: false)
         case .emoji: return .symbol("face.smiling", onAction: false)
-        case .commaEmoji: return .text(",", .symbol, onAction: false)
+        case .commaEmoji:
+            if showsFlickHints { return .hinted(",", hint: KeyAlternates.emojiGlyph, upper: false, width: Int((keyWidth * 4).rounded())) }
+            return .text(",", .symbol, onAction: false)
         }
     }
 

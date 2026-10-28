@@ -240,13 +240,6 @@ public struct KeyboardInputMachine: Sendable {
             slots[i].longPressAt = .infinity
             guard k >= 0 else { continue }
             slots[i].isCommitted = true
-            if layout.keys[k].identity == .commaEmoji {
-                // Long press on the merged comma / emoji key: open the emoji panel (no comma typed on release).
-                emit(.highlight(keyIndex: k, isOn: false))
-                slots[i].keyIndex = -1
-                emit(.openEmoji)
-                continue
-            }
             slots[i].isAlternates = true
             slots[i].firedKey = k
             emit(.highlight(keyIndex: k, isOn: false))
