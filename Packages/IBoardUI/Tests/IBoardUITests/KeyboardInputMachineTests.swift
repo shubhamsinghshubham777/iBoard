@@ -247,6 +247,7 @@ private struct Driver {
     #expect(d.m.nextDeadline == 0.5)
     d.tick(0.4)
     #expect(d.sink.nonHighlight.count == 1)
+    d.tick(0.4)
     d.tick(0.5)
     #expect(d.sink.nonHighlight.count == 2)
     d.tick(0.6)
@@ -305,6 +306,7 @@ private struct Driver {
     d.down(1, .delete, t: 0)
     d.tap(.letter("a"), touch: 2, t: 0.1)
     #expect(d.m.nextDeadline != nil)
+    d.tick(0.4)
     d.tick(0.5)
     #expect(d.sink.nonHighlight == [.deleteBackward, .insert("a"), .deleteBackward])
 }
@@ -329,12 +331,31 @@ private struct Driver {
     #expect(d.sink.nonHighlight.isEmpty)
 }
 
-@Test func duplicateDownForSameIDIsTreatedAsMissedCancel() {
+@Test func duplicateDownForSameIDTypesTheMissedLiftInsteadOfDroppingIt() {
     var d = Driver()
     d.down(1, .letter("a"))
     d.down(1, .letter("b"))
     d.up(1)
-    #expect(d.sink.inserts == ["b"])
+    #expect(d.sink.inserts == ["a", "b"])
+}
+
+@Test func stalledTickPostponesTheLongPressSoAQueuedLiftStillTypes() {
+    var d = Driver()
+    d.down(1, .letter("i"), t: 0)
+    d.tick(0.05)
+    d.tick(0.60) // main thread blocked 0.55 s: the lift stamped 0.1 may still be queued
+    #expect(!d.sink.events.contains { if case .alternatesBegan = $0 { true } else { false } })
+    d.up(1, t: 0.1)
+    #expect(d.sink.inserts == ["i"])
+}
+
+@Test func realHoldStillFiresAfterAStallRecheck() {
+    var d = Driver()
+    d.down(1, .letter("i"), t: 0)
+    d.tick(0.05)
+    d.tick(0.60)
+    d.tick(0.66)
+    #expect(d.sink.events.contains { if case .alternatesBegan = $0 { true } else { false } })
 }
 
 @Test func rotationLayoutSwapKeepsMatchingKeyAndDropsOthers() {
@@ -414,6 +435,7 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     d.down(1, .commaEmoji)
     d.tick(0.3)
     #expect(!d.sink.events.contains(where: began))
+    d.tick(0.4)
     d.tick(0.5)
     #expect(d.sink.events.filter(began).count == 1)
     #expect(!d.sink.events.contains(.openEmoji))
@@ -426,7 +448,8 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     d.down(1, .commaEmoji)
     d.tick(0.6)
     #expect(!d.sink.events.contains(where: began))
-    d.tick(0.85)
+    d.tick(0.72)
+    d.tick(0.82)
     #expect(d.sink.events.contains(where: began))
 }
 
@@ -470,6 +493,7 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     var d = Driver()
     d.m.longPressDelay = 0.45
     d.down(1, .letter("i"), t: 0)
+    d.tick(0.4)
     d.tick(0.5)
     d.up(1, t: 0.7)
     #expect(d.sink.inserts.isEmpty)

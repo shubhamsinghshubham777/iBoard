@@ -1687,7 +1687,8 @@ final class KeyboardViewController: UIInputViewController {
             let options = KeyAlternates.longPressOptions(for: key.identity, uppercase: grid.shift != .off,
                                                          clipboardEntry: hasFullAccess && settings.clipboardHistory) ?? []
             strip.beginAlternates(AlternatesSelection(options: options, stripFrame: layout.stripFrame, originRegion: key.touchRegion,
-                                                       cancelsWhenDraggedAway: key.identity == .commaEmoji))
+                                                       cancelsWhenDraggedAway: key.identity == .commaEmoji,
+                                                       originText: key.identity.insertionText.map { grid.shift != .off ? $0.uppercased() : $0 }))
         case .alternatesMoved(let p):
             strip.move(to: p)
         case .alternatesEnded(let p):
