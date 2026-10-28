@@ -1067,6 +1067,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        saveTouchBias(force: true)
         #if DEBUG
         touchRecorder.flush()
         #endif
@@ -1190,6 +1191,7 @@ final class KeyboardViewController: UIInputViewController {
         startEngineLoad(layout: layout)
         if machine == nil {
             machine = KeyboardInputMachine(layout: layout)
+            machine!.touchBias = TouchBias.decode(UserDefaults.standard.data(forKey: Self.touchBiasKey)) ?? TouchBias()
             machine!.longPressDelay = settings.longPressDelay.seconds
             updateAutoShift()
         } else {
@@ -1346,6 +1348,7 @@ final class KeyboardViewController: UIInputViewController {
             consumeShiftOnce = false
             if machine!.shift == .once { machine!.setShift(.off, emit: sink) }
         }
+        saveTouchBias(force: false)
         applyDeferredLayerChange()
         updateRepeatTimer()
     }
@@ -1353,7 +1356,7 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: Gesture arbiter (M5-01) -> flicks (M5-04), spacebar cursor (M5-02), backspace swipe-delete (M5-03)
 
     private func beginArbiter(id: Int, at point: CGPoint, time: TimeInterval, layout: KeyboardLayout) {
-        guard arbiter == nil, let hit = layout.hit(at: point), hit.keyIndex < layout.keys.count else { return }
+        guard arbiter == nil, let hit = layout.hit(at: machine?.biasedPoint(point) ?? point), hit.keyIndex < layout.keys.count else { return }
         let identity = layout.keys[hit.keyIndex].identity
         let start: GestureStart
         switch identity {
@@ -1374,6 +1377,15 @@ final class KeyboardViewController: UIInputViewController {
         dragMode = .none
     }
 
+    /// Keyboard-local (extension UserDefaults, works without Full Access): three numbers, no text.
+    private static let touchBiasKey = "iBoard.touchBias"
+
+    private func saveTouchBias(force: Bool) {
+        guard let m = machine, m.unsavedBiasSamples >= (force ? 1 : 25), let data = m.touchBias.encoded() else { return }
+        UserDefaults.standard.set(data, forKey: Self.touchBiasKey)
+        machine?.biasSaved()
+    }
+
     private func resetArbiter() {
         arbiter = nil
         arbiterTouchID = -1
@@ -1392,7 +1404,7 @@ final class KeyboardViewController: UIInputViewController {
     private func routeArbiterMove(id: Int, to point: CGPoint, time: TimeInterval, sink: (KeyEvent) -> Void) -> Bool {
         guard var a = arbiter, let layout = grid.layout else { return false }
         var crossed = false
-        if a.start == .letter, let hit = layout.hit(at: point), hit.keyIndex != gestureKeyIndex,
+        if a.start == .letter, let hit = layout.hit(at: machine?.biasedPoint(point) ?? point), hit.keyIndex != gestureKeyIndex,
            case .letter = layout.keys[hit.keyIndex].identity { crossed = true }
         let decided = a.move(to: point, time: time, crossedKeys: crossed)
         arbiter = a

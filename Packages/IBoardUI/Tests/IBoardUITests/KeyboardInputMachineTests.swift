@@ -537,3 +537,52 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     d.m.touchUp(id: 1, at: CGPoint(x: w.midX, y: w.midY), time: 0.5) { s($0) }
     #expect(d.sink.inserts == ["w"])
 }
+
+// MARK: Learned tap offset (TouchBias)
+
+@Test func touchBiasLearnsAndIsCappedAndWarmsUp() {
+    var b = TouchBias()
+    for _ in 0..<10 { b.add(dx: 0.1, dy: -0.3) }
+    #expect(b.correction == (0, 0)) // below the warm-up
+    for _ in 0..<200 { b.add(dx: 0.1, dy: -0.3) }
+    #expect(abs(b.correction.y - TouchBias.maxY) < 1e-9) // capped (mean -0.3 -> 0.22)
+    #expect(abs(b.correction.x + 0.1) < 1e-9)
+    b.add(dx: 0.9, dy: 0.9)                              // outlier ignored
+    #expect(b.count == 210)
+    #expect(TouchBias.decode(b.encoded()) == b)
+}
+
+@Test func biasPicksTheIntendedKeyForATapThatLandsHigh() {
+    var d = Driver()
+    let k = d.m.layout.firstKey(.letter("k"))!.frame
+    let i = d.m.layout.firstKey(.letter("i"))!.frame
+    // Walk up from the key's centre to where the plain hit test stops saying "k", then go 0.12 key heights beyond.
+    var y = k.midY
+    while let h = d.m.layout.hit(at: CGPoint(x: k.midX, y: y)), d.m.layout.keys[h.keyIndex].identity == .letter("k") { y -= 1 }
+    let high = CGPoint(x: k.midX, y: y - k.height * 0.12)
+    #expect(d.m.layout.hit(at: high).map { d.m.layout.keys[$0.keyIndex].identity } != .letter("k"))
+    var bias = TouchBias()
+    for _ in 0..<200 { bias.add(dx: 0, dy: -0.30) }  // this person lands 30 % of a key too high
+    d.m.touchBias = bias
+    let s = d.sink
+    d.m.touchDown(id: 1, at: high, time: 0) { s($0) }
+    d.m.touchUp(id: 1, at: high, time: 0.08) { s($0) }
+    #expect(d.sink.inserts == ["k"])
+    _ = i
+}
+
+@Test func cleanQuickTapsTeachTheBiasButDriftingOrSlowTapsDoNot() {
+    var d = Driver()
+    let q = d.m.layout.firstKey(.letter("q"))!.frame
+    let p = CGPoint(x: q.midX, y: q.midY - q.height * 0.2)
+    let s = d.sink
+    d.m.touchDown(id: 1, at: p, time: 0) { s($0) }
+    d.m.touchUp(id: 1, at: p, time: 0.08) { s($0) }
+    #expect(d.m.touchBias.count == 1)
+    #expect(abs(d.m.touchBias.meanY + 0.2) < 1e-9)
+    d.m.touchDown(id: 2, at: p, time: 1) { s($0) }
+    d.m.touchUp(id: 2, at: p, time: 1.5) { s($0) }                       // slow: not learned
+    d.m.touchDown(id: 3, at: p, time: 2) { s($0) }
+    d.m.touchUp(id: 3, at: CGPoint(x: p.x + 15, y: p.y), time: 2.05) { s($0) } // drifted: not learned
+    #expect(d.m.touchBias.count == 1)
+}

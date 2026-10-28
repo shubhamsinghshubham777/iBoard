@@ -103,6 +103,12 @@ public struct KeyboardInputMachine: Sendable {
     /// Hold time before alternates appear (F1: 350 ms).
     public var longPressDelay: TimeInterval = 0.45
 
+    /// Learned tap offset (see `TouchBias`). The host loads / saves it; taps that are clearly deliberate teach it.
+    public var touchBias = TouchBias()
+    /// Number of taps learned since the host last saved (the host saves every so often).
+    public private(set) var unsavedBiasSamples = 0
+    public mutating func biasSaved() { unsavedBiasSamples = 0 }
+
     private var slots = [Slot](repeating: Slot(), count: KeyboardInputMachine.maxTouches)
     private var orderCounter: UInt64 = 0
     /// Time of the previous `tick` while a long press was pending. A gap longer than `stallGap` means the host's main
@@ -156,12 +162,34 @@ public struct KeyboardInputMachine: Sendable {
         emit(.shiftChanged(state))
     }
 
+    // MARK: Touch bias
+
+    /// `point` moved by the learned correction, scaled to the letter keys' size. Only the key choice uses it.
+    public func biasedPoint(_ point: CGPoint) -> CGPoint {
+        let c = touchBias.correction
+        guard c.x != 0 || c.y != 0, let f = layout.keys.first(where: { if case .letter = $0.identity { true } else { false } })?.frame
+        else { return point }
+        return CGPoint(x: point.x + CGFloat(c.x) * f.width, y: point.y + CGFloat(c.y) * f.height)
+    }
+
+    /// A clean quick tap on a letter key teaches the bias: down point relative to the key's centre.
+    private mutating func learnTap(slot i: Int, up: CGPoint?, time: TimeInterval) {
+        guard let up, slots[i].downKey >= 0, slots[i].downKey < layout.keys.count,
+              case .letter = layout.keys[slots[i].downKey].identity,
+              time - slots[i].downTime < Self.quickTapWindow,
+              hypot(up.x - slots[i].downPoint.x, up.y - slots[i].downPoint.y) < Self.slideSwitchDistance else { return }
+        let f = layout.keys[slots[i].downKey].frame
+        guard f.width > 0, f.height > 0 else { return }
+        touchBias.add(dx: Double((slots[i].downPoint.x - f.midX) / f.width), dy: Double((slots[i].downPoint.y - f.midY) / f.height))
+        unsavedBiasSamples += 1
+    }
+
     // MARK: Touches
 
     public mutating func touchDown(id: Int, at point: CGPoint, time: TimeInterval, emit: (KeyEvent) -> Void) {
         // A repeated id means a missed end event: lift it first so an uncommitted tap is typed, not dropped.
         if slotIndex(for: id) != nil { touchUp(id: id, time: time, emit: emit) }
-        guard let hit = layout.hit(at: point), let free = slots.firstIndex(where: { !$0.isActive }) else { return }
+        guard let hit = layout.hit(at: biasedPoint(point)), let free = slots.firstIndex(where: { !$0.isActive }) else { return }
 
         // Rollover: earlier touches still held are committed first, in the order they went down, so overlapping
         // fast typing keeps the typed order.
@@ -248,6 +276,7 @@ public struct KeyboardInputMachine: Sendable {
                 slots[i].keyIndex = slots[i].downKey
             }
             slots[i].isCommitted = true
+            if slots[i].keyIndex == slots[i].downKey { learnTap(slot: i, up: point, time: time) }
             let identity = layout.keys[slots[i].keyIndex].identity
             // Highlight off first so the cap releases even if the action swaps the layer.
             emit(.highlight(keyIndex: slots[i].keyIndex, isOn: false))
