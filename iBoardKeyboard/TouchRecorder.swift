@@ -4,12 +4,12 @@ import IBoardCore
 import IBoardLayout
 import IBoardUI
 
-/// DEBUG-only touch recorder (M1-04 hunt). Keeps the last ~400 touch / machine events in memory and flushes them
+/// DEBUG-only touch recorder (M1-04 hunt). Keeps the last ~4000 touch / machine events in memory and flushes them
 /// to `Library/Caches/touchlog.json` in the App Group container about once a second and on disappear.
 /// Privacy: records key INDEX and KIND only, never a character; compiled out of Release.
 @MainActor
 final class TouchRecorder {
-    private var ring = TouchLogRing(capacity: 400)
+    private var ring = TouchLogRing(capacity: 4000)
     private var dirty = false
     private var timer: Timer?
     private var header = (w: 0.0, h: 0.0, globe: false, delay: 0.45)
