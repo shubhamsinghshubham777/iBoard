@@ -1896,7 +1896,7 @@ final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
     var onNewTouchHit: ((CGPoint, String) -> Void)?
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hit = super.hitTest(point, with: event)
-        if let event, event.type == .touches, event.allTouches?.contains(where: { $0.phase == .began }) == true {
+        if let event, event.type == .touches {
             onNewTouchHit?(point, hit.map { NSStringFromClass(type(of: $0)) } ?? "nil")
         }
         return hit
