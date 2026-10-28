@@ -1067,6 +1067,9 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        #if DEBUG
+        touchRecorder.flush()
+        #endif
         machine?.cancelAll { _ in }
         swipeCapture.cancel()
         resetArbiter()
@@ -1173,6 +1176,9 @@ final class KeyboardViewController: UIInputViewController {
         rememberHeight(want, width: size.width)
         let layout = LayoutEngine.layout(containerSize: size, safeArea: safe, traits: traits, kind: layoutKind, settings: ls)
         grid.apply(layout: layout)
+        #if DEBUG
+        touchRecorder.configure(container: size, globe: traits.needsInputModeSwitchKey, longPressDelay: settings.longPressDelay.seconds)
+        #endif
         strip.frame = layout.stripFrame
         // Duo split: the strip's three slots stay out of the fold band (container -> strip-local coordinates).
         strip.segments = layout.stripSegments.count == 2
@@ -1191,10 +1197,30 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    #if DEBUG
+    private let touchRecorder = TouchRecorder()
+
+    private func recordEvent(_ event: KeyEvent) {
+        let l = grid.layout
+        switch event {
+        case .insert(let t): touchRecorder.event("insert", n: t.count)
+        case .alternatesBegan(let k): touchRecorder.event("altBegan", ki: k, layout: l)
+        case .alternatesEnded: touchRecorder.event("altEnded")
+        case .alternatesCancelled: touchRecorder.event("altCancelled")
+        case .openEmoji: touchRecorder.event("openEmoji")
+        case .highlight(let k, let on): touchRecorder.event(on ? "hlOn" : "hlOff", ki: k, layout: l)
+        default: break
+        }
+    }
+    #endif
+
     // MARK: Touches -> state machine -> text proxy
 
     private func handleTouch(_ phase: KeyTouchPhase, _ id: Int, _ point: CGPoint, _ time: TimeInterval) {
         guard machine != nil else { return }
+        #if DEBUG
+        touchRecorder.touch(phase, id: id, point: point, time: time, layout: grid.layout)
+        #endif
         let sink: (KeyEvent) -> Void = { [unowned self] in self.handle($0) }
         // A touch that starts on the suggestion strip is a slot tap, not a key press.
         if phase == .began, strip.frame.contains(point), !strip.isShowingAlternates, stripTouchID == nil {
@@ -1624,6 +1650,9 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Runs inside machine calls: must not touch `machine` (exclusive access).
     private func handle(_ event: KeyEvent) {
+        #if DEBUG
+        recordEvent(event)
+        #endif
         if emoji.mode == .search {
             switch event {
             case .insert(let text): _ = emoji.handleKey(insert: text); feedback(); return
