@@ -101,22 +101,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
