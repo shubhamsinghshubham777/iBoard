@@ -208,7 +208,19 @@ public struct KeyboardInputMachine: Sendable {
                 release(slot: i, emit: emit)
                 return
             }
-            emit(.alternatesEnded(point ?? .zero))
+            guard let point else {
+                // A lift with no position (a repeated touch id stood in for the missed end): `.zero` would land on the
+                // popup's first option (i -> î). Cancel the popup and type the key's own character instead.
+                emit(.alternatesCancelled)
+                if slots[i].firedKey >= 0 {
+                    let identity = layout.keys[slots[i].firedKey].identity
+                    slots[i].firedKey = -1
+                    perform(identity: identity, slot: i, time: time, emit: emit)
+                }
+                release(slot: i, emit: emit)
+                return
+            }
+            emit(.alternatesEnded(point))
             release(slot: i, emit: emit)
             return
         }

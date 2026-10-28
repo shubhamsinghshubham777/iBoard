@@ -13,6 +13,7 @@
 		18326E8DF35ABFF5F957B177 /* IBoardLayout in Frameworks */ = {isa = PBXBuildFile; productRef = F1581D34BA86755881CE8840 /* IBoardLayout */; };
 		255B1B07CA33DEE6A0BE1ECA /* iBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C21085C40332AA7A01200 /* iBoardApp.swift */; };
 		27A5947B36DA6FD687606603 /* IBoardSync in Frameworks */ = {isa = PBXBuildFile; productRef = AE9B871F17BDE87D31F5D2D2 /* IBoardSync */; };
+		28820B328AB6DD29AA3B627C /* TouchRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B3816DCFD57233A3599739 /* TouchRecorder.swift */; };
 		291BFE79250DDD9C372E06A6 /* IBoardOTP in Frameworks */ = {isa = PBXBuildFile; productRef = BEA058F77D8001DCC3C01C35 /* IBoardOTP */; };
 		34D04E5D8DEC1E865E4C45C3 /* IBoardUI in Frameworks */ = {isa = PBXBuildFile; productRef = 09A44C1C9C141F17267A4259 /* IBoardUI */; };
 		36BBDAC124F650A1167A6920 /* DevicePerfSoakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C1FBDB96E6E119BD98E0DC3 /* DevicePerfSoakTests.swift */; };
@@ -100,22 +101,22 @@
 		542E0CD6A6A5F52D98CB7F9C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = hinglish;
+			dstPath = english;
 			dstSubfolderSpec = 7;
 			files = (
-				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
-				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
+				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
+				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79ADCEFC4F584199BD6ACD83 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = english;
+			dstPath = hinglish;
 			dstSubfolderSpec = 7;
 			files = (
-				7CB17A895D407FA8919BC834 /* lexicon.iblex in CopyFiles */,
-				74630AD306E5150FC6465BB3 /* lm.iblm in CopyFiles */,
+				9B24358876CC0704933E3652 /* lexicon.iblex in CopyFiles */,
+				B60F7B8E05560A854ADD23E8 /* lm.iblm in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +162,7 @@
 		BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSettingsHost.swift; sourceTree = "<group>"; };
 		BEDB32790B189574630A5B54 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
 		BF350BABED64EE056983837C /* ClipboardHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHost.swift; sourceTree = "<group>"; };
+		C2B3816DCFD57233A3599739 /* TouchRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchRecorder.swift; sourceTree = "<group>"; };
 		C5CF122CB70C1309F378CC9B /* lexicon.iblex */ = {isa = PBXFileReference; path = lexicon.iblex; sourceTree = "<group>"; };
 		CA1844700032908B476959FE /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
 		CD45501A21BFACC7BD3A1008 /* ThemeStudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStudioView.swift; sourceTree = "<group>"; };
@@ -339,6 +341,7 @@
 				38A2A81E6BD9DE830775AD0D /* PerfMetricsHook.swift */,
 				ED7C9CBF20BC57E527FE56A2 /* PrivacyInfo.xcprivacy */,
 				BB0C868E31AFD386412BE07B /* QuickSettingsHost.swift */,
+				C2B3816DCFD57233A3599739 /* TouchRecorder.swift */,
 			);
 			path = iBoardKeyboard;
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				E158C33A88C73FDA50646DFF /* KeyboardViewController.swift in Sources */,
 				D179194A9D0E16249D644D4F /* PerfMetricsHook.swift in Sources */,
 				BD4101E512ED4935ED489078 /* QuickSettingsHost.swift in Sources */,
+				28820B328AB6DD29AA3B627C /* TouchRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -495,7 +495,8 @@ private func began(_ e: KeyEvent) -> Bool { if case .alternatesBegan = e { true 
     d.down(1, .letter("i"), t: 0)
     d.tick(0.4)
     d.tick(0.5)
-    d.up(1, t: 0.7)
+    let s = d.sink
+    d.m.touchUp(id: 1, at: d.point(.letter("i")), time: 0.7) { s($0) } // a real lift always has a position
     #expect(d.sink.inserts.isEmpty)
     #expect(d.sink.events.contains { if case .alternatesEnded = $0 { true } else { false } })
 }
