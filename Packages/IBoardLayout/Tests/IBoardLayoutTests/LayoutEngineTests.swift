@@ -342,11 +342,14 @@ struct TraitVariantTests {
             let l = layout(traits: LayoutTraits(returnKey: kind), settings: LayoutSettings(punctuationKeys: punctuation))
             return (l.firstKey(.returnKey(kind))!.frame.width, l.firstKey(.space)!.frame.width)
         }
-        let icon = widths(.search, punctuation: true), plain = widths(.default, punctuation: true)
+        let icon = widths(.search, punctuation: true), plain = widths(.emergencyCall, punctuation: true) // the one text key left
         #expect(icon.ret < plain.ret * 0.7 && icon.space > plain.space)
-        // Without the comma/period keys the native text key stays; "return" and "done" keep text and width.
-        #expect(widths(.search, punctuation: false).ret == plain.ret)
-        #expect(ReturnKeyKind.search.iconSymbol == "magnifyingglass" && ReturnKeyKind.done.iconSymbol == nil)
+        // "return", "next" and "done" are icons too (a wide text key took the space bar's room); without the comma/period
+        // keys every return key keeps its native text label and width.
+        #expect(widths(.default, punctuation: true).ret == icon.ret)
+        #expect(widths(.search, punctuation: false).ret == widths(.default, punctuation: false).ret)
+        #expect(ReturnKeyKind.search.iconSymbol == "magnifyingglass" && ReturnKeyKind.default.iconSymbol == "return"
+                && ReturnKeyKind.done.iconSymbol == "checkmark" && ReturnKeyKind.emergencyCall.iconSymbol == nil)
     }
 
     @Test func searchRowGrowsTheStripAndKeepsTheKeySizes() {

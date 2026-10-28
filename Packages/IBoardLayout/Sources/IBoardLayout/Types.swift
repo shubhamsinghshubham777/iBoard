@@ -39,14 +39,17 @@ public enum KeyboardKind: String, Sendable, Codable, CaseIterable {
 public enum ReturnKeyKind: String, Sendable, Codable, CaseIterable {
     case `default`, go, google, join, next, route, search, send, yahoo, done, emergencyCall, `continue`
 
-    /// SF Symbol for the long text labels (search, go, join, route, send, continue). Those keys shrink to icon width when
+    /// SF Symbol for the return labels (return, next, done, search, go, join, route, send, continue). Those keys shrink to icon width when
     /// the comma/period keys are on, giving the space bar room. nil: the label stays text at full width.
     public var iconSymbol: String? {
         switch self {
         case .search, .google, .yahoo: "magnifyingglass"
         case .go, .join, .route, .continue: "arrow.right"
         case .send: "paperplane.fill"
-        case .default, .next, .done, .emergencyCall: nil
+        case .default: "return"
+        case .next: "arrow.right"
+        case .done: "checkmark"
+        case .emergencyCall: nil
         }
     }
 }
