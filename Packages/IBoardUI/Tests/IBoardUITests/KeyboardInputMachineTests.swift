@@ -329,12 +329,12 @@ private struct Driver {
     #expect(d.sink.nonHighlight.isEmpty)
 }
 
-@Test func duplicateDownForSameIDIsTreatedAsMissedCancel() {
+@Test func duplicateDownForSameIDTypesTheMissedLiftInsteadOfDroppingIt() {
     var d = Driver()
     d.down(1, .letter("a"))
     d.down(1, .letter("b"))
     d.up(1)
-    #expect(d.sink.inserts == ["b"])
+    #expect(d.sink.inserts == ["a", "b"])
 }
 
 @Test func rotationLayoutSwapKeepsMatchingKeyAndDropsOthers() {

@@ -66,6 +66,8 @@ public struct KeyboardInputMachine: Sendable {
     public static let maxTouches = 6
     /// Two shift taps within this many seconds make caps lock.
     public static let doubleTapShiftWindow: TimeInterval = 0.4
+    /// A finger must travel this far (pt) from touch-down before sliding onto a neighbour key retargets the press.
+    public static let slideSwitchDistance: CGFloat = 10
 
     private struct Slot: Sendable {
         var touchID = 0
@@ -83,6 +85,8 @@ public struct KeyboardInputMachine: Sendable {
         var firedDeadline: TimeInterval = .infinity
         /// This touch is on the shift key (see `isShiftHeld`).
         var isShiftKey = false
+        /// Where the finger went down; a slide shorter than `slideSwitchDistance` keeps the key it went down on.
+        var downPoint = CGPoint.zero
         /// The layer this touch left when it pressed 123 / ABC / #+=: lifting on another key types it and returns
         /// there (the system keyboard's slide-from-123 gesture).
         var slideFrom: LayoutKind?
@@ -146,8 +150,8 @@ public struct KeyboardInputMachine: Sendable {
     // MARK: Touches
 
     public mutating func touchDown(id: Int, at point: CGPoint, time: TimeInterval, emit: (KeyEvent) -> Void) {
-        // A repeated id means a missed end event: treat it as a cancel first.
-        if let i = slotIndex(for: id) { release(slot: i, emit: emit) }
+        // A repeated id means a missed end event: lift it first so an uncommitted tap is typed, not dropped.
+        if slotIndex(for: id) != nil { touchUp(id: id, time: time, emit: emit) }
         guard let hit = layout.hit(at: point), let free = slots.firstIndex(where: { !$0.isActive }) else { return }
 
         // Rollover: earlier touches still held are committed first, in the order they went down, so overlapping
@@ -156,6 +160,7 @@ public struct KeyboardInputMachine: Sendable {
 
         orderCounter &+= 1
         slots[free] = Slot(touchID: id, keyIndex: hit.keyIndex, order: orderCounter, isActive: true, isCommitted: false)
+        slots[free].downPoint = point
         emit(.highlight(keyIndex: hit.keyIndex, isOn: true))
         if KeyAlternates.hasLongPress(layout.keys[hit.keyIndex].identity) {
             slots[free].longPressAt = time + longPressDelay
@@ -176,6 +181,8 @@ public struct KeyboardInputMachine: Sendable {
         if slots[i].isAlternates { emit(.alternatesMoved(point)); return }
         guard !slots[i].isCommitted else { return }
         // Moving to another key restarts the long press only for that key's own alternates.
+        let dp = slots[i].downPoint
+        guard hypot(point.x - dp.x, point.y - dp.y) >= Self.slideSwitchDistance else { return }
         guard let hit = layout.nearestHit(to: point), hit.keyIndex != slots[i].keyIndex else { return }
         emit(.highlight(keyIndex: slots[i].keyIndex, isOn: false))
         slots[i].keyIndex = hit.keyIndex

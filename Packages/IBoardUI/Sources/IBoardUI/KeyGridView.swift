@@ -417,11 +417,29 @@ public final class KeyGridView: UIView {
         forward(.cancelled, touches)
     }
 
+    // UIKit recycles UITouch objects, so an address is not a stable id: a new finger could inherit the id of one whose
+    // end was never seen. Ids are handed out from a counter and dropped when the touch ends or is cancelled.
+    private var touchIDs: [(ObjectIdentifier, Int)] = []
+    private var nextTouchID = 1
+
+    private func touchID(for t: UITouch, phase: KeyTouchPhase) -> Int {
+        let key = ObjectIdentifier(t)
+        if let i = touchIDs.firstIndex(where: { $0.0 == key }) {
+            let id = touchIDs[i].1
+            if phase == .ended || phase == .cancelled { touchIDs.remove(at: i) }
+            return id
+        }
+        let id = nextTouchID
+        nextTouchID += 1
+        if phase == .began { touchIDs.append((key, id)) }
+        return id
+    }
+
     @inline(__always)
     private func forward(_ phase: KeyTouchPhase, _ touches: Set<UITouch>) {
         guard let handler = touchHandler else { return }
         for t in touches {
-            let id = Int(bitPattern: Unmanaged.passUnretained(t).toOpaque())
+            let id = touchID(for: t, phase: phase)
             handler(phase, id, t.location(in: self), t.timestamp)
         }
     }

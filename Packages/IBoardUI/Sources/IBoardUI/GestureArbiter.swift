@@ -106,7 +106,7 @@ public struct GestureArbiter: Sendable {
             if crossedKeys { hasCrossed = true }
             // Crossing a key is swipe typing, unless the whole touch still looks like a short vertical flick: then
             // the decision waits for the lift (a likely word wins) or for the flick window to close.
-            if hasCrossed, !looksLikeFlick(at: p, time: time) { return decide(.swipeTyping) }
+            if hasCrossed, maxRadius >= thresholds.tapMovement, !looksLikeFlick(at: p, time: time) { return decide(.swipeTyping) }
             return nil
         case .space:
             if maxRadius > thresholds.spacebarDragStart { return decide(shiftArmed ? .spacebarSelection : .spacebarCursor) }
@@ -145,7 +145,7 @@ public struct GestureArbiter: Sendable {
             if hasCrossed, likelyWord { return .swipeTyping }
             return p.y < origin.y ? .flickUp : .flickDown
         }
-        if hasCrossed { return .swipeTyping }
+        if hasCrossed, maxRadius >= thresholds.tapMovement { return .swipeTyping }
         return .tap
     }
 
